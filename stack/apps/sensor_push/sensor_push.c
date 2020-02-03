@@ -41,6 +41,8 @@
 
 #include "platform.h"
 
+#include "MODULE_D7AP_defs.h"
+
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
   #include "hwi2c.h"
@@ -71,7 +73,11 @@ static alp_interface_config_t itf_config = (alp_interface_config_t){
             .nls_method = AES_NONE,
             .id_type = ID_TYPE_NOID,
         },
+#ifdef MODULE_D7AP_USE_CHANNEL_HOPPING
+        .access_class = 0x31,
+#else
         .access_class = 0x01,
+#endif
         .id = { 0 }
     }
   }

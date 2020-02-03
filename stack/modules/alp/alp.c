@@ -220,7 +220,7 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   if (itf_id == ALP_ITF_ID_D7ASP)
   {
     d7ap_session_result_t* interface_status =  ((d7ap_session_result_t*)action->status.itf_status);
-    // fifo_skip(fifo, 1); //size
+    fifo_skip(fifo, 1); //size
     fifo_pop(fifo, &interface_status->channel.channel_header, 1);
     fifo_pop(fifo, (uint8_t*)&interface_status->channel.center_freq_index, 2);
     interface_status->channel.center_freq_index = __builtin_bswap16(interface_status->channel.center_freq_index);
@@ -373,7 +373,7 @@ void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status) {
   if(status->itf_id == ALP_ITF_ID_D7ASP) {
     fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
     fifo_put_byte(fifo, ALP_ITF_ID_D7ASP);
-    // fifo_put_byte(fifo, (12 + d7ap_addressee_id_length(status->d7ap_session_result.addressee.ctrl.id_type)));
+    fifo_put_byte(fifo, (12 + d7ap_addressee_id_length(status->d7ap_session_result.addressee.ctrl.id_type)));
     fifo_put_byte(fifo, status->d7ap_session_result.channel.channel_header);
     uint16_t center_freq = __builtin_bswap16(status->d7ap_session_result.channel.center_freq_index);
     fifo_put(fifo, (uint8_t*)&center_freq, 2);

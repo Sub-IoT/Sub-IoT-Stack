@@ -64,7 +64,16 @@ Coming soon
 
 # Access profiles
 
-Coming soon
+An Access profile is a collection of parameters, these define how two devices will access each other. The Access Profile exists of the Access Class, a channel header, 4 subprofiles and 8 subbands. The Access Class acts as the index of the profile, this defines which settings the remote device must have in order to receive the message succesfully, and thus is the only parameter sent over the air. In order for this to work, all Access Profiles on a network must be compatible with each other, resulting in identical Access Profiles. The channel header defines which coding, bitrate and ISM Band it should use. A subprofile specifies which subbands gets used and also decides the scan period. This period describes the amount of milliseconds between two activity measurements used for background scanning. Last but not least the Access Profile exists of 8 subbands, these subbands determine the physical channels, the output power and the fixed noisefloor level on that channel. 
+
+There are 15 Access Profiles accessible. The Access Class has 4 bits representing the index of the Access Profile and 4 bits specifying the activated subprofiles. For example access class 0x33 will use a combination of subprofiles 0 and 1 of Access Profile 3.
+
+In OSS-7, we predefined a couple of Access Profiles:
+
+* Access Profile 0: continuously scanning on the default channel index 0
+* Access Profile 1: Background scanning on the default channel index 0 with a period of 786 ms.
+* Access Profile 2: Not scanning. Used for application that only push data.
+* Access Profile 3: Channel diversity scan on channels 20, 40, 60 and 80 with a period of 18 ms. The transmitter will randomly pick one of these channels and will advertise on it. The receiver will scan for power on all channels every 18 ms.
 
 # Physical layer
 

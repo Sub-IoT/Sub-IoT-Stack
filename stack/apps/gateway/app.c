@@ -38,6 +38,7 @@
 #include "compress.h"
 
 #include "platform_defs.h"
+#include "MODULE_D7AP_defs.h"
 
 #include "d7ap.h"
 #include "alp_layer.h"
@@ -76,7 +77,11 @@ void bootstrap()
 
   d7ap_init();
 
-  d7ap_fs_write_dll_conf_active_access_class(0x31); // set to first AC, which is continuous FG scan
+#ifdef MODULE_D7AP_USE_CHANNEL_HOPPING
+  d7ap_set_access_class(0x31);
+#else
+  d7ap_set_access_class(0x01); // set to first AC, which is continuous FG scan
+#endif
 
   alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
   alp_layer_init(&alp_init_args, true);

@@ -34,6 +34,8 @@ After installation you can use the `unsolicited_response_logger.py` script to co
 
 The raw sensor data is contained in the `data` field. The other fields contain for instance the sensor node UID, reception level and link budget, channel information etc. For now we are not going to dive into this in more detail, refer to the D7A specification for more info.
 
+This example can also be run using channel diversity. This mode lets the user send on four different channels while the gateway listens to all four simultaneously. This will result in less trafic on one particular channel therefor reducing the chance on collision. When one channel is blocked, the sensors will be able to choose another channel, thus still operating normally. Channel diversity is present in default access profile 3 and can be activated by enabling MODULE_D7AP_USE_CHANNEL_DIVERSITY.
+
 # Pull communication
 
 In this example the sensor does not push sensor data to gateway(s) continuously, but instead writes the sensor value to a local file,
