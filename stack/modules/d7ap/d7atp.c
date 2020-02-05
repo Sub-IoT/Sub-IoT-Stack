@@ -442,7 +442,7 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     //TODO check if at least one Responder has set the ACK_REQ flag
     //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
     // Provide the Responder or Requester ACK template when requested
-    else if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add Responder ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
