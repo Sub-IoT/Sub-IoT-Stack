@@ -545,7 +545,6 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
-    d7ap_fs_read_uid(address_id);
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
