@@ -371,7 +371,7 @@ static void timer_overflow()
 
 static void timer_fired()
 {
-    if((timer_busy_programming && fired_by_interrupt) || ((NG(timers)[NG(next_event)].f == 0x0) && !fired_by_interrupt) || (NG(timers)[NG(next_event)].is_active && fired_by_interrupt))
+    if((timer_busy_programming && fired_by_interrupt) || (NG(timers)[NG(next_event)].f == 0x0) || (NG(timers)[NG(next_event)].is_active && fired_by_interrupt))
         return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
