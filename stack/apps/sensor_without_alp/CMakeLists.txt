@@ -32,7 +32,7 @@
 IF(${MODULE_LORAWAN})
     SET(libs d7ap d7ap_fs lorawan framework)
 ELSE()
-    SET(libs d7ap d7ap_fs framework)
+    SET(libs d7ap framework d7ap_fs)
 ENDIF()
 
 APP_BUILD(NAME ${APP_NAME} SOURCES sensor_without_alp.c LIBS ${libs})
