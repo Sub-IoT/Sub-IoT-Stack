@@ -695,6 +695,8 @@ static void OnRadioTxDone( void )
         McpsConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
         ChannelsNbRepCounter++;
     }
+    
+    sched_post_task((task_t)MacStateCheckTimer.Callback);
 }
 
 static void PrepareRxDoneAbort( void )

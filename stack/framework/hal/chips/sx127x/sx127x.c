@@ -513,7 +513,8 @@ static void fifo_level_isr()
     if (flags & 0x08)
     {
         DPRINT("FlagsIRQ2: %x means that packet has been sent! ", flags);
-        assert(false);
+        // assert(false);
+        return;
     }
     tx_refill_callback(remaining_bytes_len);
 }

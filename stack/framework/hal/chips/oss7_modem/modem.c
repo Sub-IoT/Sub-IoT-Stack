@@ -50,7 +50,7 @@ typedef struct {
 } command_t;
 
 static uart_handle_t* uart_handle;
-static modem_callbacks_t* callbacks;
+static modem_callbacks_t* callbacks = NULL;
 static fifo_t rx_fifo;
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static command_t command; // TODO only one active command supported for now
@@ -76,14 +76,14 @@ static void process_serial_frame(fifo_t* fifo) {
         }
         break;
       case ALP_OP_WRITE_FILE_DATA:
-        if(callbacks->write_file_data_callback)
+        if(callbacks && callbacks->write_file_data_callback)
           callbacks->write_file_data_callback(action.file_data_operand.file_offset.file_id,
                                                action.file_data_operand.file_offset.offset,
                                                action.file_data_operand.provided_data_length,
                                                action.file_data_operand.data);
         break;
       case ALP_OP_RETURN_FILE_DATA:
-        if(callbacks->return_file_data_callback)
+        if(callbacks && callbacks->return_file_data_callback)
           callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,
                                                action.file_data_operand.file_offset.offset,
                                                action.file_data_operand.provided_data_length,
@@ -97,7 +97,7 @@ static void process_serial_frame(fifo_t* fifo) {
           DPRINT("received resp from: ");
           DPRINT_DATA(interface_status.addressee.id, addressee_len);
         }
-        if(callbacks->modem_interface_status_callback)
+        if(callbacks && callbacks->modem_interface_status_callback)
           callbacks->modem_interface_status_callback(action.status.type, (uint8_t*) &action.status.data);
         break;
       default:
@@ -108,7 +108,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
   if(command_completed) {
     DPRINT("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
-    if(callbacks->command_completed_callback)
+    if(callbacks && callbacks->command_completed_callback)
       callbacks->command_completed_callback(completed_with_error,command.tag_id);
 
     command.is_active = false;
@@ -199,6 +199,19 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 
   alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
 
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+
+  return true;
+}
+
+bool modem_write_files(uint8_t file_id1, uint32_t offset1, uint32_t size1, uint8_t* data1, uint8_t file_id2, uint32_t offset2, uint32_t size2, uint8_t* data2) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_write_file_data_action(&command.fifo, file_id1, offset1, size1, data1, true, false);
+
+  alp_append_write_file_data_action(&command.fifo, file_id2, offset2, size2, data2, true, false);
+    
   modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
 
   return true;

@@ -33,6 +33,8 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "RegionUS915.h"
 #include "debug.h"
 
+#define DBG_PRINTF(...)
+
 // Definitions
 #define CHANNELS_MASK_SIZE              6
 

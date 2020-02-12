@@ -77,6 +77,19 @@ typedef struct {
     uint8_t data_rate;
 } lorawan_session_config_otaa_t;
 
+typedef enum {
+    LORAWAN_REGION_AS923,
+    LORAWAN_REGION_AU915,
+    LORAWAN_REGION_CN470,
+    LORAWAN_REGION_CN779,
+    LORAWAN_REGION_EU433,
+    LORAWAN_REGION_EU868,
+    LORAWAN_REGION_KR920,
+    LORAWAN_REGION_IN865,
+    LORAWAN_REGION_US915,
+    LORAWAN_REGION_US915_HYBRID,
+} lorawan_region_t;
+
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
 typedef void (*join_completed_callback_t)(bool success);
 typedef void (*lorawan_tx_completed_callback_t)(lorawan_stack_status_t status, uint8_t retries);
@@ -93,6 +106,10 @@ bool lorawan_stack_join(void);
 void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, lorawan_status_callback_t lorawan_status_cb );
 lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 uint16_t lorawan_get_duty_cycle_delay();
+void lorawan_stack_set_tx_power(int8_t power);
+void lorawan_stack_set_rxwindow(bool activate);
+void lorawan_stack_set_duty_cycle(bool activate);
+lorawan_stack_status_t lorawan_stack_set_region(lorawan_region_t region);
 
 #endif //LORAWAN_STACK_H
 
