@@ -84,7 +84,8 @@ typedef enum {
   EM_CONTINUOUS_TX = 1,
   EM_TRANSIENT_TX = 2,
   EM_PER_RX = 3,
-  EM_PER_TX = 4
+  EM_PER_TX = 4,
+  EM_CONT_TX_DUTY_CYCLE = 5
 } engineering_mode_t;
 
 

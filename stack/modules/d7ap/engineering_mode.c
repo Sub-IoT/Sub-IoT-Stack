@@ -29,6 +29,12 @@
 
 #include "modem_interface.h"
 
+#include "modules_defs.h"
+
+#ifdef MODULE_LORAWAN
+#include "lorawan_stack.h"
+#endif
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
@@ -69,6 +75,17 @@ static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
 
 static void start_per_rx();
 static void transmit_per_packet();
+
+#ifdef MODULE_LORAWAN
+bool previous_message_lorawan = false;
+
+static void em_lorawan_send_abp(){
+  // uint8_t temp[300];
+  // lorawan_stack_send(temp, sizeof(temp), 2, false);
+  lorawan_stack_send(per_data, sizeof(per_data) * sizeof(uint8_t), 2, false);
+  sched_post_task(&em_lorawan_send_abp);
+}
+#endif
 
 void cont_tx_done_callback(packet_t* packet) {}
 
@@ -190,6 +207,14 @@ static void em_file_change_callback(uint8_t file_id) {
     DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
+  #ifdef MODULE_LORAWAN
+    if(previous_message_lorawan && !((em_command->channel_id.channel_header.ch_class == PHY_CLASS_LORA) && (em_command->mode == EM_CONT_TX_DUTY_CYCLE))) {
+      lorawan_stack_deinit();
+      d7ap_init();
+      previous_message_lorawan = false;
+    }
+  #endif
+
     rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
     tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
@@ -250,6 +275,49 @@ static void em_file_change_callback(uint8_t file_id) {
         hw_radio_set_idle();
         timer_post_task_delay(&transmit_per_packet, 500);
         break;
+      case EM_CONT_TX_DUTY_CYCLE:
+        DPRINT("CONT_TX WITH DUTY CYCLE");
+        if(em_command->channel_id.channel_header.ch_class == 1) {
+        #ifdef MODULE_LORAWAN
+          previous_message_lorawan = true;
+
+          d7ap_stop();
+
+          switch(em_command->channel_id.channel_header.ch_freq_band) {
+            case PHY_BAND_868:
+              lorawan_stack_set_region(LORAWAN_REGION_EU868);
+              break;
+            case PHY_BAND_915:
+              lorawan_stack_set_region(LORAWAN_REGION_US915);
+              break;
+          }
+
+          lorawan_session_config_abp_t session_config = {
+            .nwkSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            .appSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            .devAddr = 1,
+            .network_id = 1,
+            .request_ack = false,
+            .application_port = 2,
+            .adr_enabled = false,
+            .data_rate = em_command->flags
+          };
+          lorawan_stack_init_abp(&session_config);
+
+          lorawan_stack_set_rxwindow(false);
+
+          lorawan_stack_set_duty_cycle(true);
+
+          lorawan_stack_set_tx_power(em_command->eirp > 7? 17 - em_command->eirp : 10);
+
+          DPRINT("set to cont tx duty cycle with data rate %i and power %i", em_command->flags, em_command->eirp);
+
+          sched_post_task(&em_lorawan_send_abp);
+        #else
+          DPRINT("Lorawan stack is not activated");
+        #endif
+        }
+        break;
     }
 }
 
@@ -265,4 +333,7 @@ error_t engineering_mode_init()
   sched_register_task(&transmit_per_packet);
   sched_register_task(&start_per_rx);
   sched_register_task(&em_reset);
+  #ifdef MODULE_LORAWAN
+    sched_register_task(&em_lorawan_send_abp);
+  #endif
 }
