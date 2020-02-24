@@ -126,6 +126,8 @@ static lorawan_rx_callback_t rx_callback = NULL; //called when transmitting is d
 static lorawan_tx_completed_callback_t tx_callback = NULL;
 static lorawan_status_callback_t stack_status_callback = NULL;
 
+static lorawan_region_t lorawan_region = LORAMAC_REGION_US915;
+
 /**
  * @brief LoRaWAN state machine. Sets parameters in the LoRaWAN stack and handles callbacks
  */
@@ -549,7 +551,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, lorawan_region);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
@@ -633,7 +635,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, lorawan_region);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
@@ -747,5 +749,12 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
     return LORAWAN_STACK_ERROR_UNKNOWN;
   }
 
+  return LORAWAN_STACK_ERROR_OK;
+}
+
+lorawan_stack_status_t lorawan_stack_set_region(lorawan_region_t region) {
+  if(state != STATE_NOT_JOINED)
+    return LORAWAN_STACK_ERROR_UNKNOWN;
+  lorawan_region = region;
   return LORAWAN_STACK_ERROR_OK;
 }

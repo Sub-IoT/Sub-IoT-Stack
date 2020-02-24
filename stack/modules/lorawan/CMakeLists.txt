@@ -32,7 +32,8 @@ ADD_LIBRARY(lorawan STATIC
     LoRaMAC/Mac/LoRaMac.c
     LoRaMAC/Mac/region/Region.c
     LoRaMAC/Mac/region/RegionCommon.c
-    LoRaMAC/Mac/region/RegionEU868.c    # TODO only this region for now
+    # LoRaMAC/Mac/region/RegionEU868.c    # TODO only this region for now
+    LoRaMAC/Mac/region/RegionUS915.c
     LoRaMAC/Mac/LoRaMacCrypto.c
     LoRaMAC/Crypto/aes.c
     LoRaMAC/Crypto/cmac.c
@@ -49,7 +50,7 @@ ADD_LIBRARY(lorawan STATIC
     lorawan_stack.c
 )
 
-ADD_DEFINITIONS("-DUSE_B_L072Z_LRWAN1" "-DSTM32L072xx" "-DREGION_EU868" "-DDEBUG" "-DTRACE") # TODO tmp
+ADD_DEFINITIONS("-DUSE_B_L072Z_LRWAN1" "-DSTM32L072xx" "-DREGION_US915" "-DDEBUG" "-DTRACE") # TODO tmp "-DREGION_EU868" 
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
 target_include_directories(lorawan PUBLIC
