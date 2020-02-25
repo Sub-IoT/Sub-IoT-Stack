@@ -137,10 +137,12 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
                     // update file header
                     files[file_id].addr = volatile_data_offset;
                     volatile_data_offset += files[file_id].length;
+                    permanent_data_offset += files[file_id].length;
                     break;
                 }
                 case FS_BLOCKDEVICE_TYPE_PERMANENT:
                 {
+                    files[file_id].addr = permanent_data_offset;
                     permanent_data_offset += files[file_id].length;
                     break;
                 }
