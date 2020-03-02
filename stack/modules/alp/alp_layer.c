@@ -73,8 +73,6 @@ static alp_interface_status_t NGDEF( current_status);
 static alp_init_args_t* NGDEF(_init_args);
 #define init_args NG(_init_args)
 
-static timer_event alp_layer_process_command_timer;
-
 static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
 static alp_interface_config_t session_config_saved;
@@ -88,6 +86,9 @@ static alp_interface_config_t* session_config_buffer;
 static void process_async(void* arg);
 
 static uint8_t next_tag_id = 0;
+
+static fifo_t command_fifo;
+static alp_command_t* command_fifo_buffer[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
 
 static void free_command(alp_command_t* command) {
   DPRINT("!!! Free cmd %02x %p", command->trans_id, command);
@@ -153,6 +154,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 {
   init_args = alp_init_args;
   use_serial_itf = use_serial_interface;
+  fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT);
   init_commands();
 
   if (use_serial_itf)
@@ -161,8 +163,8 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 #ifdef MODULE_LORAWAN
   lorawan_interface_register();
 #endif
-
-  timer_init_event(&alp_layer_process_command_timer, &process_async);
+  
+  sched_register_task(&process_async);
 }
 
 void alp_layer_register_interface(alp_interface_t* interface) {
@@ -657,7 +659,15 @@ static void transmit_response(alp_command_t* req, alp_command_t* resp)
 
 void process_async(void* arg)
 {
-    alp_command_t* command = (alp_command_t*)arg;
+    alp_command_t* command = NULL;
+    if (fifo_pop(&command_fifo, (void*)&command, sizeof(alp_command_t*)) != SUCCESS) {
+        return;
+    }
+
+    if (fifo_get_size(&command_fifo) > 0) {
+        sched_post_task_prio(&process_async, MIN_PRIORITY, 0);
+    }
+    
     DPRINT("process command");
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     alp_interface_config_t forward_interface_config;
@@ -736,8 +746,8 @@ void process_async(void* arg)
         }
     }
 
-    DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i\n",
-        command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id);
+    DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
+        command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
     if (command->is_response) {
         // when the command is an async response to a preceding request we first find the original request and send the response to the origin itf
         // find original request
@@ -808,16 +818,20 @@ bool alp_layer_process(alp_command_t* command)
 //    }
     
     //fifo_put(&command->alp_command_fifo, payload, len);
-    alp_layer_process_command_timer.next_event = 0;
-    alp_layer_process_command_timer.priority = MAX_PRIORITY;
-    alp_layer_process_command_timer.arg = command;
-    error_t rtc = timer_add_event(&alp_layer_process_command_timer);
-    assert(rtc == SUCCESS); // TODO handle the case where task was already scheduled
-
+ 
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     uint8_t expected_response_length
         = alp_get_expected_response_length(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     DPRINT("This ALP command will initiate a response containing <%d> bytes\n", expected_response_length);
+    if (expected_response_length == 0) {
+        command->respond_when_completed = false;
+    }
+    
+    // add to fifo for later processing
+    error_t rtc = fifo_put(&command_fifo, (uint8_t*)&command, sizeof(alp_command_t*));
+    rtc = sched_post_task_prio(&process_async, MIN_PRIORITY, NULL);
+    assert(rtc == SUCCESS || rtc == EALREADY);
+    
     return (expected_response_length > 0);
 }
 
@@ -828,7 +842,7 @@ void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, al
     assert(status != NULL);
     alp_command_t* command = alp_layer_get_command_by_transid(trans_id, status->itf_id);
     assert(command != NULL);
-
+    DPRINT("resp for tag %i\n", command->tag_id);
     alp_command_t* resp = alp_layer_command_alloc(false, false);
     resp->forward_itf_id = status->itf_id;
     resp->origin_itf_id = status->itf_id;

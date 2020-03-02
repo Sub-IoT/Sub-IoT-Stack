@@ -693,7 +693,6 @@ bool d7asp_process_received_packet(packet_t* packet)
         estimated_tl += phy_calculate_tx_duration(packet->phy_config.rx.channel_id.channel_header.ch_class,
                                                   packet->phy_config.rx.channel_id.channel_header.ch_coding,
                                                   current_master_session.requests_lengths[0], false); // TODO assuming 1 queued request for now
-
         DPRINT("Dormant session estimated Tl=%i", estimated_tl);
         packet->d7atp_tl = compress_data(estimated_tl, true);
     }
