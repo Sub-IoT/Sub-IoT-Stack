@@ -44,6 +44,10 @@
 #include "lorawan_interface.h"
 #endif
 
+#ifdef MODULE_D7AP
+#include "d7ap_interface.h"
+#endif
+
 #include "d7ap_fs.h"
 
 #include "alp_layer.h"
@@ -159,6 +163,10 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 
   if (use_serial_itf)
     serial_interface_register();
+
+#ifdef MODULE_D7AP
+  d7ap_interface_register();
+#endif
 
 #ifdef MODULE_LORAWAN
   lorawan_interface_register();
