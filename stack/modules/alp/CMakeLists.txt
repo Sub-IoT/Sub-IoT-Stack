@@ -41,6 +41,7 @@ ADD_LIBRARY(alp STATIC
     alp_layer.c
     alp.c
     lorawan_interface.c
+    d7ap_interface.c
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)

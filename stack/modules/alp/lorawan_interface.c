@@ -37,11 +37,11 @@
 static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t status);
 
 static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
-alp_interface_t interface_lorawan_otaa;
-alp_interface_t interface_lorawan_abp;
-uint16_t lorawan_trans_id;
-bool otaa_just_inited = false;
-bool abp_just_inited = false;
+static alp_interface_t interface_lorawan_otaa;
+static alp_interface_t interface_lorawan_abp;
+static uint16_t lorawan_trans_id;
+static bool otaa_just_inited = false;
+static bool abp_just_inited = false;
 
 void lorawan_rx(lorawan_AppData_t *AppData)
 {
