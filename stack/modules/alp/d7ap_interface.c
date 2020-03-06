@@ -93,7 +93,7 @@ static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result
     
     command->origin_itf_id = ALP_ITF_ID_D7ASP;
     command->respond_when_completed = result.response_expected;
-    alp_append_interface_status(&command->alp_command_fifo, &d7_status);
+    alp_append_interface_status(command, &d7_status);
     fifo_put(&command->alp_command_fifo, payload, len);
     //return alp_layer_process(command->alp_command, fifo_get_size((&command->alp_command_fifo)));
     return alp_layer_process(command);

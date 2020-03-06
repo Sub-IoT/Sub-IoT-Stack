@@ -60,12 +60,11 @@ static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
         callbacks->command_completed_callback(!success, tag_id);
 }
 
-static void on_alp_command_result_cb(alp_interface_status_t* status, uint8_t* payload, uint8_t payload_length)
+static void on_alp_command_result_cb(alp_interface_status_t* status, alp_command_t* command)
 {
     alp_action_t action;
-    uint8_t parse_index = 0;
-    while (parse_index < payload_length) {
-        alp_parse_action(payload, &parse_index, &action);
+    while (fifo_get_size(&command->alp_command_fifo) > 0) {
+        alp_parse_action(command, &action);
         switch (action.ctrl.operation) {
         case ALP_OP_STATUS:
             if (action.interface_status.itf_id == ALP_ITF_ID_SERIAL) {
@@ -166,9 +165,9 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
     if (command == NULL)
         return false;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_read_file_data_action(&command->alp_command_fifo, file_id, offset, size, true, false);
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_read_file_data_action(command, file_id, offset, size, true, false);
 
     alp_layer_process(command);
 
@@ -180,9 +179,9 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
     if (command == NULL)
         return false;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_write_file_data_action(&command->alp_command_fifo, file_id, offset, size, data, true, false);
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_write_file_data_action(command, file_id, offset, size, data, true, false);
 
     alp_layer_process(command);
 
@@ -195,10 +194,10 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
     if (command == NULL)
         return false;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_forward_action(&command->alp_command_fifo, interface_config, 0);
-    alp_append_return_file_data_action(&command->alp_command_fifo, file_id, offset, length, data);
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_forward_action(command, interface_config, 0);
+    alp_append_return_file_data_action(command, file_id, offset, length, data);
 
     alp_layer_process(command);
     return true;
@@ -210,9 +209,9 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
     if (command == NULL)
         return false;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_forward_action(&command->alp_command_fifo, interface_config, 0);
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_forward_action(command, interface_config, 0);
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
     alp_layer_process(command);
@@ -227,11 +226,11 @@ bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t off
     if (command == NULL)
         return false;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_indirect_forward_action(&command->alp_command_fifo, interface_file_id, overload, (uint8_t*)&d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)&d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
 
-    alp_append_return_file_data_action(&command->alp_command_fifo, data_file_id, offset, length, data);
+    alp_append_return_file_data_action(command, data_file_id, offset, length, data);
 
     alp_layer_process(command);
     return true;
@@ -244,9 +243,9 @@ int8_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32
     if (command == NULL)
         return -1;
 
-    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
-    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
-    alp_append_indirect_forward_action(&command->alp_command_fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
+    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_tag_request_action(command, command->tag_id, true);
+    alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
     alp_layer_process(command);
