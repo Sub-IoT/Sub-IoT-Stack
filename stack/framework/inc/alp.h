@@ -243,32 +243,25 @@ typedef struct {
     uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;
 
-/*!
- * \brief Returns the ALP operation type contained in alp_command
- * \param alp_command
- * \return the ALP operation type
- */
-alp_operation_t alp_get_operation(uint8_t* alp_command);
-
-uint8_t alp_get_expected_response_length(uint8_t* command, uint32_t len);
+uint8_t alp_get_expected_response_length(alp_command_t* command);
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf);
-void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
-void alp_append_tag_response_action(fifo_t* fifo, uint8_t tag_id, bool eop, bool err);
-void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
-void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
-void alp_append_forward_action(fifo_t* fifo, alp_interface_config_t* config, uint8_t config_len);
-void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
-void alp_append_length_operand(fifo_t* fifo, uint32_t length);
-void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
-void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
-void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status);
+void alp_append_tag_request_action(alp_command_t* command, uint8_t tag_id, bool eop);
+void alp_append_tag_response_action(alp_command_t* command, uint8_t tag_id, bool eop, bool err);
+void alp_append_read_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
+void alp_append_write_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
+void alp_append_forward_action(alp_command_t* command, alp_interface_config_t* config, uint8_t config_len);
+void alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
+void alp_append_length_operand(alp_command_t* command, uint32_t length);
+void alp_append_create_new_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
+void alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
+void alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
 
-uint32_t alp_parse_length_operand(fifo_t* fifo);
-alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* fifo);
-alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* fifo);
+void alp_parse_action(alp_command_t* command, alp_action_t* action);
+uint32_t alp_parse_length_operand(alp_command_t* command);
+alp_operand_file_offset_t alp_parse_file_offset_operand(alp_command_t* command);
+alp_operand_file_header_t alp_parse_file_header_operand(alp_command_t* command);
 
-void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 
 uint8_t alp_length_operand_coded_length(uint32_t length);
 

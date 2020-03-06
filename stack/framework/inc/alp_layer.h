@@ -48,7 +48,7 @@ typedef enum
 } interface_state_t; //ADD MORE STATES?
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
-typedef void (*alp_command_result_callback)(alp_interface_status_t* result, uint8_t* payload, uint8_t payload_length);
+typedef void (*alp_command_result_callback)(alp_interface_status_t* result, alp_command_t* command);
 typedef void (*alp_received_unsolicited_data_callback)(alp_interface_status_t* result, uint8_t *alp_command, uint8_t alp_command_size);
 typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_interface_status_t* result, alp_operand_file_data_request_t operand, uint8_t* alp_response);
 
@@ -105,6 +105,7 @@ void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* a
 
 
 alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond); // TODO expose?
+void alp_layer_command_free(alp_command_t* command);
 alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_t itf_id); // TODO alp_layer_forwarded_command_completed ?
 
 #endif /* ALP_LAYER_H_ */
