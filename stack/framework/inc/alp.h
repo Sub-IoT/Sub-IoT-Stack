@@ -42,8 +42,10 @@
 #define MODULE_ALP_INTERFACE_SIZE 10
 
 #define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
+#define ALP_QUERY_COMPARE_BODY_MAX_SIZE 100
 #define ALP_ITF_CONFIG_SIZE 43
 #define ALP_ITF_STATUS_MAX_SIZE 40
+#define ALP_INDIRECT_ITF_OVERLOAD_MAX_SIZE 10
 
 typedef enum
 {
@@ -169,6 +171,10 @@ typedef struct {
 
 typedef struct {
     uint8_t file_id;
+} alp_operand_file_id_t;
+
+typedef struct {
+    uint8_t file_id;
     uint32_t offset;
 } alp_operand_file_offset_t;
 
@@ -199,17 +205,56 @@ typedef struct __attribute__((packed)) {
     uint8_t itf_status[ALP_ITF_STATUS_MAX_SIZE];
 } alp_interface_status_t;
 
+typedef enum {
+    QUERY_CODE_TYPE_NON_VOID_CHECK = 0,
+    QUERY_CODE_TYPE_ARITHM_COMP_WITH_ZERO = 1,
+    QUERY_CODE_TYPE_ARITHM_COMP_WITH_VALUE_IN_QUERY = 2,
+    QUERY_CODE_TYPE_ARITHM_COMP_WITH_FILES = 3,
+    QUERY_CODE_TYPE_RANGE_COMP_WITH_BITMAP = 4,
+    // 5-6 RFU
+    QUERY_CODE_TYPE_STRING_TOKEN_SEARCH = 7,
+} alp_query_code_type_t;
+
+typedef struct __attribute__((packed)) {
+    union {
+        uint8_t raw;
+        struct {
+            uint8_t param : 4;
+            bool mask : 1;
+            alp_query_code_type_t type : 3;
+        };
+    } code;
+    uint32_t compare_operand_length;
+    uint8_t compare_body[ALP_QUERY_COMPARE_BODY_MAX_SIZE];
+} alp_operand_query_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t tag_id;
+} alp_operand_tag_id_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t interface_file_id;
+    uint8_t overload_data[ALP_INDIRECT_ITF_OVERLOAD_MAX_SIZE];
+} alp_operand_indirect_interface_t;
+
+
 typedef struct {
     alp_control_t ctrl;
     union {
         alp_operand_file_data_t file_data_operand;
+        alp_operand_file_data_request_t file_data_request_operand;
+        alp_operand_file_id_t file_id_operand;
+        alp_operand_file_header_t file_header_operand;
+        alp_operand_query_t query_operand;
         struct {
             bool completed;
             bool error;
             uint8_t tag_id;
-        } tag_response;
+        } tag_response; // TODO merge with tag_id_operand
         alp_interface_status_t interface_status;
         alp_interface_config_t interface_config;
+        alp_operand_tag_id_t tag_id_operand;
+        alp_operand_indirect_interface_t indirect_interface_operand;
     };
 
 } alp_action_t;
@@ -237,8 +282,8 @@ typedef struct {
     uint8_t forward_itf_id;
     uint16_t trans_id;
     uint8_t tag_id;
-    alp_itf_id_t origin_itf_id;
     alp_interface_status_t origin_itf_status;
+    alp_itf_id_t origin_itf_id; // TODO can be removed, itf id stored in origin_itf_status
     fifo_t alp_command_fifo;
     uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;
@@ -258,8 +303,8 @@ void alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id,
 void alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
 
 void alp_parse_action(alp_command_t* command, alp_action_t* action);
-uint32_t alp_parse_length_operand(alp_command_t* command);
-alp_operand_file_offset_t alp_parse_file_offset_operand(alp_command_t* command);
+uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
+alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
 alp_operand_file_header_t alp_parse_file_header_operand(alp_command_t* command);
 
 

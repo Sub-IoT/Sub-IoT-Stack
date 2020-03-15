@@ -82,7 +82,6 @@ static bool interface_file_changed = true;
 static alp_interface_config_t session_config_saved;
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
-static alp_operand_file_data_t file_data_operand; // statically allocated to prevent runtime stackoverflows
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 static alp_interface_config_t* session_config_buffer;
@@ -190,13 +189,9 @@ void alp_layer_register_interface(alp_interface_t* interface) {
   alp_register_interface(interface);
 }
 
-static alp_status_codes_t process_op_read_file_data(alp_command_t* command, alp_command_t* resp_command)
+static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command)
 {
-    alp_operand_file_data_request_t operand;
-    error_t err;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    operand.file_offset = alp_parse_file_offset_operand(command);
-    operand.requested_data_length = alp_parse_length_operand(command);
+    alp_operand_file_data_request_t operand = action->file_data_request_operand;
     DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
     if (operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
@@ -218,69 +213,56 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command, alp_
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_read_file_properties(alp_command_t* command, alp_command_t* resp_command)
+static alp_status_codes_t process_op_read_file_properties(alp_action_t* action, alp_command_t* resp_command)
 {
-    uint8_t file_id;
     error_t err;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
-
-    DPRINT("READ FILE PROPERTIES %i", file_id);
+    
+    DPRINT("READ FILE PROPERTIES %i", action->file_id_operand.file_id);
 
     d7ap_fs_file_header_t file_header;
-    alp_status_codes_t alp_status = d7ap_fs_read_file_header(file_id, &file_header);
-
+    err = d7ap_fs_read_file_header(action->file_id_operand.file_id, &file_header);
+    if (err != SUCCESS) {
+        DPRINT("!!! d7ap_fs_read_file_header returned error %i", err);
+        assert(false); // TODO error handlink
+    }
+    
     // convert to big endian
     file_header.length = __builtin_bswap32(file_header.length);
     file_header.allocated_length = __builtin_bswap32(file_header.allocated_length);
 
-    if (alp_status == ALP_STATUS_OK) {
-        // fill response
-        err = fifo_put_byte(&resp_command->alp_command_fifo, ALP_OP_RETURN_FILE_PROPERTIES);
-        assert(err == SUCCESS);
-        err = fifo_put_byte(&resp_command->alp_command_fifo, file_id);
-        assert(err == SUCCESS);
-        err = fifo_put(&resp_command->alp_command_fifo, (uint8_t*)&file_header, sizeof(d7ap_fs_file_header_t));
-        assert(err == SUCCESS);
-  }
-
-  return alp_status;
+    // fill response
+    err = fifo_put_byte(&resp_command->alp_command_fifo, ALP_OP_RETURN_FILE_PROPERTIES);
+    assert(err == SUCCESS);
+    err = fifo_put_byte(&resp_command->alp_command_fifo, action->file_id_operand.file_id);
+    assert(err == SUCCESS);
+    err = fifo_put(&resp_command->alp_command_fifo, (uint8_t*)&file_header, sizeof(d7ap_fs_file_header_t));
+    assert(err == SUCCESS);
+    
+    return SUCCESS;
 }
 
-static alp_status_codes_t process_op_write_file_properties(alp_command_t* command)
+static alp_status_codes_t process_op_write_file_properties(alp_action_t* action)
 {
-    uint8_t file_id;
-    error_t err;
-    d7ap_fs_file_header_t file_header;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
-    err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&file_header, sizeof(d7ap_fs_file_header_t)); assert(err == SUCCESS);
-    DPRINT("WRITE FILE PROPERTIES %i", file_id);
-    
-    // convert to little endian (native)
-    file_header.length = __builtin_bswap32(file_header.length);
-    file_header.allocated_length = __builtin_bswap32(file_header.allocated_length);
-    
-    int rc = d7ap_fs_write_file_header(file_id, &file_header);
+    DPRINT("WRITE FILE PROPERTIES %i", action->file_header_operand.file_id);
+        
+    int rc = d7ap_fs_write_file_header(action->file_header_operand.file_id, &action->file_header_operand.file_header);
     if(rc != 0)
-        return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific erro
+        return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
 
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
-    error_t err;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    file_data_operand.file_offset = alp_parse_file_offset_operand(command);
-    file_data_operand.provided_data_length = alp_parse_length_operand(command);
-    DPRINT("WRITE FILE %i LEN %i", file_data_operand.file_offset.file_id, file_data_operand.provided_data_length);
-    if (file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
+static alp_status_codes_t process_op_write_file_data(alp_action_t* action) {
+    DPRINT("WRITE FILE %i LEN %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+    if (action->file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
     
-    err = fifo_pop(&command->alp_command_fifo, alp_data, (uint16_t)file_data_operand.provided_data_length);
-    int rc = d7ap_fs_write_file(file_data_operand.file_offset.file_id, file_data_operand.file_offset.offset, alp_data, file_data_operand.provided_data_length);
-    if(rc != 0)
+    int rc = d7ap_fs_write_file(action->file_data_operand.file_offset.file_id, action->file_data_operand.file_offset.offset,
+        action->file_data_operand.data, action->file_data_operand.provided_data_length);
+    if (rc != 0) {
+        assert(false);
         return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
+    }
 
     return ALP_STATUS_OK;
 }
@@ -316,35 +298,33 @@ bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, al
   return false;
 }
 
-static alp_status_codes_t process_op_break_query(alp_command_t* command) {
-    fifo_t* cmd_fifo = &command->alp_command_fifo;
-    uint8_t query_code;
-    error_t err;
+static alp_status_codes_t process_op_break_query(alp_action_t* action)
+{
     DPRINT("BREAK QUERY");
-    err = fifo_skip(cmd_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    err = fifo_pop(cmd_fifo, &query_code, 1); assert(err == SUCCESS);
-    assert((query_code & 0xE0) == 0x40); // TODO only arithm comp with value type is implemented for now
-    assert((query_code & 0x10) == 0); // TODO mask value not implemented for now
+    assert(action->query_operand.code.type
+        == QUERY_CODE_TYPE_ARITHM_COMP_WITH_VALUE_IN_QUERY); // TODO only arithm comp with value type is implemented for
+    // now
+    
+    assert(!action->query_operand.code.mask); // TODO mask value not implemented for now
     
     // parse arithm query params
     bool use_signed_comparison = true;
-    if((query_code & 0x08) == 0)
+    if((action->query_operand.code.param & 0x08) == 0)
         use_signed_comparison = false;
     
-    alp_query_arithmetic_comparison_type_t comp_type = query_code & 0x07;
-    uint32_t comp_length = alp_parse_length_operand(command);
+    alp_query_arithmetic_comparison_type_t comp_type = action->query_operand.code.param & 0x07;
+
     // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
+    fifo_t temp_fifo;
+    fifo_init_filled(&temp_fifo, action->query_operand.compare_body, ALP_QUERY_COMPARE_BODY_MAX_SIZE, ALP_QUERY_COMPARE_BODY_MAX_SIZE);
     
-    if(comp_length > ALP_PAYLOAD_MAX_SIZE)
-        goto error;
+    memset(alp_data, 0, action->query_operand.compare_operand_length);
+    error_t err = fifo_pop(&temp_fifo, alp_data, action->query_operand.compare_operand_length); assert(err == SUCCESS);
+    alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(&temp_fifo);
     
-    memset(alp_data, 0, comp_length);
-    err = fifo_pop(cmd_fifo, alp_data, (uint16_t)comp_length); assert(err == SUCCESS);
-    alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(command);
+    d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, action->query_operand.compare_operand_length);
     
-    d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, comp_length);
-    
-    if(!process_arithm_predicate(alp_data2, alp_data, comp_length, comp_type)) {
+    if(!process_arithm_predicate(alp_data2, alp_data, action->query_operand.compare_operand_length, comp_type)) {
         DPRINT("predicate failed, clearing ALP command to stop further processing");
         goto error;
     }
@@ -352,7 +332,7 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
     return ALP_STATUS_OK;
 
 error:
-    fifo_clear(&command->alp_command_fifo);
+    //fifo_clear(&command->alp_command_fifo);
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific  
 }
 
@@ -362,95 +342,75 @@ static void interface_file_changed_callback(uint8_t file_id)
     interface_file_changed = true;
 }
 
-static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config)
+static alp_status_codes_t process_op_indirect_forward(
+    alp_action_t* action, uint8_t* itf_id, alp_interface_config_t* session_config)
 {
-  DPRINT("indirect fwd");
-  bool re_read = false;
-  bool found = false;
-  alp_control_t ctrl;
-  error_t err = fifo_pop(&command->alp_command_fifo, &ctrl.raw, 1); assert(err == SUCCESS);
-  uint8_t interface_file_id;
-  err = fifo_pop(&command->alp_command_fifo, &interface_file_id, 1);
-  if((previous_interface_file_id != interface_file_id) || interface_file_changed) {
-    re_read = true;
-    interface_file_changed = false;
-    if(previous_interface_file_id != interface_file_id) {
-      if(fs_file_stat(interface_file_id)!=NULL) {
-        fs_unregister_file_modified_callback(previous_interface_file_id);
-        fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
-        d7ap_fs_read_file(interface_file_id, 0, itf_id, 1);
-        previous_interface_file_id = interface_file_id;
-      } else {
-        DPRINT("itf file %i is not defined", interface_file_id);
-        assert(false);
-      }
-    } else
-      *itf_id = session_config_saved.itf_id;
-  } else
-    *itf_id = session_config_saved.itf_id;
-  for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-    if(*itf_id == interfaces[i]->itf_id) {
-      session_config->itf_id = *itf_id;
-      if(re_read) {
-        session_config_saved.itf_id = *itf_id;
-        d7ap_fs_read_file(interface_file_id, 1, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
-      }
-      if(!ctrl.b7) 
-        memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
-#ifdef MODULE_D7AP
-      else { //overload bit set
-          // TODO
-        memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len - 10);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->itf_config[interfaces[i]->itf_cfg_len - 10], 2); assert(err == SUCCESS);
-        uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)session_config)->d7ap_session_config.addressee.ctrl.id_type);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->itf_config[interfaces[i]->itf_cfg_len - 8], id_len); assert(err == SUCCESS);        
-      }
-#endif
-      found = true;
-      DPRINT("indirect forward %02X", *itf_id);
-      break;
-    }
-  }
-  if(!found) {
-    DPRINT("interface %02X is not registered", *itf_id);
-    assert(false);
-  }
-
-  return ALP_STATUS_PARTIALLY_COMPLETED;
-}
-
-static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config)
-{
-    // TODO move session config to alp_command_t struct
-    error_t err;
+    DPRINT("indirect fwd");
+    bool re_read = false;
     bool found = false;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
-    for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-        if(*itf_id == interfaces[i]->itf_id) {
-            session_config->itf_id = *itf_id;
-            if(*itf_id == ALP_ITF_ID_D7ASP) {
-#ifdef MODULE_D7AP
-                uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
-                err = fifo_pop(&command->alp_command_fifo, session_config->itf_config, min_size); assert(err == SUCCESS);
-                uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)session_config)->d7ap_session_config.addressee.ctrl.id_type);
-                err = fifo_pop(&command->alp_command_fifo, session_config->itf_config + min_size, id_len); assert(err == SUCCESS);
-#endif
+    alp_control_t ctrl;
+    if ((previous_interface_file_id != action->indirect_interface_operand.interface_file_id)
+        || interface_file_changed) {
+        re_read = true;
+        interface_file_changed = false;
+        if (previous_interface_file_id != action->indirect_interface_operand.interface_file_id) {
+            if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
+                fs_unregister_file_modified_callback(previous_interface_file_id);
+                fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
+                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1);
+                previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
             } else {
-                err = fifo_pop(&command->alp_command_fifo, session_config->itf_config, interfaces[i]->itf_cfg_len); assert(err == SUCCESS);
+                DPRINT("itf file %i is not defined", action->indirect_interface_operand.interface_file_id);
+                assert(false);
             }
+        } else {
+            *itf_id = session_config_saved.itf_id;
+        }
+    } else {
+        *itf_id = session_config_saved.itf_id;
+    }
 
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+        if (*itf_id == interfaces[i]->itf_id) {
+            session_config->itf_id = *itf_id;
+            if (re_read) {
+                session_config_saved.itf_id = *itf_id;
+                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 1,
+                    session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
+            }
+            if (!ctrl.b7)
+                memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
+#ifdef MODULE_D7AP
+            else { // overload bit set
+                // TODO
+                memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len - 10);
+                memcpy(&session_config->itf_config[interfaces[i]->itf_cfg_len - 10],
+                    action->indirect_interface_operand.overload_data, 2);
+                uint8_t id_len = d7ap_addressee_id_length(
+                    ((alp_interface_config_d7ap_t*)session_config)->d7ap_session_config.addressee.ctrl.id_type);
+                memcpy(&session_config->itf_config[interfaces[i]->itf_cfg_len - 8],
+                    action->indirect_interface_operand.overload_data, id_len);
+            }
+#endif
             found = true;
-            DPRINT("FORWARD %02X", *itf_id);
+            DPRINT("indirect forward %02X", *itf_id);
             break;
         }
     }
-
     if (!found) {
-        DPRINT("FORWARD interface %02X not found", *itf_id);
+        DPRINT("interface %02X is not registered", *itf_id);
         assert(false);
     }
 
+    return ALP_STATUS_PARTIALLY_COMPLETED;
+}
+
+static alp_status_codes_t process_op_forward(alp_action_t* action, uint8_t* itf_id, alp_interface_config_t* session_config)
+{
+    // TODO move session config to alp_command_t struct
+    memcpy(session_config, &action->interface_config, sizeof(alp_interface_config_t));
+    *itf_id = action->interface_config.itf_id;
+    DPRINT("FORWARD %02X", session_config->itf_id);
     return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
@@ -466,78 +426,51 @@ static alp_status_codes_t process_op_response_tag(alp_command_t* command, uint8_
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_status(alp_command_t* command)
+static alp_status_codes_t process_op_status(alp_action_t* action, alp_command_t* command)
 {
-    error_t err;
-    alp_control_t ctrl;
-    err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&ctrl, 1);
-    if (!ctrl.b7 && !ctrl.b6) {
+    if (!action->ctrl.b7 && !action->ctrl.b6) {
         //action status operation
         DPRINT("act status");
-        fifo_skip(&command->alp_command_fifo, 1);
         //TO DO implement handling of action status
-    } else if (!ctrl.b7 && ctrl.b6) {
+    } else if (!action->ctrl.b7 && action->ctrl.b6) {
         //interface status operation
-        fifo_pop(&command->alp_command_fifo, &command->origin_itf_status.itf_id, 1);
-        command->origin_itf_status.len = (uint8_t)alp_parse_length_operand(command);
-        fifo_pop(&command->alp_command_fifo, command->origin_itf_status.itf_status, command->origin_itf_status.len);
-        command->origin_itf_id = command->origin_itf_status.itf_id;
+        memcpy(&command->origin_itf_status, &action->interface_status, sizeof(alp_interface_status_t));
+        command->origin_itf_id = command->origin_itf_status.itf_id; 
         DPRINT("itf status (%i)", command->origin_itf_status.itf_id);
     } else {
-        DPRINT("op_status ext not defined b6=%i, b7=%i", ctrl.b6, ctrl.b7);
+        DPRINT("op_status ext not defined b6=%i, b7=%i", action->ctrl.b6, action->ctrl.b7);
         assert(false); // TODO
     }
 
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_request_tag(alp_command_t* command, uint8_t* tag_id, bool* respond_when_completed)
+static alp_status_codes_t process_op_request_tag(alp_action_t* action, uint8_t* tag_id, bool* respond_when_completed)
 {
-    error_t err;
-    alp_control_tag_request_t tag_request;
-    err = fifo_pop(&command->alp_command_fifo, &tag_request.raw, 1); assert(err == SUCCESS); 
-    err = fifo_pop(&command->alp_command_fifo, tag_id, 1); assert(err == SUCCESS);
-    *respond_when_completed = respond_when_completed;
-    DPRINT("tag req %i, EOP %i", *tag_id, tag_request.respond_when_completed);
+    *tag_id = action->tag_id_operand.tag_id;
+    *respond_when_completed = action->ctrl.b7;
+    DPRINT("tag req %i, EOP %i", *tag_id, *respond_when_completed);
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_return_file_data(alp_command_t* command, alp_command_t** unsollicited_response_command)
+static alp_status_codes_t process_op_return_file_data(alp_action_t* action, alp_command_t** unsollicited_response_command)
 {
     if (*unsollicited_response_command == NULL) {
         *unsollicited_response_command = alp_layer_command_alloc(false, false);
     }
-
-    fifo_t* cmd_fifo = &command->alp_command_fifo;
-    // parse file offset length
-    // take care not to pop from command, use a new fifo subview
-    uint8_t original_fifo_length = fifo_get_size(cmd_fifo);
-    fifo_peek(cmd_fifo, alp_data, 0, original_fifo_length);
-    fifo_skip(cmd_fifo, 1); // skip control byte
-    alp_operand_file_offset_t file_offset = alp_parse_file_offset_operand(command);
-
-    DPRINT("Return file data (%i):", file_offset.file_id);
-    DPRINT("offset size: %d", file_offset.offset);
-    uint32_t data_len = alp_parse_length_operand(command);
-    DPRINT("data size: %d", data_len);
+    
+    DPRINT("Return file data (%i):", action->file_data_operand.file_offset.file_id);
+    DPRINT("offset size: %d", action->file_data_operand.file_offset.offset);
+    DPRINT("data size: %d", action->file_data_operand.provided_data_length);
     // fill unsollicited_response_command
- 
-    uint8_t header_len = original_fifo_length - fifo_get_size(cmd_fifo);
-    fifo_skip(cmd_fifo, data_len);
-    fifo_put(&(*unsollicited_response_command)->alp_command_fifo, alp_data, header_len + data_len);
-    DPRINT_DATA(alp_data, header_len + data_len);
+    alp_append_return_file_data_action(*unsollicited_response_command, action->file_data_operand.file_offset.file_id,
+        action->file_data_operand.file_offset.offset, action->file_data_operand.provided_data_length, action->file_data_operand.data);
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_create_file(alp_command_t* command) {
-    alp_operand_file_header_t operand;
-    error_t err;
-    err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-    operand = alp_parse_file_header_operand(command);
-    DPRINT("CREATE FILE %i", operand.file_id);
-    
-    d7ap_fs_init_file(operand.file_id, &operand.file_header, NULL);
-
+static alp_status_codes_t process_op_create_file(alp_action_t* action) {
+    DPRINT("CREATE FILE %i", action->file_header_operand.file_id);
+    d7ap_fs_init_file(action->file_header_operand.file_id, &action->file_header_operand.file_header, NULL);
     return ALP_STATUS_OK;
 }
 
@@ -595,7 +528,6 @@ static void forward_command(alp_command_t* command, alp_interface_config_t* itf_
             if (command->trans_id == 0)
                 command->trans_id = command->tag_id; // interface does not provide transaction tracking, using tag_id
 
-            DPRINT("!!! fwded cmd trans_id %i", command->trans_id);
             if (error) {
                 DPRINT("transmit returned error %x", error);
                 alp_layer_forwarded_command_completed(command->trans_id, &error, NULL); // TODO return error to caller instead?
@@ -644,7 +576,6 @@ static void transmit_response_to_serial(alp_command_t* resp, alp_interface_statu
 static void transmit_response(alp_command_t* req, alp_command_t* resp)
 {
     DPRINT("async response to cmd tag %i, ori itf %i completed %i", req->tag_id, req->origin_itf_id, resp->is_response_completed);
-
     // when the command originates from the app code call callbacks directly, since this is not a 'real' interface
     if (req->origin_itf_id == ALP_ITF_ID_HOST) {
         transmit_response_to_app(resp);
@@ -692,58 +623,57 @@ void process_async(void* arg)
     alp_interface_config_t forward_interface_config;
     alp_command_t* resp_command = alp_layer_command_alloc(false, false);
     alp_command_t* unsollicited_resp_command = NULL;
-    alp_action_t action; // TODO
+    alp_action_t action;
 
-    while (fifo_get_size(&command->alp_command_fifo) > 0) {
-        // TODO alp_parse_action(&command->alp_command_fifo, &action);
-        alp_control_t control;
-        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); // TODO pop control byte
+    while (fifo_get_size(&command->alp_command_fifo) > 0) {      
+        alp_parse_action(command, &action);
+//        alp_control_t control;
+//        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); // TODO pop control byte
         alp_status_codes_t alp_status;
-        switch (control.operation) {
+        switch (action.ctrl.operation) {
         case ALP_OP_READ_FILE_DATA:
-            alp_status = process_op_read_file_data(command, resp_command);
+            alp_status = process_op_read_file_data(&action, resp_command);
             break;
         case ALP_OP_READ_FILE_PROPERTIES:
-            alp_status = process_op_read_file_properties(command, resp_command);
+            alp_status = process_op_read_file_properties(&action, resp_command);
             break;
         case ALP_OP_WRITE_FILE_DATA:
-            alp_status = process_op_write_file_data(command);
+            alp_status = process_op_write_file_data(&action);
             break;
         case ALP_OP_WRITE_FILE_PROPERTIES:
-            alp_status = process_op_write_file_properties(command);
+            alp_status = process_op_write_file_properties(&action);
             break;
         case ALP_OP_BREAK_QUERY:
-            alp_status = process_op_break_query(command);
+            alp_status = process_op_break_query(&action);
             break;
         case ALP_OP_STATUS:
-            alp_status = process_op_status(command);
+            alp_status = process_op_status(&action, command);
             break;
         case ALP_OP_RESPONSE_TAG:;
             uint8_t resp_tag_id;
             alp_status = process_op_response_tag(command, &resp_tag_id, &command->is_response_completed, &command->is_response_error);
             command->is_response = true;
-            DPRINT("!! t id %i", command->tag_id);
             assert(command->tag_id == 0 || command->tag_id == resp_tag_id);
             command->tag_id = resp_tag_id;
             break;
         case ALP_OP_FORWARD:
-            alp_status = process_op_forward(command, &command->forward_itf_id, &forward_interface_config);
+            alp_status = process_op_forward(&action, &command->forward_itf_id, &forward_interface_config);
             break;
         case ALP_OP_INDIRECT_FORWARD:
-            alp_status = process_op_indirect_forward(command, &command->forward_itf_id, &forward_interface_config);
+            alp_status = process_op_indirect_forward(&action, &command->forward_itf_id, &forward_interface_config);
             break;
         case ALP_OP_REQUEST_TAG:;
-            alp_status = process_op_request_tag(command, &command->tag_id, &command->respond_when_completed);
+            alp_status = process_op_request_tag(&action, &command->tag_id, &command->respond_when_completed);
             command->is_tag_requested = true;
             break;
         case ALP_OP_RETURN_FILE_DATA:
-            alp_status = process_op_return_file_data(command, &unsollicited_resp_command);
+            alp_status = process_op_return_file_data(&action, &unsollicited_resp_command);
             break;
         case ALP_OP_CREATE_FILE:
-            alp_status = process_op_create_file(command);
+            alp_status = process_op_create_file(&action);
             break;
         default:
-            DPRINT("op %i not implemented\n", control.operation);
+            DPRINT("op %i not implemented\n", action.ctrl.operation);
             alp_status = ALP_STATUS_UNKNOWN_OPERATION;
             assert(false); // TODO return error
         }

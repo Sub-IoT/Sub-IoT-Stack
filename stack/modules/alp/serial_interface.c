@@ -68,7 +68,6 @@ static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
 
     alp_command_t* command = alp_layer_command_alloc(false, false);
     command->origin_itf_id = ALP_ITF_ID_SERIAL;
-    
     alp_append_interface_status(command, &serial_itf_status);
     fifo_put(&command->alp_command_fifo, alp_command, alp_command_len);
     // alp_layer_process(command->alp_command, fifo_get_size(&command->alp_command_fifo));
