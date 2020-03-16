@@ -300,6 +300,7 @@ bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, al
 
 static alp_status_codes_t process_op_break_query(alp_action_t* action)
 {
+    
     DPRINT("BREAK QUERY");
     assert(action->query_operand.code.type
         == QUERY_CODE_TYPE_ARITHM_COMP_WITH_VALUE_IN_QUERY); // TODO only arithm comp with value type is implemented for
@@ -694,7 +695,19 @@ void process_async(void* arg)
             }
         }
     }
-
+    
+    if (unsollicited_resp_command != NULL) {
+        if (use_serial_itf) {
+            DPRINT("Unsollicited response, sending to serial");
+            transmit_response_to_serial(unsollicited_resp_command, &command->origin_itf_status);
+        } else {
+            DPRINT("Unsollicited response, sending to app");
+            transmit_response_to_app(unsollicited_resp_command);
+        }
+        
+        free_command(unsollicited_resp_command);
+    }
+    
     DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
         command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
     if (command->is_response) {
@@ -739,18 +752,6 @@ void process_async(void* arg)
             }
 
             transmit_response(command, resp_command);
-        }
-
-        if (unsollicited_resp_command != NULL) {
-            if (use_serial_itf) {
-                DPRINT("Unsollicited response, sending to serial");
-                transmit_response_to_serial(unsollicited_resp_command, &command->origin_itf_status);
-            } else {
-                DPRINT("Unsollicited response, sending to app");
-                transmit_response_to_app(unsollicited_resp_command);
-            }
-
-            free_command(unsollicited_resp_command);
         }
     }
 
