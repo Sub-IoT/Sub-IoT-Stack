@@ -517,7 +517,6 @@ static void forward_command(alp_command_t* command, alp_interface_config_t* itf_
                 interfaces[i]->init(itf_config);
                 current_itf_deinit = interfaces[i]->deinit;
             }
-
             uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
             assert(forwarded_alp_size <= ALP_PAYLOAD_MAX_SIZE);
             fifo_pop(&command->alp_command_fifo, command->alp_command, forwarded_alp_size);
@@ -574,6 +573,18 @@ static void transmit_response_to_serial(alp_command_t* resp, alp_interface_statu
     }
 }
 
+static alp_interface_t* find_interface(uint8_t itf_id)
+{
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+        if ((interfaces[i] != NULL) && (interfaces[i]->itf_id == itf_id)) {
+            return interfaces[i];
+        }
+    }
+
+    DPRINT("interface %i not found", itf_id);
+    return NULL;
+}
+
 static void transmit_response(alp_command_t* req, alp_command_t* resp)
 {
     DPRINT("async response to cmd tag %i, ori itf %i completed %i", req->tag_id, req->origin_itf_id, resp->is_response_completed);
@@ -583,31 +594,26 @@ static void transmit_response(alp_command_t* req, alp_command_t* resp)
         return;
     }
 
-    bool found = false;
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-        if ((interfaces[i] != NULL) && (interfaces[i]->itf_id == req->origin_itf_id)) {
-            uint8_t alp_response_length = (uint8_t)fifo_get_size(&resp->alp_command_fifo);
-            uint8_t expected_response_length = 0; // TODO alp_get_expected_response_length(&resp->alp_command_fifo);
-            //fifo_pop(&command->alp_response_fifo, command->alp_response, alp_response_length);
-            DPRINT("interface found, sending len %i, expect %i answer", alp_response_length, expected_response_length);
-            found = true;
-            error_t err = interfaces[i]->send_command(resp->alp_command, alp_response_length, expected_response_length, &resp->trans_id, session_config_buffer);
-            if (err == SUCCESS) {
-                free_command(resp); // TODO req
-            } else {
-                assert(false); // TODO
-            }
-
-            break;
-        }
-    }
-    if (!found) {
+    alp_interface_t* interface = find_interface(req->origin_itf_id);
+    if(interface == NULL)  {
         DPRINT("interface %i not found", req->origin_itf_id);
-        assert(false);
+        assert(false); // TODO error handling
+    }
+    
+    uint8_t alp_response_length = (uint8_t)fifo_get_size(&resp->alp_command_fifo);
+    uint8_t expected_response_length = 0; // TODO alp_get_expected_response_length(&resp->alp_command_fifo);
+    DPRINT("interface found, sending len %i, expect %i answer", alp_response_length, expected_response_length);
+    error_t err = interface->send_command(resp->alp_command, alp_response_length, expected_response_length, &resp->trans_id, session_config_buffer);
+    if (err == SUCCESS) {
+        free_command(resp); // TODO req
+    } else {
+        assert(false); // TODO
     }
 }
 
-void process_async(void* arg)
+
+
+static void process_async(void* arg)
 {
     (void)arg; // suppress unused warning
     alp_command_t* command = NULL;
@@ -618,7 +624,7 @@ void process_async(void* arg)
     if (fifo_get_size(&command_fifo) > 0) {
         sched_post_task_prio(&process_async, MIN_PRIORITY, 0);
     }
-    
+
     DPRINT("process command");
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     alp_interface_config_t forward_interface_config;
@@ -626,10 +632,10 @@ void process_async(void* arg)
     alp_command_t* unsollicited_resp_command = NULL;
     alp_action_t action;
 
-    while (fifo_get_size(&command->alp_command_fifo) > 0) {      
+    while (fifo_get_size(&command->alp_command_fifo) > 0) {
         alp_parse_action(command, &action);
-//        alp_control_t control;
-//        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); // TODO pop control byte
+        //        alp_control_t control;
+        //        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); // TODO pop control byte
         alp_status_codes_t alp_status;
         switch (action.ctrl.operation) {
         case ALP_OP_READ_FILE_DATA:
@@ -652,7 +658,8 @@ void process_async(void* arg)
             break;
         case ALP_OP_RESPONSE_TAG:;
             uint8_t resp_tag_id;
-            alp_status = process_op_response_tag(command, &resp_tag_id, &command->is_response_completed, &command->is_response_error);
+            alp_status = process_op_response_tag(
+                command, &resp_tag_id, &command->is_response_completed, &command->is_response_error);
             command->is_response = true;
             assert(command->tag_id == 0 || command->tag_id == resp_tag_id);
             command->tag_id = resp_tag_id;
@@ -686,15 +693,26 @@ void process_async(void* arg)
 
         if (command->forward_itf_id != ALP_ITF_ID_HOST) {
             if (!command->is_response) {
-                //fifo_skip(&command->alp_command_fifo, parse_command_index);
+                // fifo_skip(&command->alp_command_fifo, parse_command_index);
                 forward_command(command, &forward_interface_config);
-                free_command(resp_command); // command itself will be free-ed when interface responds with this command with correct tag
+                free_command(resp_command); // command itself will be free-ed when interface responds with this command
+                                            // with correct tag
                 return;
             } else {
                 // response received over interface we forwarded to, stop parsing to return rest of command
             }
         }
     }
+
+#ifdef MODULE_D7AP
+    if (command->use_d7aactp) {
+        DPRINT("Using D7AActP, transmit response to the configured interface");
+        resp_command->forward_itf_id = command->d7aactp_interface_config.itf_id;
+        forward_command(resp_command, &command->d7aactp_interface_config);
+        free_command(command);
+        return;
+    }
+#endif
     
     if (unsollicited_resp_command != NULL) {
         if (use_serial_itf) {
@@ -754,7 +772,7 @@ void process_async(void* arg)
             transmit_response(command, resp_command);
         }
     }
-
+    
     free_command(resp_command);
     free_command(command);
     return;
@@ -768,14 +786,13 @@ bool alp_layer_process(alp_command_t* command)
 //    }
     
     //fifo_put(&command->alp_command_fifo, payload, len);
- 
+
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     uint8_t expected_response_length = alp_get_expected_response_length(command);
     DPRINT("This ALP command will initiate a response containing <%d> bytes\n", expected_response_length);
     if (expected_response_length == 0) {
         command->respond_when_completed = false;
     }
-    
     // add to fifo for later processing
     error_t rtc = fifo_put(&command_fifo, (uint8_t*)&command, sizeof(alp_command_t*));
     rtc = sched_post_task_prio(&process_async, MIN_PRIORITY, NULL);
@@ -783,6 +800,7 @@ bool alp_layer_process(alp_command_t* command)
     
     return (expected_response_length > 0);
 }
+
 
 void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status)
 {
@@ -827,27 +845,18 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
 }
 
 #ifdef MODULE_D7AP
-void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
+void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
     // TODO refactor, might be removed
-//    alp_command_t* command = alp_layer_command_alloc(false);
-//    assert(command != NULL);
+    alp_command_t* command = alp_layer_command_alloc(false, false);
+    assert(command != NULL);
 
-//    memcpy(command->alp_command, alp_command, alp_command_length);
-//    fifo_init_filled(&(command->alp_command_fifo), command->alp_command, alp_command_length, ALP_PAYLOAD_MAX_SIZE);
-//    fifo_init(&(command->alp_response_fifo), command->alp_response, ALP_PAYLOAD_MAX_SIZE);
-
-//    alp_layer_parse_and_execute_alp_command(command);
-
-//    uint8_t expected_response_length = alp_get_expected_response_length(command->alp_response_fifo);
-//    error_t error = d7ap_send(alp_client_id, session_config, command->alp_response,
-//        fifo_get_size(&(command->alp_response_fifo)), expected_response_length, &command->trans_id);
-
-//    if (error)
-//    {
-//        DPRINT("d7ap_send returned an error %x", error);
-//        free_command(command);
-//    }
+    command->use_d7aactp = true;
+    memcpy(&command->d7aactp_interface_config, interface_config, sizeof(alp_interface_config_t));
+    error_t e = fifo_put(&command->alp_command_fifo, alp_command, alp_command_length);
+    assert(e == SUCCESS);
+    
+    alp_layer_process(command);
 }
 #endif // MODULE_D7AP
 
