@@ -101,7 +101,7 @@ void alp_layer_register_interface(alp_interface_t* interface);
 bool alp_layer_process(alp_command_t* command);
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status); // TODO merge with alp_layer_process_command()?
 void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
-void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
+void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length);
 
 
 alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond); // TODO expose?

@@ -39,6 +39,8 @@
 
 #include "fifo.h"
 
+#include "modules_defs.h"
+
 #define MODULE_ALP_INTERFACE_SIZE 10
 
 #define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
@@ -284,6 +286,10 @@ typedef struct {
     uint8_t tag_id;
     alp_interface_status_t origin_itf_status;
     alp_itf_id_t origin_itf_id; // TODO can be removed, itf id stored in origin_itf_status
+#ifdef MODULE_D7AP // TODO add separate flag to disable D7AActP?
+    bool use_d7aactp;
+    alp_interface_config_t d7aactp_interface_config;
+#endif
     fifo_t alp_command_fifo;
     uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;

@@ -101,6 +101,7 @@ static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result
 
 static error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
     DPRINT("sending D7 packet");
+
     if(itf_cfg != NULL) {
         return d7ap_send(alp_client_id, (d7ap_session_config_t*)&itf_cfg->itf_config, payload, payload_length, expected_response_length, trans_id);
     } else {
