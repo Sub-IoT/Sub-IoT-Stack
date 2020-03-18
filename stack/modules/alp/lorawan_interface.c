@@ -24,6 +24,7 @@
 #include "lorawan_stack.h"
 #include "string.h"
 #include "log.h"
+#include "errors.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -96,6 +97,7 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
 
 static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
 {
+    (void)expected_response_length; // suppress unused warning
     alp_interface_config_lorawan_otaa_t* lorawan_itf_cfg = (alp_interface_config_lorawan_otaa_t*)itf_cfg;
     if(!otaa_just_inited && (lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa))) {
         DPRINT("sending otaa payload");
@@ -105,7 +107,7 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
     } else { //OTAA not joined yet or still initing
         DPRINT("OTAA not joined yet");
         otaa_just_inited = false;
-        alp_command_t* command = alp_layer_get_command_by_transid(*trans_id, ALP_ITF_ID_LORAWAN_OTAA);
+        // alp_command_t* command = alp_layer_get_command_by_transid(*trans_id, ALP_ITF_ID_LORAWAN_OTAA);
         // TODO why? fifo_put(&command->alp_response_fifo, payload, payload_length);
         lorawan_error_handler(trans_id, LORAWAN_STACK_ERROR_NOT_JOINED);
     }
@@ -113,6 +115,7 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
 }
 
 static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
+    (void)expected_response_length; // suppress unused warning
     alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
     if(!abp_just_inited) {
         lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);

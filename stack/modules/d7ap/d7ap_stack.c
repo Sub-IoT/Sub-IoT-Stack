@@ -273,10 +273,13 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
 
     session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id & 0x00FF);
 
-    if (trans_id != NULL)
+    if (trans_id != NULL) {
         *trans_id = session->trans_id[session->request_nb];
-
-    DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
+        DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
+    } else {
+        DPRINT("[D7AP] request posted with request_nb %d", session->request_nb);
+    }
+    
     DPRINT_DATA(payload, len);
 
     session->request_nb++;

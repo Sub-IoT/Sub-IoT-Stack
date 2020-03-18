@@ -192,39 +192,17 @@ static void parse_operand_file_data(alp_command_t* command, alp_action_t* action
     action->file_data_operand.provided_data_length = alp_parse_length_operand(cmd_fifo);
     assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
     fifo_pop(cmd_fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
+    DPRINT("parsed write file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
 }
 
 static void parse_operand_file_data_request(alp_command_t* command, alp_action_t* action)
 {
     action->file_data_request_operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
     action->file_data_request_operand.requested_data_length = alp_parse_length_operand(&command->alp_command_fifo);
-}
-
-static void parse_op_write_file_data(alp_command_t* command, alp_action_t* action) {
-    parse_operand_file_data(command, action);
-    DPRINT("parsed write file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
-}
-
-static void parse_op_read_file_data(alp_command_t* command, alp_action_t* action) {
-    parse_operand_file_data_request(command, action);
     DPRINT("parsed read file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
 }
 
-static void parse_op_return_file_data(alp_command_t* command, alp_action_t* action) {
-    parse_operand_file_data(command, action);
-    DPRINT("parsed return file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
-}
-
-static void parse_op_return_tag(alp_command_t* command, alp_action_t* action, bool b6, bool b7) {
-    fifo_t* cmd_fifo = &command->alp_command_fifo;
-    action->tag_response.completed = b7;
-    action->tag_response.error = b6;
-    assert(fifo_pop(cmd_fifo, &action->tag_response.tag_id, 1) == SUCCESS);
-    DPRINT("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed,
-        action->tag_response.error);
-}
-
-static void parse_op_return_status(alp_command_t* command, alp_action_t* action, bool b6, bool b7)
+static void parse_operand_status(alp_command_t* command, alp_action_t* action, bool b6, bool b7)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
     if (!b7 && !b6) {
@@ -276,7 +254,7 @@ static void parse_op_forward(alp_command_t* command, alp_action_t* action)
     }
 }
 
-static void parse_op_read_file_properties(alp_command_t* command, alp_action_t* action)
+static void parse_operand_file_id(alp_command_t* command, alp_action_t* action)
 {
     fifo_pop(&command->alp_command_fifo, &action->file_id_operand.file_id, 1);
     DPRINT("READ FILE PROPERTIES %i", action->file_id_operand.file_id);
@@ -337,7 +315,6 @@ static void parse_operand_tag_id(alp_command_t* command, alp_action_t* action)
 
 static void parse_operand_interface_config(alp_command_t* command, alp_action_t* action)
 {
-    // TODO move session config to alp_command_t struct
     error_t err;
     fifo_t* cmd_fifo = &command->alp_command_fifo;
     bool found = false;
@@ -421,33 +398,28 @@ void alp_parse_action(alp_command_t* command, alp_action_t* action)
     DPRINT("ALP op %i", action->ctrl.operation);
     
     switch (action->ctrl.operation) {
-        // TODO call parse_operand_ fn, remove duplicates
     case ALP_OP_WRITE_FILE_DATA:
-        parse_op_write_file_data(command, action);
+    case ALP_OP_RETURN_FILE_DATA:
+        parse_operand_file_data(command, action);
         break;
     case ALP_OP_READ_FILE_DATA:
-        parse_op_read_file_data(command, action);
+        parse_operand_file_data_request(command, action);
         break;
     case ALP_OP_READ_FILE_PROPERTIES:
-        parse_op_read_file_properties(command, action);
+        parse_operand_file_id(command, action);
         break;
     case ALP_OP_WRITE_FILE_PROPERTIES:
     case ALP_OP_CREATE_FILE:
         parse_operand_file_header(command, action);
         break;
-    case ALP_OP_RETURN_FILE_DATA:
-        parse_op_return_file_data(command, action);
-        break;
-    case ALP_OP_RESPONSE_TAG:
-        parse_op_return_tag(command, action, action->ctrl.b6, action->ctrl.b7);
-        break;
     case ALP_OP_STATUS:
-        parse_op_return_status(command, action, action->ctrl.b6, action->ctrl.b7);
+        parse_operand_status(command, action, action->ctrl.b6, action->ctrl.b7);
         break;
     case ALP_OP_BREAK_QUERY:
     case ALP_OP_ACTION_QUERY:
         parse_operand_query(command, action);
         break;
+    case ALP_OP_RESPONSE_TAG:
     case ALP_OP_REQUEST_TAG:
         parse_operand_tag_id(command, action);
         break;

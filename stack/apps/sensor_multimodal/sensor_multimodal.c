@@ -71,7 +71,7 @@ network_driver_t* current_network_driver;
 static alp_init_args_t alp_init_args;
 
 // Define the D7 interface configuration used for sending the ALP command on
-static alp_interface_config_t itf_cfg = {
+static alp_interface_config_d7ap_t itf_cfg = {
   .itf_id = ALP_ITF_ID_D7ASP,
   .d7ap_session_config = {
     .qos = {
