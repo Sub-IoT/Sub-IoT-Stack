@@ -457,7 +457,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
         hw_radio_set_preamble_size(preamble_size_lo_rate);
-        set_preamble_detector(preamble_detector_size_lo_rate, preamble_tol_lo_rate);
+        hw_radio_set_preamble_detector(preamble_detector_size_lo_rate, preamble_tol_lo_rate);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
@@ -468,7 +468,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
         hw_radio_set_preamble_size(preamble_size_normal_rate);
-        set_preamble_detector(preamble_detector_size_normal_rate, preamble_tol_normal_rate);
+        hw_radio_set_preamble_detector(preamble_detector_size_normal_rate, preamble_tol_normal_rate);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
@@ -479,7 +479,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
         hw_radio_set_preamble_size(preamble_size_hi_rate);
-        set_preamble_detector(preamble_detector_size_hi_rate, preamble_tol_hi_rate);
+        hw_radio_set_preamble_detector(preamble_detector_size_hi_rate, preamble_tol_hi_rate);
     }
 #ifdef USE_SX127X
     else if(channel->channel_header.ch_class == PHY_CLASS_LORA)
@@ -558,7 +558,7 @@ void fact_settings_file_change_callback(uint8_t file_id)
     rssi_smoothing = fact_settings[46];
     rssi_offset = fact_settings[47];
 
-    set_rssi_config(rssi_smoothing, rssi_offset);
+    hw_radio_set_rssi_config(rssi_smoothing, rssi_offset);
 
     lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+48)));
     lora_SF = (uint8_t)fact_settings[52];
@@ -594,9 +594,17 @@ error_t phy_init(void) {
 #endif
 
 #ifdef HAL_RADIO_USE_HW_DC_FREE
-    hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
+    if (default_channel_id.channel_header.ch_coding == PHY_CODING_RFU)
+        hw_radio_set_dc_free(HW_DC_FREE_NONE);
+    else
+        hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
 #else
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
+#endif
+
+#ifdef HAL_RADIO_USE_HW_FEC
+    uint8_t enable = (default_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) ? 1 : 0;
+    hw_radio_set_fec(enable);
 #endif
 
     fact_settings_file_change_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID); // trigger read

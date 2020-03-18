@@ -55,12 +55,14 @@ void packet_init(packet_t* packet)
 void packet_assemble(packet_t* packet)
 {
     uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
-    uint8_t* nwl_payload;
 
     data_ptr += dll_assemble_packet_header(packet, data_ptr);
 
     data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
-    nwl_payload = data_ptr;
+
+#if defined(MODULE_D7AP_NLS_ENABLED)
+    uint8_t* nwl_payload = data_ptr;
+#endif
 
     data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
 

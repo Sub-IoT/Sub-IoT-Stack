@@ -396,11 +396,11 @@ static void init_regs() {
   // TODO burst write reg?
 }
 
-void set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol) {
+void hw_radio_set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol) {
   write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | (preamble_detector_size-1) << 5 | preamble_tol);
 }
 
-void set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset) {
+void hw_radio_set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset) {
   write_reg(REG_RSSICONFIG, rssi_offset << 3 | rssi_smoothing);
 
   rssi_smoothing_full = 2 << rssi_smoothing;
