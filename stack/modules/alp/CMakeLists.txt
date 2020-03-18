@@ -35,13 +35,23 @@ MODULE_BUILD_SETTINGS_FILE()
 #Export the module-specific header files to the application by using
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 
+SET(sources 
+  serial_interface.c
+  alp_layer.c
+  alp.c
+)
+
+if(MODULE_D7AP)
+  list(APPEND sources d7ap_interface.c)
+endif()
+
+if(MODULE_LORAWAN)
+  list(APPEND sources lorawan_interface.c)
+endif()
+
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(alp STATIC
-    serial_interface.c
-    alp_layer.c
-    alp.c
-    lorawan_interface.c
-    d7ap_interface.c
+  ${sources}
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
