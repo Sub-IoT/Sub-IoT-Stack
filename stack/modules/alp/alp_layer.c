@@ -415,15 +415,12 @@ static alp_status_codes_t process_op_forward(alp_action_t* action, uint8_t* itf_
     return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
-static alp_status_codes_t process_op_response_tag(alp_command_t* command, uint8_t* tag_id, bool* is_response_completed, bool* is_response_error)
+static alp_status_codes_t process_op_response_tag(alp_action_t* action, alp_command_t* command, uint8_t* tag_id, bool* is_response_completed, bool* is_response_error)
 {
-    alp_control_t ctrl;
-    error_t err = fifo_pop(&command->alp_command_fifo, &ctrl.raw, 1); assert(err == SUCCESS);
-    err = fifo_pop(&command->alp_command_fifo, tag_id, 1); assert(err == SUCCESS);
-
-    *is_response_completed = ctrl.b7;
-    *is_response_error = ctrl.b6;
-    DPRINT("tag response %i EOP %i, ERR %i\n", *tag_id, ctrl.b7, ctrl.b6);
+    *tag_id = action->tag_id_operand.tag_id;
+    *is_response_completed = action->ctrl.b7;
+    *is_response_error = action->ctrl.b6;
+    DPRINT("tag response %i EOP %i, ERR %i\n", *tag_id, *is_response_completed, *is_response_error);
     return ALP_STATUS_OK;
 }
 
@@ -432,7 +429,7 @@ static alp_status_codes_t process_op_status(alp_action_t* action, alp_command_t*
     if (!action->ctrl.b7 && !action->ctrl.b6) {
         //action status operation
         DPRINT("act status");
-        //TO DO implement handling of action status
+        //TODO implement handling of action status
     } else if (!action->ctrl.b7 && action->ctrl.b6) {
         //interface status operation
         memcpy(&command->origin_itf_status, &action->interface_status, sizeof(alp_interface_status_t));
@@ -473,35 +470,6 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
     DPRINT("CREATE FILE %i", action->file_header_operand.file_id);
     d7ap_fs_init_file(action->file_header_operand.file_id, &action->file_header_operand.file_header, NULL);
     return ALP_STATUS_OK;
-}
-
-void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length, alp_interface_config_t* itf_cfg) {
-    bool found = false;
-    DPRINT("alp cmd size %i", alp_command_length);
-    assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
-
-    alp_command_t* command = alp_layer_command_alloc(true, true);
-    assert(command != NULL);
-
-    fifo_init_filled(&command->alp_command_fifo, alp_command, alp_command_length, alp_command_length+1);
-    error_t err = SUCCESS;
-
-    for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == itf_cfg->itf_id)) {
-        err = interfaces[i]->send_command(alp_command, alp_command_length, alp_get_expected_response_length(command), &command->trans_id, itf_cfg);
-        found = true;
-        break;
-      }
-    }
-    if(!found) {
-      DPRINT("interface %i not found", itf_cfg->itf_id);
-      assert(false);
-    }
-
-    if(err) {
-      DPRINT("transmit returned an error %x", err);
-      free_command(command);
-    }
 }
 
 static void forward_command(alp_command_t* command, alp_interface_config_t* itf_config)
@@ -605,7 +573,7 @@ static void transmit_response(alp_command_t* req, alp_command_t* resp)
     DPRINT("interface found, sending len %i, expect %i answer", alp_response_length, expected_response_length);
     error_t err = interface->send_command(resp->alp_command, alp_response_length, expected_response_length, &resp->trans_id, session_config_buffer);
     if (err == SUCCESS) {
-        free_command(resp); // TODO req
+        free_command(resp);
     } else {
         assert(false); // TODO
     }
@@ -616,7 +584,7 @@ static void transmit_response(alp_command_t* req, alp_command_t* resp)
 static void process_async(void* arg)
 {
     (void)arg; // suppress unused warning
-    alp_command_t* command = NULL;
+    static alp_command_t* command = NULL;
     if (fifo_pop(&command_fifo, (void*)&command, sizeof(alp_command_t*)) != SUCCESS) {
         return;
     }
@@ -630,12 +598,10 @@ static void process_async(void* arg)
     alp_interface_config_t forward_interface_config;
     alp_command_t* resp_command = alp_layer_command_alloc(false, false);
     alp_command_t* unsollicited_resp_command = NULL;
-    alp_action_t action;
+    static alp_action_t action;
 
     while (fifo_get_size(&command->alp_command_fifo) > 0) {
         alp_parse_action(command, &action);
-        //        alp_control_t control;
-        //        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); // TODO pop control byte
         alp_status_codes_t alp_status;
         switch (action.ctrl.operation) {
         case ALP_OP_READ_FILE_DATA:
@@ -658,8 +624,7 @@ static void process_async(void* arg)
             break;
         case ALP_OP_RESPONSE_TAG:;
             uint8_t resp_tag_id;
-            alp_status = process_op_response_tag(
-                command, &resp_tag_id, &command->is_response_completed, &command->is_response_error);
+            alp_status = process_op_response_tag(&action, command, &resp_tag_id, &command->is_response_completed, &command->is_response_error);
             command->is_response = true;
             assert(command->tag_id == 0 || command->tag_id == resp_tag_id);
             command->tag_id = resp_tag_id;
@@ -693,7 +658,6 @@ static void process_async(void* arg)
 
         if (command->forward_itf_id != ALP_ITF_ID_HOST) {
             if (!command->is_response) {
-                // fifo_skip(&command->alp_command_fifo, parse_command_index);
                 forward_command(command, &forward_interface_config);
                 free_command(resp_command); // command itself will be free-ed when interface responds with this command
                                             // with correct tag
@@ -780,23 +744,18 @@ static void process_async(void* arg)
 
 bool alp_layer_process(alp_command_t* command)
 {
-//    alp_command_t* command = alp_layer_command_alloc(false, false);
-//    if (command == NULL) {
-//        assert(false); // TODO error handling
-//    }
-    
-    //fifo_put(&command->alp_command_fifo, payload, len);
-
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     uint8_t expected_response_length = alp_get_expected_response_length(command);
     DPRINT("This ALP command will initiate a response containing <%d> bytes\n", expected_response_length);
     if (expected_response_length == 0) {
         command->respond_when_completed = false;
     }
+    
     // add to fifo for later processing
-    error_t rtc = fifo_put(&command_fifo, (uint8_t*)&command, sizeof(alp_command_t*));
-    rtc = sched_post_task_prio(&process_async, MIN_PRIORITY, NULL);
-    assert(rtc == SUCCESS || rtc == EALREADY);
+    error_t e = fifo_put(&command_fifo, (uint8_t*)&command, sizeof(alp_command_t*));
+    assert(e == SUCCESS); // TODO error handling
+    e = sched_post_task_prio(&process_async, MIN_PRIORITY, NULL);
+    assert(e == SUCCESS || e == EALREADY);
     
     return (expected_response_length > 0);
 }
@@ -804,7 +763,6 @@ bool alp_layer_process(alp_command_t* command)
 
 void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status)
 {
-    // TODO
     DPRINT("command completed with trans id %i and error location %i: value %i", trans_id, error, *error);
     assert(status != NULL);
     alp_command_t* command = alp_layer_get_command_by_transid(trans_id, status->itf_id);
@@ -818,12 +776,8 @@ void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, al
     resp->is_response_error = (*error != SUCCESS);
     resp->tag_id = command->tag_id;
     alp_append_interface_status(resp, status);
-
     // we do not add a tag response, since we know the original command using the trans_id
-    // alp_layer_process(resp->alp_command, fifo_get_size(&resp->alp_command_fifo));
     alp_layer_process(resp);
-
-    //free_command(command);
 }
 
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status)
@@ -840,7 +794,6 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
     alp_append_interface_status(resp, itf_status);
     // we do not add a tag response, since we know the original command using the trans_id
     fifo_put(&resp->alp_command_fifo, payload, payload_length);
-    //alp_layer_process(resp->alp_command, fifo_get_size(&resp->alp_command_fifo));
     alp_layer_process(resp);
 }
 

@@ -64,6 +64,8 @@ IF(NOT PLATFORM)
 	SET(PLATFORM "B_L072Z_LRWAN1" CACHE STRING "Choose the platform to compile for.")
 ENDIF()
 
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/modules")
+
 #Then load the Framework
 ADD_SUBDIRECTORY("framework")
 

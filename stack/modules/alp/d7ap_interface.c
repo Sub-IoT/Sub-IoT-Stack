@@ -75,12 +75,6 @@ static void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len,
     alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
     DPRINT(&d7_status, d7_status.len);
     alp_layer_received_response(trans_id, payload, len, &d7_status);
-    
-    //    uint8_t tag_id = (uint8_t)(trans_id & 0xFF);
-    //    alp_command_t* resp = alp_layer_command_alloc(false);
-    //    alp_append_tag_response_action(&resp->alp_command_fifo, tag_id, false, false); // TODO err flag?
-    //    fifo_put(&resp->alp_command_fifo, payload, len);
-    //    alp_layer_process_command(resp->alp_command, fifo_get_size(&resp->alp_command_fifo), ALP_ITF_ID_D7ASP, &d7_status); // TODO remove status?
 }
 
 static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {

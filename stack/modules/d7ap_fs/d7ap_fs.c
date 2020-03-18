@@ -84,7 +84,6 @@ static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interfac
   assert(action_len <= FILE_SIZE_MAX);
   fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
 
-  //alp_layer_execute_command_over_itf(file_buffer, action_len, &itf_cfg);
   alp_layer_process_d7aactp(&itf_cfg, file_buffer, action_len);
 }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)

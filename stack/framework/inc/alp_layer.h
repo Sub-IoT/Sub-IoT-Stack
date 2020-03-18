@@ -37,15 +37,14 @@
 
 #include "fifo.h"
 #include "alp.h"
+
+#ifdef MODULE_D7AP
 #include "d7ap.h"
+#endif
+
+#ifdef MODULE_ALP
 #include "lorawan_stack.h"
-
-
-typedef enum
-{
-  STATE_NOT_INITIALIZED,
-  STATE_INITIALIZED
-} interface_state_t; //ADD MORE STATES?
+#endif
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(alp_interface_status_t* result, alp_command_t* command);
@@ -69,22 +68,12 @@ typedef struct {
 } alp_init_args_t;
 
 
-
 /*!
  * \brief Initializes the ALP layer
  * \param init_args Specifies the callback function pointers
  * \param use_serial_interface Specifies if the ALP layer should initialize and use a serial interface
  */
 void alp_layer_init(alp_init_args_t* init_args, bool use_serial_interface);
-
-
-/*!
- * \brief Execute the command asynchronously against the provided session configuration
- * \param alp_command
- * \param alp_command_length
- * \param session_config
- */
-void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length,  alp_interface_config_t* itf_cfg);
 
 /*!
  * \brief Register a new interface in alp_layer
@@ -93,20 +82,54 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
 void alp_layer_register_interface(alp_interface_t* interface);
 
 /*!
+ * \brief Allocates an alp_command_t instance from the pool. Commands are always free-ed by ALP layer when completed.
+ * \param with_tag_request Add a tag request action to the command
+ * \param always_respond When set a response is requested even if there is no respond payload expected from other actions. Only relevant when `with_tag_request` is set
+ * \return 
+ */
+alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond);
+
+/*!
+ * \brief Free an allocated alp_command_t. Note that commands processed by ALP layer are always free-ed by ALP layer when completed already.
+ * \param command Command to free
+ * \return 
+ */
+void alp_layer_command_free(alp_command_t* command);
+
+/*!
  * \brief Processes the ALP command in an asynchronous way
- * \param payload
- * \param len
+ * \param Command Pointer to a command which should be allocated by calling `alp_layer_command_alloc()`. The command will be free-ed by ALP layer.
  * \return True if response payload is to be expected
  */
 bool alp_layer_process(alp_command_t* command);
+
+/*!
+ * \brief To be called by an ALP interface implementation (only those which are aware of transactions) when a response is received.
+ * \param trans_id The transaction id used to lookup the originating request
+ * \param payload Response ALP payloader
+ * \param payload_length Response length
+ * \param itf_status The interface status
+ */
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status); // TODO merge with alp_layer_process_command()?
+
+/*!
+ * \brief To be called by an ALP interface implementation (only those which are aware of transactions) when a command forwarded to this interface is completed.
+ * \param trans_id The transaction id used to lookup the originating request
+ * \param payload Response ALP payloader
+ * \param payload_length Response length
+ * \param itf_status The interface status
+ */
 void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
+
+#ifdef MODULE_D7AP
+/*!
+ * \brief Process a command triggered by D7A Action Protocol, where the resut of the command will be transmitted over the supplied interface
+ * \param interface_config The interface config to transmit the response on
+ * \param alp_command The ALP command to execute
+ * \param alp_command_length Length of the command
+ */
 void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length);
-
-
-alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond); // TODO expose?
-void alp_layer_command_free(alp_command_t* command);
-alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_t itf_id); // TODO alp_layer_forwarded_command_completed ?
+#endif
 
 #endif /* ALP_LAYER_H_ */
 

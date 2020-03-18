@@ -91,24 +91,26 @@ void execute_sensor_measurement()
   // Generate ALP command.
   // We will be sending a return file data action, without a preceding file read request.
   // This is an unsolicited message, where we push the sensor data to the gateway(s).
-  fifo_t alp_command_fifo;
-  fifo_init(&alp_command_fifo, alp_command, sizeof(alp_command));
-
-  alp_append_forward_action(&alp_command_fifo, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
+  
+  // alloc command. This will be freed when the command completes
+  alp_command_t* command = alp_layer_command_alloc(false, false);
+  
+  // forward to the D7 interface
+  alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
 
   // add the return file data action
-  alp_append_return_file_data_action(&alp_command_fifo, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
+  alp_append_return_file_data_action(command, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
 
-  // and execute this
-  // TODO alp_layer_process(alp_command, fifo_get_size(&alp_command_fifo));
+  // and finally execute this
+  alp_layer_process(command);
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
     if(success)
-      log_print_string("Command completed successfully");
+      log_print_string("Command (%i) completed successfully", tag_id);
     else
-      log_print_string("Command failed, no ack received");
+      log_print_string("Command failed, no ack received", tag_id);
 
     // reschedule sensor measurement
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
