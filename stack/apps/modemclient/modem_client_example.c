@@ -67,7 +67,8 @@ void send_counter() {
   static uint8_t counter = 0;
   log_print_string("counter %i", counter);
 
-  modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, &session_config);
+  int8_t tag_id = modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, &session_config);
+  assert(tag_id >= 0);
   //alp_layer_process_raw_indirect_unsolicited_response(alp_command, sizeof (alp_command), 29, false, NULL);
   counter++;
 }
