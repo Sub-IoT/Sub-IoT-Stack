@@ -47,14 +47,15 @@ void modem_init();
 void modem_send_ping();
 void modem_cb_init(modem_callbacks_t* cbs);
 void modem_reinit();
-bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);
-bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class);
-bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class);
-bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
-bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
-bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, alp_interface_config_t* interface_config);
-bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, alp_interface_config_t* interface_config);
-bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
+
+int8_t modem_execute_raw_alp(uint8_t* alp, uint8_t len);
+int8_t modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class);
+int8_t modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class);
+int8_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
+int8_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
+int8_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, alp_interface_config_t* interface_config);
+int8_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, alp_interface_config_t* interface_config);
+int8_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
                                               uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 int8_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
                                                   uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
