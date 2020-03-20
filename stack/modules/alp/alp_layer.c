@@ -113,7 +113,7 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
     for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
         if (commands[i].is_active == false) {
             commands[i].is_active = true;
-            DPRINT("alloc cmd %p in slot %i (%p)", &commands[i], i, &commands[i]);
+            DPRINT("alloc cmd %p in slot %i", &commands[i], i);
             if (with_tag_request) {
                 next_tag_id++;
                 alp_append_tag_request_action(&commands[i], next_tag_id, always_respond);
@@ -357,7 +357,7 @@ static alp_status_codes_t process_op_indirect_forward(
         if (previous_interface_file_id != action->indirect_interface_operand.interface_file_id) {
             if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
                 fs_unregister_file_modified_callback(previous_interface_file_id);
-                fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
+                fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
                 d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1);
                 previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
             } else {
@@ -813,6 +813,3 @@ void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t
 }
 #endif // MODULE_D7AP
 
-#ifdef MODULE_LORAWAN
-
-#endif

@@ -110,7 +110,7 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
     if(success)
       log_print_string("Command (%i) completed successfully", tag_id);
     else
-      log_print_string("Command failed, no ack received", tag_id);
+      log_print_string("Command failed, no ack received");
 
     // reschedule sensor measurement
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
