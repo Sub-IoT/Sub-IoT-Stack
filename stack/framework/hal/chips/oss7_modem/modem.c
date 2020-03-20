@@ -107,7 +107,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
 
   if(command_completed) {
-    DPRINT("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
+    DPRINT("command with tag %i completed with error %i @ %i", command.tag_id, completed_with_error, timer_get_counter_value());
     if(callbacks->command_completed_callback)
       callbacks->command_completed_callback(completed_with_error,command.tag_id);
 
