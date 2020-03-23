@@ -53,7 +53,9 @@
 #define D7A_FILE_VID_SIZE 3
 
 #define D7A_FILE_PHY_STATUS_FILE_ID 0x09
-#define D7A_FILE_PHY_STATUS_MINIMUM_SIZE 15 // maximum size for now is 45 which supports 10 channels
+#define D7A_FILE_PHY_STATUS_MINIMUM_SIZE 15
+#define D7A_FILE_PHY_STATUS_SIZE 45 // maximum size for now is 45 which supports 10 channels
+#define D7A_FILE_PHY_STATUS_CHANNEL_COUNT 10 
 
 #define D7A_FILE_DLL_CONF_FILE_ID	0x0A
 #define D7A_FILE_DLL_CONF_SIZE		7

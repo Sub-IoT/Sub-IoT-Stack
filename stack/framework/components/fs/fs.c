@@ -134,33 +134,16 @@ int _fs_init()
         files[file_id].length = __builtin_bswap32(files[file_id].length);
 #endif
 
+        DPRINT("File %i, bd %i, len %i", file_id, files[file_id].blockdevice_index, files[file_id].length);
         if(_is_file_defined(file_id))
         {
-            switch(files[file_id].blockdevice_index)
-            {
-                case FS_BLOCKDEVICE_TYPE_VOLATILE:
-                {
-                    //wipe volatile memory space
-                    uint8_t default_data[64];
-                    memset(default_data, 0xff, 64);
-                    uint32_t remaining_length = files[file_id].length;
-                    int i = 0;
-                    while(remaining_length > 64) 
-                    {
-                        blockdevice_program(bd[files[file_id].blockdevice_index], default_data, bd_data_offset[files[file_id].blockdevice_index] + (i * 64), 64);
-                        remaining_length -= 64;
-                        i++;
-                    }
-                    blockdevice_program(bd[files[file_id].blockdevice_index], default_data, bd_data_offset[files[file_id].blockdevice_index]  + (i * 64), remaining_length);
-
-                    files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
-                    bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
-                    break;
-                }
-                default:
-                    files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
-                    bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
+            if (files[file_id].blockdevice_index == FS_BLOCKDEVICE_TYPE_VOLATILE) {
+                DPRINT("volatile file (%i) will not be initialized", file_id);
+                break;
             }
+
+            files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
+            bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
 
         }
     }
@@ -265,11 +248,11 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
     assert(bd[files[file_id].blockdevice_index] != NULL);
 
     if(files[file_id].length < offset + length) return -EINVAL;
-
+    
+    DPRINT("fs read_file(file_id %d, offset %d, addr %p, bd %i, length %d)\n",file_id, offset, files[file_id].addr, files[file_id].blockdevice_index, length);
     error_t e = blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
     assert(e == SUCCESS);
 
-    DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)\n",file_id, offset, files[file_id].addr, length);
     return 0;
 }
 

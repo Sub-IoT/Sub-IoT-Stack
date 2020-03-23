@@ -940,6 +940,14 @@ void dll_init()
 
     phy_init();
 
+
+    d7ap_fs_file_header_t volatile_file_header = { .file_permissions = 0, // TODO not implemented
+        .file_properties.storage_class = FS_STORAGE_VOLATILE,
+        .length = D7A_FILE_PHY_STATUS_SIZE,
+        .allocated_length = D7A_FILE_PHY_STATUS_SIZE }; // TODO length for multiple channels
+
+    assert(d7ap_fs_init_file(D7A_FILE_PHY_STATUS_FILE_ID, &volatile_file_header, NULL) == SUCCESS); // TODO error handling
+
     if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
 

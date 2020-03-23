@@ -82,7 +82,7 @@ typedef struct  __attribute__((__packed__))
 
 typedef struct __attribute__((__packed__))
 {
-    uint8_t blockdevice_index; // the members of fs_blockdevice_types_t are required, but more blockdevices can be registered in the futute
+    uint8_t blockdevice_index; // the members of fs_blockdevice_types_t are required, but more blockdevices can be registered in the future
     uint32_t length;
     uint32_t addr;
 } fs_file_t;
