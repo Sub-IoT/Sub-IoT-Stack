@@ -24,14 +24,20 @@
 #include "hwatomic.h"
 #include "stm32_device.h"
 
- // TODO nesting?
+static uint8_t nests = 0;
 
 void start_atomic()
 {  
-  __disable_irq();
+  if(nests == 0)
+    __disable_irq();
+  ++nests;
 }
 
 void end_atomic()
 {
-  __enable_irq();
+  if(nests == 0)
+    return;
+  --nests;
+  if(nests == 0)
+    __enable_irq();
 }
