@@ -121,7 +121,7 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
 {
   int rtc;
   DPRINT("FS init %i, alloc %i", file_id, file_header->allocated_length);
-  assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
+
   // TODO only volatile for now, return error when permanent storage requested
 
   d7ap_fs_file_header_t file_header_big_endian;
