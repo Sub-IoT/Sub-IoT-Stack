@@ -25,6 +25,8 @@
 #include "string.h"
 #include "log.h"
 #include "errors.h"
+#include "framework_defs.h"
+#include "MODULE_ALP_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -70,7 +72,8 @@ void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_st
     memcpy(&payload[5], (uint8_t*)&wait_time, 2);
 }
 
-    void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts) {
+void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts)
+{
     error_t status_buffer = (error_t)status;
     alp_interface_status_t result = (alp_interface_status_t) {
         .itf_id = current_lorawan_interface_type,
@@ -92,13 +95,14 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
     };
     add_interface_status_lorawan(result.itf_status, attempts, status);
 
-    alp_layer_forwarded_command_completed(command->trans_id, NULL, &result);
+    alp_layer_forwarded_command_completed(lorawan_trans_id, NULL, &result); 
 }
 
 static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
 {
     (void)expected_response_length; // suppress unused warning
     alp_interface_config_lorawan_otaa_t* lorawan_itf_cfg = (alp_interface_config_lorawan_otaa_t*)itf_cfg;
+    (*trans_id) = ++lorawan_trans_id;
     if(!otaa_just_inited && (lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa))) {
         DPRINT("sending otaa payload");
         current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
@@ -117,6 +121,7 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
 static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
     (void)expected_response_length; // suppress unused warning
     alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
+    (*trans_id) = ++lorawan_trans_id;    
     if(!abp_just_inited) {
         lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);
         lorawan_itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.network_id);
@@ -139,9 +144,9 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
             .len = 7
         };
         add_interface_status_lorawan(result.itf_status, 1, status);
-        alp_layer_forwarded_command_completed(*trans_id, &status_buffer, &result);
-    } else
-    lorawan_trans_id = *trans_id;
+    } else {
+        lorawan_trans_id = *trans_id;
+    }
 }
 
 static void lorawan_init_otaa(alp_interface_config_t* itf_cfg) {
