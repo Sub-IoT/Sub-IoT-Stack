@@ -167,7 +167,7 @@ config:
     }
 
 end:
-    end_atomic();
+    end_atomic(); //this end_atomic does not do anything when configure_next_event got called
     return status;
 }
 
@@ -319,6 +319,7 @@ static void configure_next_event()
 		if(fire_delay < COUNTER_OVERFLOW_INCREASE)
 		{
 			NG(hw_event_scheduled) = true;
+            end_atomic(); //stop atomic when scheduling a new timer because this needs to wait for a interrupt before writing
 			hw_timer_schedule_delay(HW_TIMER_ID, (hwtimer_tick_t)fire_delay);
 #ifndef NDEBUG	    
 			//check that we didn't try to schedule a timer in the past
