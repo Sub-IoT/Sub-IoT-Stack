@@ -139,14 +139,13 @@ int _fs_init()
         {
             if (files[file_id].blockdevice_index == FS_BLOCKDEVICE_TYPE_VOLATILE) {
                 DPRINT("volatile file (%i) will not be initialized", file_id);
-                break;
+            } else {
+                files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
+                bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;                
             }
-
-            files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
-            bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
-
         }
     }
+    
     return 0;
 }
 
@@ -185,9 +184,6 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     // update file caching for stat lookup
     files[file_id].blockdevice_index = (uint8_t)bd_type;
     files[file_id].length = length;
-
-    // only user files can be created
-    assert(file_id >= 0x40);
 
     if (bd_type == FS_BLOCKDEVICE_TYPE_VOLATILE)
     {
