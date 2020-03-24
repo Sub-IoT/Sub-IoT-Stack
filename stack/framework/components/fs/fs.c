@@ -237,7 +237,6 @@ int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t*
 {
     assert(is_fs_init_completed);
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
-    assert(file_id >= 0x40); // system files may not be inited
    
     return (_fs_create_file(file_id, bd_type, initial_data, length));
 }
