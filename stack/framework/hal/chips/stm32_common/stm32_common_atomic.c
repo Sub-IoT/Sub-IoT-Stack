@@ -24,7 +24,7 @@
 #include "hwatomic.h"
 #include "stm32_device.h"
 
-static uint8_t nests = 0;
+static volatile uint8_t nests = 0;
 
 void start_atomic()
 {  
