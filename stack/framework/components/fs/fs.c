@@ -134,7 +134,7 @@ int _fs_init()
         files[file_id].length = __builtin_bswap32(files[file_id].length);
 #endif
 
-        DPRINT("File %i, bd %i, len %i", file_id, files[file_id].blockdevice_index, files[file_id].length);
+        DPRINT("File %i, bd %i, len %i, addr %i", file_id, files[file_id].blockdevice_index, files[file_id].length, files[file_id].addr);
         if(_is_file_defined(file_id))
         {
             if (files[file_id].blockdevice_index == FS_BLOCKDEVICE_TYPE_VOLATILE) {
