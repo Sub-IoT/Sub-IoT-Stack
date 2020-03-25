@@ -112,7 +112,7 @@ FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_FILE_COUNT)
 SET(FRAMEWORK_FS_USER_FILE_COUNT "10" CACHE STRING "The number of user files in the filesystem")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_USER_FILE_COUNT)
 
-SET(FRAMEWORK_FS_PERMANENT_STORAGE_SIZE "1900" CACHE STRING "The total number of bytes which can be stored in the user filesystem")
+SET(FRAMEWORK_FS_PERMANENT_STORAGE_SIZE "2000" CACHE STRING "The total number of bytes which can be stored in the user filesystem")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_PERMANENT_STORAGE_SIZE)
 
 SET(FRAMEWORK_FS_VOLATILE_STORAGE_SIZE "57" CACHE STRING "The total number of bytes which can be stored in the user filesystem")

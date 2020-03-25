@@ -198,17 +198,20 @@ static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_co
         return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
 
     int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length);
-    if (rc == -ENOENT) {
-        // give the application layer the chance to fullfill this request ...
-        if (init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
-            rc = init_args->alp_unhandled_read_action_cb(&current_status, operand, alp_data);
-    }
-
+    
     if (rc == 0) {
         // fill response
         alp_append_return_file_data_action(resp_command, operand.file_offset.file_id, operand.file_offset.offset,
             operand.requested_data_length, alp_data);
+    } else if (rc == -ENOENT) {
+        // give the application layer the chance to fullfill this request ...
+        if (init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
+            rc = init_args->alp_unhandled_read_action_cb(&current_status, operand, alp_data);
+    } else {
+        DPRINT("d7ap_fs_read_file rc %i\n", rc);
+        assert(false);
     }
+
 
     return ALP_STATUS_OK;
 }
