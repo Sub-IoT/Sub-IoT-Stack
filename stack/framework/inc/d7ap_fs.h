@@ -92,6 +92,7 @@ typedef enum {
 
 void d7ap_fs_init();
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
+int d7ap_fs_init_file_on_blockdevice(uint8_t file_id, uint8_t blockdevice_index, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
