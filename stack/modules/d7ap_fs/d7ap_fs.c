@@ -119,25 +119,29 @@ void d7ap_fs_init()
 
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data)
 {
-  int rtc;
-  DPRINT("FS init %i, alloc %i", file_id, file_header->allocated_length);
+    // init on default permanent or volatile blockdevice based on requested storage class
+    fs_blockdevice_types_t bd_type = (file_header->file_properties.storage_class == FS_STORAGE_VOLATILE)
+        ? FS_BLOCKDEVICE_TYPE_VOLATILE
+        : FS_BLOCKDEVICE_TYPE_PERMANENT;
+    return d7ap_fs_init_file_on_blockdevice(file_id, bd_type, file_header, initial_data);
+}
 
-  // TODO only volatile for now, return error when permanent storage requested
-
-  d7ap_fs_file_header_t file_header_big_endian;
-  memcpy(&file_header_big_endian, file_header, sizeof (d7ap_fs_file_header_t));
-  file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
-  file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
-
-  memset(file_buffer, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
-  memcpy(file_buffer, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
-  if(initial_data != NULL)
-    memcpy(file_buffer + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
-
-  fs_blockdevice_types_t bd_type = (file_header->file_properties.storage_class == FS_STORAGE_VOLATILE) ? FS_BLOCKDEVICE_TYPE_VOLATILE : FS_BLOCKDEVICE_TYPE_PERMANENT;
-
-  rtc = fs_init_file(file_id, bd_type, (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
-  return rtc;
+int d7ap_fs_init_file_on_blockdevice(
+    uint8_t file_id, uint8_t blockdevice_index, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data)
+{
+    DPRINT("FS init %i, alloc %i", file_id, file_header->allocated_length);
+    
+    d7ap_fs_file_header_t file_header_big_endian;
+    memcpy(&file_header_big_endian, file_header, sizeof (d7ap_fs_file_header_t));
+    file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
+    file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
+    
+    memset(file_buffer, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
+    memcpy(file_buffer, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
+    if(initial_data != NULL)
+        memcpy(file_buffer + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
+       
+    return fs_init_file(file_id, blockdevice_index, (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
 }
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
