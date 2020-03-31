@@ -258,7 +258,10 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
     if(files[file_id].length < offset + length) return -EINVAL;
 
     error_t e = blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
-    assert(e == SUCCESS);
+    if(e != SUCCESS) {
+        log_print_string("reading from blockdevice failed, you probably didn't allocate enough memory (volatile or permanent)");
+        assert(false);
+    }
 
     DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)\n",file_id, offset, files[file_id].addr, length);
     return 0;

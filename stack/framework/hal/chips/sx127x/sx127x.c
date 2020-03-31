@@ -63,7 +63,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-// #define testing_ADV
+#define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
@@ -177,6 +177,8 @@ static uint16_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
 static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
+static uint8_t current_preamble_detector_size = 3;
+static uint8_t current_preamble_tol = 15;
 
 static bool fast_hop_enabled = false;
 
@@ -400,7 +402,12 @@ static void init_regs() {
 }
 
 void set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol) {
-  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | (preamble_detector_size-1) << 5 | preamble_tol);
+  if((preamble_detector_size == current_preamble_detector_size) && (preamble_tol == current_preamble_tol))
+    return;
+  DPRINT("set preamble detector to size %i and tol %i with reg values to 0x%02X", preamble_detector_size, preamble_tol, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_ON) | (preamble_detector_size-1) << 5 | preamble_tol);
+  current_preamble_detector_size = preamble_detector_size;
+  current_preamble_tol = preamble_tol;
+  write_reg(REG_PREAMBLEDETECT, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_ON) | (preamble_detector_size-1) << 5 | preamble_tol);
 }
 
 void set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset) {

@@ -324,7 +324,7 @@ void background_scan_return() {
     ready_for_bg_scan = true;
     phy_configure_channel(&scan_automation_channel_list[current_rx_channel_index]);
     phy_enable_fast_hop(false);
-    if(tsched > (10 * channel_list_length)) //if large tsched, set to sleep
+    if(tsched > (10 * channel_list_length) + 50) //if large tsched, set to sleep, TODO: check for a valid threshold
         phy_switch_to_sleep_mode();
 }
 
@@ -568,7 +568,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             if (current_packet->ETA)
             {
-                DPRINT("Start background advertising @ %i", timer_get_counter_value());
+                DPRINT("Start background advertising on %i @ %i", current_packet->phy_config.tx.channel_id.center_freq_index, timer_get_counter_value());
                 uint8_t dll_header_bg_frame[2];
                 dll_assemble_packet_header_bg(current_packet, dll_header_bg_frame);
 

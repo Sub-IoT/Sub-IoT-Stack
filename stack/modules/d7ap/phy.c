@@ -52,7 +52,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-// #define testing_ADV
+#define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
@@ -517,10 +517,11 @@ void phy_configure_channel(const channel_id_t* channel) {
     hw_radio_set_center_freq(center_freq);
 
     current_channel_id = *channel;
-    DPRINT("set channel_header %i, channel_band %i, center_freq_index %i\n",
-           current_channel_id.channel_header_raw,
-           current_channel_id.channel_header.ch_freq_band,
-           current_channel_id.center_freq_index);
+    // DPRINT("set channel_class %i, channel_coding %i, channel_band %i, center_freq_index %i\n",
+    //        current_channel_id.channel_header.ch_class,
+    //        current_channel_id.channel_header.ch_coding,
+    //        current_channel_id.channel_header.ch_freq_band,
+    //        current_channel_id.center_freq_index);
 }
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
@@ -811,6 +812,9 @@ static uint8_t assemble_background_payload()
     crc = __builtin_bswap16(crc_calculate(bg_adv.packet_payload, 4));
     memcpy(&bg_adv.packet_payload[BACKGROUND_DLL_HEADER_LENGTH + sizeof(uint16_t)], &crc, 2);
 
+    DPRINT("next background frame send with encoding %i: ", current_channel_id.channel_header.ch_coding);
+    DPRINT_DATA(bg_adv.packet_payload, BACKGROUND_FRAME_LENGTH);
+
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
         payload_len = fec_encode(bg_adv.packet_payload, BACKGROUND_FRAME_LENGTH);
@@ -823,6 +827,8 @@ static uint8_t assemble_background_payload()
         pn9_encode(bg_adv.packet_payload, BACKGROUND_FRAME_LENGTH);
         payload_len = BACKGROUND_FRAME_LENGTH;
     }
+
+    DPRINT_DATA(bg_adv.packet_payload, payload_len);
 
     return payload_len;
 }
@@ -970,10 +976,12 @@ static void fill_in_fifo(uint16_t remaining_bytes_len)
             // not enough time for sending another BG frame, send the FG frame,
             // prepend with preamble bytes if necessary
             uint16_t preamble_len = 0;
-            uint8_t preamble[24];
+            uint8_t preamble[50]; //to be checked how large the actual preamble can be, this causes a hardfault when it's too small.
 
             preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
             DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d\n", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());
+
+            assert(preamble_len <= sizeof(preamble));
 
             DPRINT("Add preamble_bytes: %d\n", preamble_len);
             memset(preamble, 0xAA, preamble_len);
@@ -1027,7 +1035,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= config->rssi_thr)
     {
-        DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
+        // DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
         phy_switch_to_standby_mode();
         // shut down should be handled in higher layer
         DEBUG_BG_END();
