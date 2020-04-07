@@ -133,6 +133,7 @@ void alp_layer_command_free(alp_command_t* command)
     for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
         if (&commands[i] == command) {
             free_command(command);
+            return;
         }
     }
     
@@ -168,7 +169,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 {
   init_args = alp_init_args;
   use_serial_itf = use_serial_interface;
-  fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT);
+  fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT*sizeof(alp_command_t*));
   init_commands();
 
   if (use_serial_itf)
