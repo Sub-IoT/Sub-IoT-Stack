@@ -98,6 +98,81 @@ MACRO(APP_OPTION option doc default)
     APP_PARAM( ${option} ${default} BOOL ${doc})
 ENDMACRO()
 
+MACRO(__APP_BUILD_ON_LOCATION app_name flash_origin flash_length)
+	SET(ELF ${app_name}.elf)
+	ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
+	
+	TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
+	
+	GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
+	TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})
+	
+	GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
+	TARGET_INCLUDE_DIRECTORIES(${ELF} PUBLIC ${__global_include_dirs})
+	
+	IF(APP_LINKER_SCRIPT)
+		SET(__LINKER_SCRIPT ${APP_LINKER_SCRIPT})
+	ELSE()
+		SET(__LINKER_SCRIPT ${LINKER_SCRIPT})
+	ENDIF()
+
+	SET(FLASH_ORIGIN ${flash_origin})
+	SET(FLASH_LENGTH ${flash_length})
+	CONFIGURE_FILE(${__LINKER_SCRIPT} ${CMAKE_CURRENT_BINARY_DIR}/${app_name}.ld)
+	SET(__LINKER_SCRIPT_FLAG "-T${CMAKE_CURRENT_BINARY_DIR}/${app_name}.ld")
+	
+	SET_TARGET_PROPERTIES(${ELF} PROPERTIES LINK_FLAGS "${__LINKER_SCRIPT_FLAG} ${LINKER_FLAGS}")
+	
+	# extract hex files
+	# when the system files are not stored a separate linker section but in RAM (default when not defined in platform) make sure these sections are not removed from the app hex
+	IF((DEFINED PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION) AND PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION)
+	  SET(REMOVE_SECTIONS "-R" ".d7ap_fs_metadata_section" "-R" ".d7ap_fs_permanent_files_section")
+	  SET(ADD_SECTIONS "-j" ".d7ap_fs_metadata_section" "-j" ".d7ap_fs_permanent_files_section")
+	ENDIF()
+	
+	ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${app_name}-full.hex)
+	ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
+	  -O ihex
+	  ${REMOVE_SECTIONS}
+	  ${ELF} ${app_name}-app.hex
+	)
+	ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} 
+	  -O binary 
+	  ${REMOVE_SECTIONS}
+	  ${ELF} ${app_name}-app.bin)
+	ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
+	  -O ihex
+	  ${ADD_SECTIONS}
+	  ${ELF} ${app_name}-eeprom-fs.hex
+	)
+	
+	# generate target for flashing application using jlink
+	# TODO optional depending on platform?
+	SET(HEX ${app_name}-full.hex)
+	CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script)
+	ADD_CUSTOM_TARGET(
+		flash-${app_name}
+		COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script
+		DEPENDS ${ELF}
+	)
+	
+	SET(HEX ${app_name}-app.hex)
+	CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script)
+	ADD_CUSTOM_TARGET(
+		flash-${app_name}-app
+		COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script
+		DEPENDS ${ELF}
+	)
+	
+	SET(HEX ${app_name}-eeprom-fs.hex)
+	CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script)
+	ADD_CUSTOM_TARGET(
+		flash-${app_name}-eeprom-fs
+		COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script
+		DEPENDS ${ELF}
+	)
+ENDMACRO()
+
 MACRO(APP_BUILD)
     SET(options "")
     SET(oneValueArgs "NAME")
@@ -110,91 +185,27 @@ MACRO(APP_BUILD)
     CONFIGURE_FILE("${PROJECT_SOURCE_DIR}/cmake/version.c.in" "${CMAKE_CURRENT_BINARY_DIR}/version.c")
     LIST(APPEND __APP_BUILD_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/version.c")
 
-    IF(PLATFORM_USE_BOOTLOADER)
-        SET(__APP_BUILD_NAME ${__APP_BUILD_NAME}_bootloader)
+	IF(NOT STANDALONE_FLASH_ORIGIN)
+	  MESSAGE(FATAL_ERROR "The platform should set STANDALONE_FLASH_ORIGIN")
+	ENDIF()
+	
+	IF(NOT STANDALONE_FLASH_LENGTH)
+	  MESSAGE(FATAL_ERROR "The platform should set STANDALONE_FLASH_LENGTH")
+	ENDIF()
+	__APP_BUILD_ON_LOCATION(${__APP_BUILD_NAME} ${STANDALONE_FLASH_ORIGIN} ${STANDALONE_FLASH_LENGTH})
+	IF(PLATFORM_BUILD_BOOTLOADABLE_VERSION)
+		IF(NOT BOOTLOADABLE_FLASH_ORIGIN)
+		  MESSAGE(FATAL_ERROR "You should set BOOTLOADABLE_FLASH_ORIGIN when PLATFORM_BUILD_BOOTLOADABLE_VERSION=y")
+		ENDIF()
+		
+		IF(NOT BOOTLOADABLE_FLASH_LENGTH)
+		  MESSAGE(FATAL_ERROR "You should set BOOTLOADABLE_FLASH_LENGTH when PLATFORM_BUILD_BOOTLOADABLE_VERSION=y")
+		ENDIF()
+        __APP_BUILD_ON_LOCATION("${__APP_BUILD_NAME}-bootloadable" ${BOOTLOADABLE_FLASH_ORIGIN} ${BOOTLOADABLE_FLASH_LENGTH})
     ENDIF()
 
     #INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-T${LINKER_SCRIPT}")
     #INSERT_LINKER_FLAGS(AFTER OBJECTS INSERT "-Xlinker  -Map=.map")
-
-    SET(ELF ${__APP_BUILD_NAME}.elf)
-    ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
-
-    TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
-
-    GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
-    TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})
-
-    GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
-    TARGET_INCLUDE_DIRECTORIES(${ELF} PUBLIC ${__global_include_dirs})
-
-    IF(APP_LINKER_SCRIPT)
-        
-        SET(__LINKER_SCRIPT_FLAG "-T${APP_LINKER_SCRIPT}")
-    ELSE()
-        IF(LINKER_SCRIPT)
-            SET(__LINKER_SCRIPT_FLAG "-T${LINKER_SCRIPT}")
-        ENDIF()
-    ENDIF()
-
-    SET_TARGET_PROPERTIES(${ELF} PROPERTIES LINK_FLAGS "${__LINKER_SCRIPT_FLAG} ${LINKER_FLAGS}")
-
-#    TODO not used for now
-#    IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
-#        SET(BOOTLOADABLE_ELF ${__APP_BUILD_NAME}_bootloadable.elf)
-#        SET(BOOTLOADABLE_BIN ${__APP_BUILD_NAME}_bootloadable.bin)
-#        ADD_EXECUTABLE(${BOOTLOADABLE_ELF} ${__APP_BUILD_SOURCES})
-#        TARGET_LINK_LIBRARIES(${BOOTLOADABLE_ELF} -Wl,--whole-archive ${__APP_BUILD_LIBS}  -Wl,--no-whole-archive)
-#        TARGET_COMPILE_DEFINITIONS(${BOOTLOADABLE_ELF} PUBLIC ${__global_compile_definitions})
-#        SET_TARGET_PROPERTIES(${BOOTLOADABLE_ELF} PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT_BOOTLOADABLE} ${LINKER_FLAGS}")
-#        ADD_CUSTOM_COMMAND(TARGET ${BOOTLOADABLE_ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${BOOTLOADABLE_ELF} ${BOOTLOADABLE_BIN})
-#    ENDIF()
-
-    # extract hex files
-
-    # when the system files are not stored a separate linker section but in RAM (default when not defined in platform) make sure these sections are not removed from the app hex
-    IF((DEFINED PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION) AND PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION)
-      SET(REMOVE_SECTIONS "-R" ".d7ap_fs_metadata_section" "-R" ".d7ap_fs_permanent_files_section")
-      SET(ADD_SECTIONS "-j" ".d7ap_fs_metadata_section" "-j" ".d7ap_fs_permanent_files_section")
-    ENDIF()
-
-    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${__APP_BUILD_NAME}-full.hex)
-    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
-      -O ihex
-      ${REMOVE_SECTIONS}
-      ${ELF} ${__APP_BUILD_NAME}-app.hex
-    )
-    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
-      -O ihex
-      ${ADD_SECTIONS}
-      ${ELF} ${__APP_BUILD_NAME}-eeprom-fs.hex
-    )
-
-    # generate target for flashing application using jlink
-    # TODO optional depending on platform?
-    SET(HEX ${__APP_BUILD_NAME}-full.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script)
-    ADD_CUSTOM_TARGET(
-        flash-${__APP_BUILD_NAME}
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script
-        DEPENDS ${ELF}
-    )
-
-    SET(HEX ${__APP_BUILD_NAME}-app.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script)
-    ADD_CUSTOM_TARGET(
-        flash-${__APP_BUILD_NAME}-app
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script
-        DEPENDS ${ELF}
-    )
-
-    SET(HEX ${__APP_BUILD_NAME}-eeprom-fs.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script)
-    ADD_CUSTOM_TARGET(
-        flash-${__APP_BUILD_NAME}-eeprom-fs
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script
-        DEPENDS ${ELF}
-    )
 ENDMACRO()
 
 
