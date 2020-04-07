@@ -132,3 +132,16 @@ This will result in a native binary per test, for example:
     AES-CCM test vector #5 passed
     AES-CCM test vector #6 passed
     AES all unit tests OK !
+
+# Compiling for running on top of a bootloader
+
+The binaries produced by the build are supposed to be executed directly on the target, and thus linked to make sure the code will be located at the expected entry point in the flash. When the binary needs to be chain-loaded because the target is running a bootloader it is required to link the `.text` section of the binary to a different offset, and use a different length. In most cases it is useful to compile both the standalone version as well as the bootloadable version. By default the buildsystem only builds the standalone binary. When you want to build a bootloadable version as well you can set the cmake variable `PLATFORM_BUILD_BOOTLOADABLE_VERSION=y`. To configure the flash origin and length used in the linker script you can set `BOOTLOADABLE_FLASH_ORIGIN` and `BOOTLOADABLE_FLASH_LENGTH`. These values will replace the `${FLASH_ORIGIN}` and `${FLASH_LENGTH}` placeholders in the linker script's memory section (as shown below)
+
+	MEMORY
+	{
+	  FLASH (rx) : ORIGIN = ${FLASH_ORIGIN}, LENGTH = ${FLASH_LENGTH}
+	  EEPROM (r) : ORIGIN = 0x08080000, LENGTH = 6K
+	  RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
+	}
+
+Note that this feature only allows to relocate the binary to enable chain-loading, but we do not assume or integrate a bootloader currently.

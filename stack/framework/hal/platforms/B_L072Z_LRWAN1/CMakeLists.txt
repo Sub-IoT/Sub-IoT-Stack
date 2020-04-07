@@ -75,8 +75,10 @@ INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "--specs=nosys.sp
 INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -Wl,--whole-archive") # libs are using weak symbols
 INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive  -Wl,--end-group")
 
+SET(STANDALONE_FLASH_ORIGIN 0x08000000 CACHE STRING "The offset in flash used for linking the text section when not using bootloader")
+SET(STANDALONE_FLASH_LENGTH 192K CACHE STRING "The length of the flash section when not using bootloader")
 
-SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32L072XZ.ld" CACHE FILEPATH "")
+SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32L072XZ.ld.in" CACHE FILEPATH "")
 SET(LINKER_FLAGS "-Xlinker -Map=linker.map" CACHE STRING "")
 
 #Set platform specific compile options
