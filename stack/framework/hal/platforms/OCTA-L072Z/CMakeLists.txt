@@ -79,6 +79,9 @@ INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive  -Wl,--e
 SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32L072XZ.ld" CACHE FILEPATH "")
 SET(LINKER_FLAGS "-Xlinker -Map=linker.map" CACHE STRING "")
 
+SET(STANDALONE_FLASH_ORIGIN 0x08000000 CACHE STRING "The offset in flash used for linking the text section when not using bootloader")
+SET(STANDALONE_FLASH_LENGTH 192K CACHE STRING "The length of the flash section when not using bootloader")
+
 #Set platform specific compile options
 #INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
 #INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-ffunction-sections" "-fdata-sections" "-ffreestanding" "-fno-move-loop-invariants" "-DDEBUG" "-DTRACE" "-DOS_USE_TRACE_SEMIHOSTING_DEBUG")
