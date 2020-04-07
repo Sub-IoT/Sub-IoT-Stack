@@ -47,6 +47,10 @@ INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive -lgcc -l
 SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32L151XC.ld" CACHE FILEPATH "")
 SET(LINKER_FLAGS "-Xlinker -Map=linker.map" CACHE STRING "")
 
+
+SET(STANDALONE_FLASH_ORIGIN 0x08000000 CACHE STRING "The offset in flash used for linking the text section when not using bootloader")
+SET(STANDALONE_FLASH_LENGTH 256K CACHE STRING "The length of the flash section when not using bootloader")
+
 #Add platform specific linker flags
 #INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
 #INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group")
