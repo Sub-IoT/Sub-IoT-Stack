@@ -116,17 +116,11 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
-void on_alp_command_result_cb(alp_interface_status_t* result, uint8_t* payload, uint8_t payload_length)
+void on_alp_command_result_cb(alp_command_t *alp_command)
 {
-  if(result->itf_id == ALP_ITF_ID_D7ASP) {
-    d7ap_session_result_t d7_result;
-    memcpy(&d7_result, result->itf_status, result->len);
-    log_print_string("recv response @ %i dB link budget from:", d7_result.link_budget);
-    log_print_data(d7_result.addressee.id, 8);
-  }
-
   log_print_string("response payload:");
-  log_print_data(payload, payload_length);
+  log_print_data(alp_command->alp_command, fifo_get_size(&alp_command->alp_command_fifo));
+  fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
 }
 
 static alp_init_args_t alp_init_args;

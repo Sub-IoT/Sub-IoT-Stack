@@ -60,7 +60,7 @@ static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
         callbacks->command_completed_callback(!success, tag_id);
 }
 
-static void on_alp_command_result_cb(alp_interface_status_t* status, alp_command_t* command)
+static void on_alp_command_result_cb(alp_command_t* command)
 {
     alp_action_t action;
     while (fifo_get_size(&command->alp_command_fifo) > 0) {
@@ -72,7 +72,7 @@ static void on_alp_command_result_cb(alp_interface_status_t* status, alp_command
             }
             if (action.interface_status.itf_id == ALP_ITF_ID_D7ASP) {
                 if (action.interface_status.len > 0) {
-                    d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)status->itf_status);
+                    d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)action.interface_status.itf_status);
                     log_print_string("recv response @ %i dB link budget from:", d7_result->rx_level);
                     log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
                 }
