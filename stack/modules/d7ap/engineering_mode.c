@@ -68,6 +68,8 @@ static uint16_t per_received_packets_counter = 0;
 static uint16_t per_packet_counter = 0; 
 static uint16_t per_start_index = 65535; //Impossible value to show this is not yet set
 static uint16_t per_packet_limit = 0;
+static uint8_t lora_packet[54]; //largest packetsize currently needed
+static uint8_t lora_packet_size;
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
 static uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
@@ -82,7 +84,7 @@ bool previous_message_lorawan = false;
 static void em_lorawan_send_abp(){
   // uint8_t temp[300];
   // lorawan_stack_send(temp, sizeof(temp), 2, false);
-  lorawan_stack_send(per_data, sizeof(per_data) * sizeof(uint8_t), 2, false);
+  lorawan_stack_send(lora_packet, lora_packet_size, 2, false);
   sched_post_task(&em_lorawan_send_abp);
 }
 #endif
@@ -279,6 +281,11 @@ static void em_file_change_callback(uint8_t file_id) {
         DPRINT("CONT_TX WITH DUTY CYCLE");
         if(em_command->channel_id.channel_header.ch_class == 1) {
         #ifdef MODULE_LORAWAN
+          if(em_command->flags) {
+            log_print_string("Hybrid mode not yet implemented");
+            break;
+          }
+
           previous_message_lorawan = true;
 
           d7ap_stop();
@@ -292,6 +299,11 @@ static void em_file_change_callback(uint8_t file_id) {
               break;
           }
 
+          if(em_command->flags) //Hybrid mode --> DR 8
+            lora_packet_size = 53;
+          else  //FHSS --> DR 0
+            lora_packet_size = 11;
+
           lorawan_session_config_abp_t session_config = {
             .nwkSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             .appSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -300,7 +312,7 @@ static void em_file_change_callback(uint8_t file_id) {
             .request_ack = false,
             .application_port = 2,
             .adr_enabled = false,
-            .data_rate = em_command->flags
+            .data_rate = em_command->flags * 8
           };
           lorawan_stack_init_abp(&session_config);
 
