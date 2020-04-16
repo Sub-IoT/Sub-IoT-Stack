@@ -68,7 +68,7 @@ static uint16_t per_received_packets_counter = 0;
 static uint16_t per_packet_counter = 0; 
 static uint16_t per_start_index = 65535; //Impossible value to show this is not yet set
 static uint16_t per_packet_limit = 0;
-static uint8_t lora_packet[54]; //largest packetsize currently needed
+static uint8_t lora_packet[250]; //largest packetsize currently needed
 static uint8_t lora_packet_size;
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
@@ -281,11 +281,6 @@ static void em_file_change_callback(uint8_t file_id) {
         DPRINT("CONT_TX WITH DUTY CYCLE");
         if(em_command->channel_id.channel_header.ch_class == 1) {
         #ifdef MODULE_LORAWAN
-          if(em_command->flags) {
-            log_print_string("Hybrid mode not yet implemented");
-            break;
-          }
-
           previous_message_lorawan = true;
 
           d7ap_stop();
@@ -299,8 +294,8 @@ static void em_file_change_callback(uint8_t file_id) {
               break;
           }
 
-          if(em_command->flags) //Hybrid mode --> DR 8
-            lora_packet_size = 53;
+          if(em_command->flags) //Hybrid mode --> DR 4
+            lora_packet_size = 242;
           else  //FHSS --> DR 0
             lora_packet_size = 11;
 
@@ -312,7 +307,7 @@ static void em_file_change_callback(uint8_t file_id) {
             .request_ack = false,
             .application_port = 2,
             .adr_enabled = false,
-            .data_rate = em_command->flags * 8
+            .data_rate = em_command->flags * 4
           };
           lorawan_stack_init_abp(&session_config);
 
@@ -322,7 +317,7 @@ static void em_file_change_callback(uint8_t file_id) {
 
           lorawan_stack_set_tx_power(em_command->eirp > 7? 17 - em_command->eirp : 10);
 
-          DPRINT("set to cont tx duty cycle with data rate %i and power %i", em_command->flags, em_command->eirp);
+          DPRINT("set to cont tx duty cycle with data rate %i and power %i", em_command->flags * 4, em_command->eirp);
 
           sched_post_task(&em_lorawan_send_abp);
         #else
