@@ -140,6 +140,15 @@ void alp_layer_command_free(alp_command_t* command)
     DPRINT("Could not free command");
 }
 
+void alp_layer_free_itf_commands(uint8_t forward_itf_id)
+{
+    for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
+        if (commands[i].forward_itf_id == forward_itf_id) {
+            free_command(&commands[i]);
+        }
+    }
+}
+
 static alp_command_t* get_request_command(uint8_t tag_id, uint8_t itf_id)
 {
     for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
@@ -499,7 +508,7 @@ static void forward_command(alp_command_t* command, alp_interface_config_t* itf_
 
             if (error) {
                 DPRINT("transmit returned error %x", error);
-                alp_layer_forwarded_command_completed(command->trans_id, &error, NULL); // TODO return error to caller instead?
+                alp_layer_forwarded_command_completed(command->trans_id, &error, NULL, true); // TODO return error to caller instead?
             }
 
             found = true;
@@ -763,7 +772,7 @@ bool alp_layer_process(alp_command_t* command)
 }
 
 
-void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status)
+void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status, bool command_completed)
 {
     DPRINT("alp_layer_forwarded_cmd_completed: with trans id %i and error location %i: value %i, itf_status len %i", trans_id, error, *error, status->len);
     assert(status != NULL);
@@ -772,7 +781,7 @@ void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, al
     DPRINT("resp for tag %i\n", command->tag_id);
     alp_command_t* resp = alp_layer_command_alloc(false, false);
     alp_append_interface_status(resp, status);
-    alp_append_tag_response_action(resp, command->tag_id, true, *error != SUCCESS);
+    alp_append_tag_response_action(resp, command->tag_id, command_completed, *error != SUCCESS);
     alp_layer_process(resp);
 }
 

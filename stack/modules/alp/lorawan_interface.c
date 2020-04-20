@@ -63,13 +63,10 @@ void lorawan_rx(lorawan_AppData_t *AppData)
 }
 
 void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_stack_status_t status) {
-    payload[0] = ALP_OP_STATUS + (1 << 6);
-    payload[1] = current_lorawan_interface_type;
-    payload[2] = 4; //length
-    payload[3] = attempts;
-    payload[4] = status;
+    payload[0] = attempts;
+    payload[1] = status;
     uint16_t wait_time = __builtin_bswap16(lorawan_get_duty_cycle_delay());
-    memcpy(&payload[5], (uint8_t*)&wait_time, 2);
+    memcpy(&payload[2], (uint8_t*)&wait_time, 2);
 }
 
 void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts)
@@ -77,25 +74,23 @@ void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts)
     error_t status_buffer = (error_t)status;
     alp_interface_status_t result = (alp_interface_status_t) {
         .itf_id = current_lorawan_interface_type,
-        .len = 7,
+        .len = 4,
         };
     add_interface_status_lorawan(result.itf_status, attempts, status);
 
-    alp_layer_forwarded_command_completed(lorawan_trans_id, &status_buffer, &result);
+    alp_layer_forwarded_command_completed(lorawan_trans_id, &status_buffer, &result, true);
 }
 
 static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attempts)
 {
-    alp_command_t* command = alp_layer_command_alloc(false, false);
-    command->respond_when_completed=true;
 
     alp_interface_status_t result = (alp_interface_status_t) {
         .itf_id = current_lorawan_interface_type,
-        .len = 7
+        .len = 4
     };
     add_interface_status_lorawan(result.itf_status, attempts, status);
 
-    alp_layer_forwarded_command_completed(lorawan_trans_id, NULL, &result); 
+    alp_layer_forwarded_command_completed(lorawan_trans_id, NULL, &result, false); 
 }
 
 static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
@@ -141,9 +136,10 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
         error_t status_buffer = (error_t)status;
         alp_interface_status_t result = (alp_interface_status_t) {
             .itf_id = current_lorawan_interface_type,
-            .len = 7
+            .len = 4
         };
         add_interface_status_lorawan(result.itf_status, 1, status);
+        alp_layer_forwarded_command_completed(*trans_id, &status_buffer, &result, false);
     } else {
         lorawan_trans_id = *trans_id;
     }

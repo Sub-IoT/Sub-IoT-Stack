@@ -97,6 +97,12 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
 void alp_layer_command_free(alp_command_t* command);
 
 /*!
+ * \brief Free an alp_commands with the specified forward interface id. Note that commands processed by ALP layer are always free-ed by ALP layer when completed already.
+ * \param forward_itf_id inteface id of commands that need to be free-ed
+ * \return 
+ */
+void alp_layer_free_itf_commands(uint8_t forward_itf_id);
+/*!
  * \brief Processes the ALP command in an asynchronous way
  * \param Command Pointer to a command which should be allocated by calling `alp_layer_command_alloc()`. The command will be free-ed by ALP layer.
  * \return True if response payload is to be expected
@@ -118,8 +124,9 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
  * \param payload Response ALP payloader
  * \param payload_length Response length
  * \param itf_status The interface status
+ * \param command_completed Is command fully completed 
  */
-void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
+void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status, bool command_completed);
 
 #ifdef MODULE_D7AP
 /*!

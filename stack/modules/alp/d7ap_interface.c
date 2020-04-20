@@ -111,7 +111,7 @@ static alp_interface_status_t empty_itf_status = {
 static void d7ap_command_completed(uint16_t trans_id, error_t error) {
     // TODO D7ASP ALP status maps to D7ASP Result, which is only relevant for responses and not for the command (dialog as a whole)
     // TBD in D7 PAG, for now supply 'empty' D7 status
-    alp_layer_forwarded_command_completed(trans_id, &error, &empty_itf_status);
+    alp_layer_forwarded_command_completed(trans_id, &error, &empty_itf_status, true);
 }
 
 void d7ap_interface_register()
