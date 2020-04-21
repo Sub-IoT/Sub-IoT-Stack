@@ -1,5 +1,7 @@
 [![Build Status](https://jenkins.idlab.uantwerpen.be/buildStatus/icon?job=BuildForOSS7Repo/master)](https://jenkins.idlab.uantwerpen.be/job/BuildForOSS7Repo/job/master/)
 
+[![Gitter](https://badges.gitter.im/dash7-ap-open-source-stack/community.svg)](https://gitter.im/dash7-ap-open-source-stack/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 # Welcome
 
 OSS-7 is an open source implementation of the [DASH7 Alliance](http://www.dash7-alliance.org) protocol for ultra low power wireless sensor communication. The aim of the project is to provide a reference implementation of the protocol stack which allows for fast development and prototyping of DASH7 based products. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
