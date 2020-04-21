@@ -63,10 +63,10 @@ void lorawan_rx(lorawan_AppData_t *AppData)
 }
 
 void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_stack_status_t status) {
-    payload[0] = attempts;
-    payload[1] = status;
-    uint16_t wait_time = __builtin_bswap16(lorawan_get_duty_cycle_delay());
-    memcpy(&payload[2], (uint8_t*)&wait_time, 2);
+    lorawan_session_result_t* interface_status = (lorawan_session_result_t*) payload;
+    interface_status->attempts = attempts;
+    interface_status->error_state = status;
+    interface_status->duty_cycle_wait_time = lorawan_get_duty_cycle_delay();
 }
 
 void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts)
