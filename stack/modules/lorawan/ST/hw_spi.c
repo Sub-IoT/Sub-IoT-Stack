@@ -98,10 +98,39 @@ void HW_SPI_DeInit( void )
 }
 void HW_SPI_enable( void )
 {
+  #ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
+  hw_gpio_disable_interrupt(SX127x_DIO3_PIN);
+#endif
+
+   #ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);
+  hw_gpio_set(SX127x_VCC_TXCO);
+#endif
+  hw_gpio_configure_pin(ABZ_ANT_SW_RX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+  hw_gpio_configure_pin(ABZ_ANT_SW_TX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+  hw_gpio_configure_pin(ABZ_ANT_SW_PA_BOOST_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+
+
   spi_enable(spi_handle);
 }
 void HW_SPI_disable( void )
 {
+    GPIO_InitTypeDef initStruct={0};
+  initStruct.Mode = GPIO_MODE_ANALOG;
+   hw_gpio_configure_pin_stm(ABZ_ANT_SW_RX_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
+  hw_gpio_configure_pin_stm(ABZ_ANT_SW_TX_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+    hw_gpio_configure_pin_stm(ABZ_ANT_SW_PA_BOOST_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+#ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  hw_gpio_configure_pin_stm(SX127x_VCC_TXCO, &initStruct);
+#endif
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  hw_gpio_configure_pin_stm(SX127x_DIO3_PIN, &initStruct);
+#endif
+
   spi_disable(spi_handle);
 
 }
