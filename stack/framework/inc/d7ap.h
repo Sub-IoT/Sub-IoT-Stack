@@ -192,9 +192,9 @@ void d7ap_stop(void);
  *
  * @param[in] desc pointer to the client resource
  *
- * @return  the client Id
+ * @return  the client Id (-1 when trying to register whereas the D7A stack is not initialised)
  */
-uint8_t d7ap_register(d7ap_resource_desc_t* desc);
+int8_t d7ap_register(d7ap_resource_desc_t* desc);
 
 
 /**
