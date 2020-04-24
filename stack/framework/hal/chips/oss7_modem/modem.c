@@ -159,7 +159,7 @@ void modem_init()
 //  return true;
 //}
 
-int8_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
+int16_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 {
     alp_command_t* command = alp_layer_command_alloc(true, false);
     if (command == NULL)
@@ -174,7 +174,7 @@ int8_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
     return command->tag_id;
 }
 
-int8_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
+int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
     alp_command_t* command = alp_layer_command_alloc(true, false);
     if (command == NULL)
         return -1;
@@ -188,7 +188,7 @@ int8_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t
     return command->tag_id;
 }
 
-int8_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
+int16_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
                                      alp_interface_config_t* interface_config) {
     alp_command_t* command = alp_layer_command_alloc(true, false);
     if (command == NULL)
@@ -203,7 +203,7 @@ int8_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_
     return command->tag_id;
 }
 
-int8_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
+int16_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
                                          alp_interface_config_t* interface_config) {
     alp_command_t* command = alp_layer_command_alloc(true, false);
     if (command == NULL)
@@ -219,7 +219,7 @@ int8_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length
     return command->tag_id;
 }
 
-int8_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data,
+int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data,
     uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
 {
     alp_command_t* command = alp_layer_command_alloc(true, false);
@@ -236,7 +236,7 @@ int8_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t o
     return command->tag_id;
 }
 
-int8_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
+int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
     uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
 {
     alp_command_t* command = alp_layer_command_alloc(true, false);
