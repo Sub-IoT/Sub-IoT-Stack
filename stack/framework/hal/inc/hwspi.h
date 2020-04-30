@@ -72,6 +72,14 @@ __LINK_C void                spi_send_byte_with_control(spi_slave_handle_t* spi,
 __LINK_C void                spi_exchange_bytes(spi_slave_handle_t* spi,
                                                 uint8_t *TxData,
                                                 uint8_t *RxData, size_t length);
+
+
+__LINK_C void                spi_read_3wire_bytes(spi_slave_handle_t* spi,
+                                                uint8_t *TxData,
+                                                uint8_t *RxData, size_t length);
+
+__LINK_C bool                spi_read_timeout_flag(spi_slave_handle_t *slave);
+
 #endif
 
 /** @}*/
