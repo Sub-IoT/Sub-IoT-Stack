@@ -109,7 +109,6 @@ void spi_enable(spi_handle_t* spi) {
       __HAL_RCC_SPI2_CLK_ENABLE();
       break;
     default:
-      log_print_string("instance is 0x%08X with portnumber %i compared to bases %08X and %08X\n", (uint32_t)spi->hspi.Instance, spi->spi_port_number,(uint32_t) SPI1_BASE, (uint32_t) SPI2_BASE);
       assert(false);
   }
 
@@ -283,11 +282,7 @@ void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
   HAL_SPI_Transmit(&slave->spi->hspi, (uint8_t *)&data, 2, HAL_MAX_DELAY);
 }
 
-bool spi_read_timeout_flag(spi_slave_handle_t* slave) {
-  return __HAL_SPI_GET_FLAG(&slave->spi->hspi, SPI_FLAG_OVR);
-}
-
-void spi_read_3wire_bytes(spi_slave_handle_t* slave, uint8_t* address, uint8_t* rxData, size_t length) {
+static void spi_read_3wire_bytes(spi_slave_handle_t* slave, uint8_t* address, uint8_t* rxData, size_t length) {
   HAL_SPI_Transmit(&slave->spi->hspi, address, 1, HAL_MAX_DELAY);
 
   start_atomic();
@@ -315,19 +310,24 @@ void spi_read_3wire_bytes(spi_slave_handle_t* slave, uint8_t* address, uint8_t* 
     while((slave->spi->hspi.Instance->SR & SPI_FLAG_BSY) == SPI_FLAG_BSY);
   }
   end_atomic();
+
+  assert(!__HAL_SPI_GET_FLAG(&slave->spi->hspi, SPI_FLAG_OVR));
 }
 
 void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, size_t length) {
   // TODO replace HAL calls with direct registry access for performance / code size ?
-  if( RxData != NULL && TxData != NULL ) {           // two way transmission
-    HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
+  if( RxData != NULL && TxData != NULL ) {
+    if(slave->spi->hspi.Init.Direction == SPI_DIRECTION_1LINE) //1line read bytes
+      spi_read_3wire_bytes(slave, TxData, RxData, length);
+    else // two way transmission
+      HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
   } else if( RxData == NULL && TxData != NULL ) {    // send only
     HAL_SPI_Transmit(&slave->spi->hspi, TxData, length, HAL_MAX_DELAY);
   } else if( RxData != NULL && TxData == NULL ) {   // receive only
     if(slave->spi->hspi.Init.Direction == SPI_DIRECTION_2LINES) {
       HAL_SPI_Receive(&slave->spi->hspi, RxData, length, HAL_MAX_DELAY);
     } else {
-      assert(false); //use spi_read_3wire_bytes for 1line direction
+      assert(false); //1line direction should exchange address as txData and the buffer as rxdata
     }
   }
 }
