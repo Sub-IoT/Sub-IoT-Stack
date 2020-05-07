@@ -70,8 +70,7 @@ typedef enum
 {
     FS_BLOCKDEVICE_TYPE_METADATA = 0,
     FS_BLOCKDEVICE_TYPE_PERMANENT = 1,
-    FS_BLOCKDEVICE_TYPE_VOLATILE = 2,
-    FS_BLOCKDEVICE_TYPE_EXTERNAL_FLASH = 4
+    FS_BLOCKDEVICE_TYPE_VOLATILE = 2
 } fs_blockdevice_types_t;
 
 typedef struct  __attribute__((__packed__))
