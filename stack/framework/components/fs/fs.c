@@ -137,12 +137,10 @@ int _fs_init()
         DPRINT("File %i, bd %i, len %i, addr %i", file_id, files[file_id].blockdevice_index, files[file_id].length, files[file_id].addr);
         if(_is_file_defined(file_id))
         {
-            if (files[file_id].blockdevice_index == FS_BLOCKDEVICE_TYPE_VOLATILE) {
+            if (files[file_id].blockdevice_index == FS_BLOCKDEVICE_TYPE_VOLATILE)
                 DPRINT("volatile file (%i) will not be initialized", file_id);
-            } else {
-                files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
-                bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;                
-            }
+            else
+                bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
         }
     }
     
@@ -208,9 +206,20 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     }
 
     if(initial_data != NULL) {
-        blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
-    }
-    else{
+        if(bd_type == 4) {
+            // the driver can only write in pages of 256 bytes. Every 4k, the sector should first be erased
+            blockdevice_erase_sector4k(bd[bd_type], files[file_id].addr);
+            uint16_t offset = ((files[file_id].addr + length) & 0xFF);
+            assert(length < 256); //larger inits are currently not supported for this blockdevice
+            if ((files[file_id].addr & 0xFF) > offset) {
+                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length - offset);
+                blockdevice_program(bd[bd_type], initial_data + (length - offset), files[file_id].addr + (length - offset), offset);
+            } else {
+                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
+            }
+        } else 
+            blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
+    } else {
         // do not use variable length array to limit stack usage, do in chunks instead
         uint8_t default_data[64];
         memset(default_data, 0xff, 64);
@@ -225,7 +234,7 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
         blockdevice_program(bd[bd_type], default_data, files[file_id].addr  + (i * 64), remaining_length);
     }
 
-    DPRINT("fs init file(file_id %d, bd_type %d, addr %p, length %d)\n",file_id, bd_type, files[file_id].addr, length);
+    DPRINT("fs init file(file_id %d, bd_type %d, addr %i, length %d)\n",file_id, bd_type, files[file_id].addr, length);
     return 0;
 }
 
