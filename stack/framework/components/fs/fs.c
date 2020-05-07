@@ -59,7 +59,7 @@ static blockdevice_t* bd[FRAMEWORK_FS_BLOCKDEVICES_COUNT] = { 0 };
 static int _fs_init(void);
 static int _fs_create_magic(void);
 static int _fs_verify_magic(uint8_t* magic_number);
-static int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length);
+static int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length);
 
 static inline bool _is_file_defined(uint8_t file_id)
 {
@@ -172,7 +172,7 @@ static int _fs_verify_magic(uint8_t* expected_magic_number)
 }
 
 
-int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length)
+int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length)
 {
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
 
@@ -206,19 +206,19 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     }
 
     if(initial_data != NULL) {
-        if(bd_type == 4) {
+        if(bd_type == FS_BLOCKDEVICE_TYPE_EXTERNAL_FLASH) {
             // the driver can only write in pages of 256 bytes. Every 4k, the sector should first be erased
             blockdevice_erase_sector4k(bd[bd_type], files[file_id].addr);
-            uint16_t offset = ((files[file_id].addr + length) & 0xFF);
-            assert(length < 256); //larger inits are currently not supported for this blockdevice
+            uint16_t offset = ((files[file_id].addr + initial_data_length) & 0xFF);
+            assert(initial_data_length < 256); //larger inits are currently not supported for this blockdevice
             if ((files[file_id].addr & 0xFF) > offset) {
-                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length - offset);
-                blockdevice_program(bd[bd_type], initial_data + (length - offset), files[file_id].addr + (length - offset), offset);
+                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, initial_data_length - offset);
+                blockdevice_program(bd[bd_type], initial_data + (initial_data_length - offset), files[file_id].addr + (initial_data_length - offset), offset);
             } else {
-                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
+                blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, initial_data_length);
             }
         } else 
-            blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
+            blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, initial_data_length);
     } else {
         // do not use variable length array to limit stack usage, do in chunks instead
         uint8_t default_data[64];
@@ -238,12 +238,12 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     return 0;
 }
 
-int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length)
+int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length)
 {
     assert(is_fs_init_completed);
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
    
-    return (_fs_create_file(file_id, bd_type, initial_data, length));
+    return (_fs_create_file(file_id, bd_type, initial_data, initial_data_length, length));
 }
 
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
