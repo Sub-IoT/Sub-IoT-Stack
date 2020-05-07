@@ -206,7 +206,7 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     }
 
     if(initial_data != NULL) {
-        if(bd_type == FS_BLOCKDEVICE_TYPE_EXTERNAL_FLASH) {
+        if(bd_type == 4) {
             // the driver can only write in pages of 256 bytes. Every 4k, the sector should first be erased
             blockdevice_erase_sector4k(bd[bd_type], files[file_id].addr);
             uint16_t offset = ((files[file_id].addr + initial_data_length) & 0xFF);
