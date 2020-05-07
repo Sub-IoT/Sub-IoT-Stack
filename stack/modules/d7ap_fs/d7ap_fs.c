@@ -136,12 +136,15 @@ int d7ap_fs_init_file_on_blockdevice(
     file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
     file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
     
-    memset(file_buffer, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
     memcpy(file_buffer, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
-    if(initial_data != NULL)
-        memcpy(file_buffer + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
+    uint32_t length = sizeof(d7ap_fs_file_header_t);
+    if(initial_data != NULL) {
+        length += file_header->length;
+        assert(length <= FILE_SIZE_MAX);
+        memcpy(file_buffer + sizeof(d7ap_fs_file_header_t), initial_data, file_header->length);
+    }
        
-    return fs_init_file(file_id, blockdevice_index, (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
+    return fs_init_file(file_id, blockdevice_index, (const uint8_t *)file_buffer, length, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
 }
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)

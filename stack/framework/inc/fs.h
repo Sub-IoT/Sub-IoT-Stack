@@ -70,7 +70,7 @@ typedef enum
 {
     FS_BLOCKDEVICE_TYPE_METADATA = 0,
     FS_BLOCKDEVICE_TYPE_PERMANENT = 1,
-    FS_BLOCKDEVICE_TYPE_VOLATILE = 2,
+    FS_BLOCKDEVICE_TYPE_VOLATILE = 2
 } fs_blockdevice_types_t;
 
 typedef struct  __attribute__((__packed__))
@@ -95,7 +95,7 @@ typedef struct __attribute__((__packed__))
 typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 
 void fs_init();
-int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length);
+int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
 fs_file_stat_t *fs_file_stat(uint8_t file_id);
