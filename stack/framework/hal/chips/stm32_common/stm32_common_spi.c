@@ -33,7 +33,7 @@
 #include "errors.h"
 
 
-#define MAX_SPI_SLAVE_HANDLES 5        // TODO expose this in chip configuration
+#define MAX_SPI_SLAVE_HANDLES 6        // TODO expose this in chip configuration
 
 #define __SPI_DIRECTION_1LINE_RX(__HANDLE__) do {\
                                              CLEAR_BIT((__HANDLE__)->Instance->CR1, SPI_CR1_RXONLY | SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE);\
@@ -145,7 +145,7 @@ void spi_disable(spi_handle_t* spi) {
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex, bool cpol, bool cpha) {
   // assert what is supported by HW
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
@@ -170,8 +170,20 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
     handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_2LINES;
 
   handle[spi_number].hspi.Init.DataSize = SPI_DATASIZE_8BIT;
-  handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
+
   handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
+  handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
+
+  if(cpol)
+    handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  else
+    handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
+
+  if(cpha)
+    handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_2EDGE;
+  else
+    handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
+
   handle[spi_number].hspi.Init.NSS = SPI_NSS_SOFT;
 
   // TODO take pheripal clock freq into account ...
