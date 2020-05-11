@@ -17,7 +17,7 @@ error_t blockdevice_program(blockdevice_t* bd, const uint8_t* data, uint32_t add
   return bd->driver->program(bd, data, addr, size);
 }
 
-error_t blockdevice_erase_chip(blockdevice_t* bd){
+error_t blockdevice_erase_chip(blockdevice_t* bd, uint32_t addr){
   assert(bd && bd->driver && bd->driver->erase_chip);
   return bd->driver->erase_chip(bd);
 }
