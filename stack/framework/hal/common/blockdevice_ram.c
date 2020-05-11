@@ -43,6 +43,8 @@ blockdevice_driver_t blockdevice_driver_ram = {
     .init = init,
     .read = read,
     .program = program,
+    .erase_block_size = 0,          //erase not necessary
+    .write_block_size = UINT32_MAX  //blocks don't have a limit to write at once
 };
 
 
