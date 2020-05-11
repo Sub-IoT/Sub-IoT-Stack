@@ -27,6 +27,7 @@
 #include "stm32_device.h"
 #include "stm32_common_mcu.h"
 #include "log.h"
+#include "hwatomic.h"
 
 #define DPRINT(...)
 //#define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -121,7 +122,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 {
 
   DPRINT("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
-  __disable_irq();
+  start_atomic();
 
   gpio_config_save();
   hw_deinit_pheriperals();
@@ -202,7 +203,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
   gpio_config_restore();
   hw_reinit_pheriperals();
-  __enable_irq();
+  end_atomic();
   DPRINT("wake up @ %i", hw_timer_getvalue(0) );
 }
 

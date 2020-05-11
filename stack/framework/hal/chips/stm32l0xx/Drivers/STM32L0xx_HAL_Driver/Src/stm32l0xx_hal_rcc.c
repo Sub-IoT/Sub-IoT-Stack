@@ -765,7 +765,7 @@ HAL_StatusTypeDef HAL_RCC_OscConfig(RCC_OscInitTypeDef  *RCC_OscInitStruct)
         {
           if((HAL_GetTick() - tickstart ) > PLL_TIMEOUT_VALUE)
           {
-            log_print_string("##### above timeout value with ticks: %i", HAL_GetTick());
+            log_print_string("##### above timeout value with ticks: %lu", HAL_GetTick() - tickstart);
             if((HAL_GetTick() - tickstart) > 10)
               return HAL_TIMEOUT;
           }
