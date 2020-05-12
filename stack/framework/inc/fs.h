@@ -100,6 +100,8 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
 fs_file_stat_t *fs_file_stat(uint8_t file_id);
 
+uint32_t fs_get_address(uint8_t file_id);
+
 bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
 bool fs_unregister_file_modified_callback(uint8_t file_id);
 

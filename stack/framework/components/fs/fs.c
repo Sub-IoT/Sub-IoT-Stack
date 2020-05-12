@@ -87,6 +87,8 @@ error_t fs_register_block_device(blockdevice_t* block_device, uint8_t bd_index)
     
 }
 
+uint32_t fs_get_address(uint8_t file_id) { return files[file_id].addr; }
+
 void fs_init()
 {
     if (is_fs_init_completed)
@@ -230,7 +232,7 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
         uint8_t* current_data = (uint8_t*)initial_data;
         do {
             /* if we can write the remaining data in one write-block, program the remaining length */
-            if((remaining_length < bd[bd_type]->driver->write_block_size) && ((current_address & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))) == ((current_address + remaining_length) & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))))) {
+            if((remaining_length <= bd[bd_type]->driver->write_block_size) && ((bd[bd_type]->driver->write_block_size == UINT32_MAX) || ((current_address & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))) == ((current_address + remaining_length) & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1)))))) {
                 /* if erase is necessary and previous address is on a different sector than the current, erase the content */
                 if((bd[bd_type]->driver->erase_block_size) && ((previous_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))) != (current_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))))) {
                     DPRINT("erase at 1");
@@ -343,7 +345,37 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
 
     if(files[file_id].length < offset + length) return -ENOBUFS;
 
-    blockdevice_program(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
+    uint32_t current_address = files[file_id].addr + offset;
+    uint32_t remaining_length = length;
+    uint8_t* current_data = (uint8_t*)buffer;
+    fs_blockdevice_types_t bd_type = files[file_id].blockdevice_index;
+
+    do {
+        /* if we can write the remaining data in one write-block, program the remaining length */
+        if((remaining_length <= bd[bd_type]->driver->write_block_size) && ((bd[bd_type]->driver->write_block_size == UINT32_MAX) || ((current_address & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))) == ((current_address + remaining_length) & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1)))))) {
+            DPRINT("program remaining length of %i", remaining_length);
+
+            blockdevice_program(bd[bd_type], current_data, current_address, remaining_length);
+            remaining_length = 0;
+        /* else if this is the starting block, only write untill the end of the first write_block */
+        } else if(current_address == files[file_id].addr) {
+            remaining_length -= bd[bd_type]->driver->write_block_size - (current_address & (bd[bd_type]->driver->write_block_size - 1));
+
+            DPRINT("program initial length of %i - %i = %i at address %i", length, remaining_length, length - remaining_length, current_address);
+
+            blockdevice_program(bd[bd_type], current_data, current_address, length - remaining_length);
+            current_data += length - remaining_length;
+            current_address += length - remaining_length;
+        /* else this is a block in between, just program the maximum amount of block size */
+        } else {
+            DPRINT("program write block size of %lu while remaining_length is %i at address %i", (uint32_t)bd[bd_type]->driver->write_block_size, remaining_length, current_address);
+
+            remaining_length -= bd[bd_type]->driver->write_block_size;
+            blockdevice_program(bd[bd_type], current_data, current_address, bd[bd_type]->driver->write_block_size);
+            current_data += bd[bd_type]->driver->write_block_size;
+            current_address += bd[bd_type]->driver->write_block_size;
+        }
+    } while (remaining_length > 0);
 
     DPRINT("fs write_file (file_id %d, offset %d, addr %p, length %d)\n",
            file_id, offset, files[file_id].addr, length);
