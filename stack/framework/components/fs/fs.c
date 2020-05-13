@@ -358,7 +358,7 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
             blockdevice_program(bd[bd_type], current_data, current_address, remaining_length);
             remaining_length = 0;
         /* else if this is the starting block, only write untill the end of the first write_block */
-        } else if(current_address == files[file_id].addr) {
+        } else if(current_address == (files[file_id].addr + offset)) {
             remaining_length -= bd[bd_type]->driver->write_block_size - (current_address & (bd[bd_type]->driver->write_block_size - 1));
 
             DPRINT("program initial length of %i - %i = %i at address %i", length, remaining_length, length - remaining_length, current_address);
@@ -377,7 +377,7 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
         }
     } while (remaining_length > 0);
 
-    DPRINT("fs write_file (file_id %d, offset %d, addr %p, length %d)\n",
+    DPRINT("fs write_file (file_id %d, offset %d, addr %lu, length %d)\n",
            file_id, offset, files[file_id].addr, length);
 
     if(file_modified_callbacks[file_id])
