@@ -89,6 +89,7 @@ __LINK_C bool uart_disable(uart_handle_t* uart) {}
 __LINK_C void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {}
 __LINK_C error_t uart_rx_interrupt_enable(uart_handle_t* uart) {}
 __LINK_C void uart_set_rx_interrupt_callback(uart_handle_t* uart, uart_rx_inthandler_t rx_handler) {}
+__LINK_C void uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler) {}
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id) {}
 system_reboot_reason_t hw_system_reboot_reason(void) {}
 __LINK_C void hw_enter_lowpower_mode(uint8_t mode) {}

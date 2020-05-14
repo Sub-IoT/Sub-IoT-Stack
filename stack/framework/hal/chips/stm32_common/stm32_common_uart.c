@@ -37,6 +37,7 @@ struct uart_handle {
   UART_HandleTypeDef handle;
   uint32_t baudrate;
   uart_rx_inthandler_t rx_cb;
+  uart_error_handler_t error_cb;
 };
 
 // private storage of handles, pointers to these records are passed around
@@ -160,6 +161,10 @@ void uart_set_rx_interrupt_callback(uart_handle_t* uart,
   uart->rx_cb = rx_handler;
 }
 
+void uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler) {
+    uart->error_cb = error_handler;
+}
+
 void uart_send_byte(uart_handle_t* uart, uint8_t data) {
   //   while(!(uart->channel->STATUS & (1 << 6))); // wait for TX buffer to empty
   // 	uart->channel->TXDATA = data;
@@ -211,47 +216,58 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
   LL_USART_DisableIT_ERROR(uart->handle.Instance);
 }
 
-static void uart_irq_handler(USART_TypeDef* uart) {
-  if(LL_USART_IsEnabledIT_ERROR(uart))
-  {
-    if(LL_USART_IsActiveFlag_NE(uart))
-    {
-      //assert(false); // TODO how to handle this?
-      LL_USART_ClearFlag_NE(uart);
+static void uart_irq_handler(USART_TypeDef* uart)
+{
+    if (LL_USART_IsEnabledIT_ERROR(uart)) {
+        uart_error_t err = UART_NO_ERROR;
+        if (LL_USART_IsActiveFlag_NE(uart)) {
+            LL_USART_ClearFlag_NE(uart);
+            err = UART_NOISE_ERROR;
+        }
+
+        if (LL_USART_IsActiveFlag_FE(uart)) {
+            LL_USART_ClearFlag_FE(uart);
+            err = UART_FRAMING_ERROR;
+        }
+
+        if (LL_USART_IsActiveFlag_ORE(uart)) {
+            LL_USART_ClearFlag_ORE(uart);
+            LL_USART_RequestRxDataFlush(uart);
+            err = UART_OVERRUN_ERROR;
+        }
+
+        if (LL_USART_IsActiveFlag_PE(uart)) {
+            LL_USART_ClearFlag_PE(uart);
+            err = UART_PARITY_ERROR;
+        }
+
+        if(err != UART_NO_ERROR) {
+            uint8_t idx = 0;
+            do {
+              if(handle[idx].error_cb != NULL && handle[idx].handle.Instance == uart) {
+                  handle[idx].error_cb(err);
+                  break;
+              }
+              idx++;
+            } while (idx < UART_COUNT);
+        }
+
+        // TODO other flags?
     }
 
-    if(LL_USART_IsActiveFlag_FE(uart))
-    {
-      LL_USART_ClearFlag_FE(uart);
+    if (LL_USART_IsActiveFlag_RXNE(uart) && LL_USART_IsEnabledIT_RXNE(uart)) {
+        uint8_t idx = 0;
+        do {
+            if (handle[idx].uart_port != NULL && handle[idx].handle.Instance == uart) {
+                handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
+                return;
+            }
+
+            idx++;
+        } while (idx < UART_COUNT);
+
+        assert(false); // we should not reach this point
     }
-
-    if(LL_USART_IsActiveFlag_ORE(uart))
-    {
-      LL_USART_ClearFlag_ORE(uart);
-    }
-
-     if(LL_USART_IsActiveFlag_PE(uart))
-    {
-      LL_USART_ClearFlag_PE(uart);
-    }
-
-    // TODO other flags?
-  }
-
-  if(LL_USART_IsActiveFlag_RXNE(uart) && LL_USART_IsEnabledIT_RXNE(uart))
-  {
-    uint8_t idx = 0;
-    do {
-      if(handle[idx].uart_port != NULL && handle[idx].handle.Instance == uart) {
-        handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
-        return;
-      }
-
-      idx++;
-    } while(idx < UART_COUNT);
-
-    assert(false); // we should not reach this point
-  }
 }
 
 void USART2_IRQHandler(void) {
