@@ -297,11 +297,10 @@ static bool verify_payload(fifo_t* bytes, uint8_t* header)
  * @brief reset modem interface because of error or reset of the other party
  * 
  */
-void modem_interface_reset_handler() {
+void modem_interface_clear_handler() {
     //clear RX
     parsed_header = false;
     payload_len = 0;
-    packet_down_counter = 0;
     fifo_clear(&rx_fifo);
 
     //clear TX
@@ -316,7 +315,6 @@ static void uart_error_cb(uart_error_t error) {
     if(error == UART_OVERRUN_ERROR) {
       parsed_header = false;
       payload_len = 0;
-      packet_down_counter = 0;
       fifo_clear(&rx_fifo);
     }
 }
