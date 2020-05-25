@@ -461,18 +461,16 @@ static alp_status_codes_t process_op_request_tag(alp_action_t* action, uint8_t* 
     return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_return_file_data(alp_action_t* action, alp_command_t** unsollicited_response_command)
+static alp_status_codes_t process_op_return_file_data(alp_action_t* action, alp_command_t* unsollicited_response_command)
 {
-    if (*unsollicited_response_command == NULL) {
-        *unsollicited_response_command = alp_layer_command_alloc(false, false);
-    }
     
     DPRINT("Return file data (%i):", action->file_data_operand.file_offset.file_id);
     DPRINT("offset size: %d", action->file_data_operand.file_offset.offset);
     DPRINT("data size: %d", action->file_data_operand.provided_data_length);
     // fill unsollicited_response_command
-    alp_append_return_file_data_action(*unsollicited_response_command, action->file_data_operand.file_offset.file_id,
+    alp_append_return_file_data_action(unsollicited_response_command, action->file_data_operand.file_offset.file_id,
         action->file_data_operand.file_offset.offset, action->file_data_operand.provided_data_length, action->file_data_operand.data);
+    unsollicited_response_command->is_unsollicited = true;
     return ALP_STATUS_OK;
 }
 
@@ -630,6 +628,7 @@ static void process_async(void* arg)
             command->is_response = true;
             assert(command->tag_id == 0 || command->tag_id == resp_tag_id);
             command->tag_id = resp_tag_id;
+            resp_command->is_unsollicited = false;
             break;
         case ALP_OP_FORWARD:
             alp_status = process_op_forward(&action, &command->forward_itf_id, &forward_interface_config);
@@ -642,7 +641,7 @@ static void process_async(void* arg)
             command->is_tag_requested = true;
             break;
         case ALP_OP_RETURN_FILE_DATA:
-            alp_status = process_op_return_file_data(&action, &resp_command);
+            alp_status = process_op_return_file_data(&action, resp_command);
             break;
         case ALP_OP_CREATE_FILE:
             alp_status = process_op_create_file(&action);
@@ -720,7 +719,7 @@ static void process_async(void* arg)
         }
     } else {
         // Check if unsollicited response
-        if (fifo_get_size(&resp_command->alp_command_fifo) > 0) {
+        if (resp_command->is_unsollicited) {
             if (use_serial_itf) {
                 DPRINT("Unsollicited response, sending to serial");
                 transmit_response_to_serial(resp_command, &command->origin_itf_status);
