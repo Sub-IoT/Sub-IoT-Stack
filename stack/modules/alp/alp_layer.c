@@ -527,6 +527,7 @@ static void transmit_response_to_app(alp_command_t* resp)
     if (init_args && init_args->alp_command_result_cb) {
         init_args->alp_command_result_cb(resp);
     }
+}
 
 static void transmit_response_to_serial(alp_command_t* resp, alp_interface_status_t* origin_itf_status)
 {
