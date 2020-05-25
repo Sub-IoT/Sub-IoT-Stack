@@ -161,7 +161,7 @@ void modem_init()
 
 int16_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 {
-    alp_command_t* command = alp_layer_command_alloc(true, false);
+    alp_command_t* command = alp_layer_command_alloc(true, true);
     if (command == NULL)
         return -1;
 

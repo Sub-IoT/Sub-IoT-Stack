@@ -527,7 +527,6 @@ static void transmit_response_to_app(alp_command_t* resp)
     if (init_args && init_args->alp_command_result_cb) {
         init_args->alp_command_result_cb(resp);
     }
-}
 
 static void transmit_response_to_serial(alp_command_t* resp, alp_interface_status_t* origin_itf_status)
 {
@@ -600,7 +599,6 @@ static void process_async(void* arg)
     DPRINT_DATA(command->alp_command, fifo_get_size(&command->alp_command_fifo));
     alp_interface_config_t forward_interface_config;
     alp_command_t* resp_command = alp_layer_command_alloc(false, false);
-    alp_command_t* unsollicited_resp_command = NULL;
     static alp_action_t action;
 
     while (fifo_get_size(&command->alp_command_fifo) > 0) {
@@ -643,7 +641,7 @@ static void process_async(void* arg)
             command->is_tag_requested = true;
             break;
         case ALP_OP_RETURN_FILE_DATA:
-            alp_status = process_op_return_file_data(&action, &unsollicited_resp_command);
+            alp_status = process_op_return_file_data(&action, &resp_command);
             break;
         case ALP_OP_CREATE_FILE:
             alp_status = process_op_create_file(&action);
@@ -686,18 +684,6 @@ static void process_async(void* arg)
     }
 #endif
     
-    if (unsollicited_resp_command != NULL) {
-        if (use_serial_itf) {
-            DPRINT("Unsollicited response, sending to serial");
-            transmit_response_to_serial(unsollicited_resp_command, &command->origin_itf_status);
-        } else {
-            DPRINT("Unsollicited response, sending to app");
-            transmit_response_to_app(unsollicited_resp_command);
-        }
-        
-        free_command(unsollicited_resp_command);
-    }
-    
     DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
         command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
     if (command->is_response) {
@@ -732,10 +718,23 @@ static void process_async(void* arg)
             free_command(request_command);
         }
     } else {
-        uint8_t resp_cmd_size = fifo_get_size(&resp_command->alp_command_fifo);
-        DPRINT("resp_cmd size %i", resp_cmd_size);
-        DPRINT_DATA(resp_command->alp_command, resp_cmd_size);
-        if (resp_cmd_size > 0 || command->respond_when_completed) {
+        // Check if unsollicited response
+        if (fifo_get_size(&resp_command->alp_command_fifo) > 0) {
+            if (use_serial_itf) {
+                DPRINT("Unsollicited response, sending to serial");
+                transmit_response_to_serial(resp_command, &command->origin_itf_status);
+            } else {
+                DPRINT("Unsollicited response, sending to app");
+                transmit_response_to_app(resp_command);
+            }
+        }
+
+        // uint8_t resp_cmd_size = fifo_get_size(&resp_command->alp_command_fifo);
+        // DPRINT("resp_cmd size %i", resp_cmd_size);
+        // DPRINT_DATA(resp_command->alp_command, resp_cmd_size);
+        
+        //send response to command if required
+        if (command->respond_when_completed) {
             //if ((resp_cmd_size == 0 && command->respond_when_completed) || resp_cmd_size > 0) {
             if (command->is_tag_requested && command->origin_itf_id != ALP_ITF_ID_HOST) {
                 // make sure to respond when requested, even if there is no response payload
@@ -743,7 +742,6 @@ static void process_async(void* arg)
                 // TODO set err flag
                 alp_append_tag_response_action(resp_command, command->tag_id, true, false);
             }
-
             transmit_response(command, resp_command);
         }
     }
