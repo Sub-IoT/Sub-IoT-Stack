@@ -281,6 +281,7 @@ typedef struct {
     bool is_response_completed;
     bool is_response_error;
     bool is_tag_requested;
+    bool is_unsollicited;
     uint8_t forward_itf_id;
     uint16_t trans_id;
     uint8_t tag_id;
