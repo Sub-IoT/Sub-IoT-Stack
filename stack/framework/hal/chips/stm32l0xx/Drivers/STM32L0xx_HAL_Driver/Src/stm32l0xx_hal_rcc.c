@@ -759,13 +759,15 @@ HAL_StatusTypeDef HAL_RCC_OscConfig(RCC_OscInitTypeDef  *RCC_OscInitStruct)
         
         /* Get Start Tick */
         tickstart = HAL_GetTick();
-        
+
         /* Wait till PLL is ready */
         while(__HAL_RCC_GET_FLAG(RCC_FLAG_PLLRDY)  == RESET)
         {
           if((HAL_GetTick() - tickstart ) > PLL_TIMEOUT_VALUE)
           {
-            return HAL_TIMEOUT;
+            log_print_string("##### above timeout value with ticks: %lu", HAL_GetTick() - tickstart);
+            if((HAL_GetTick() - tickstart) > 10)
+              return HAL_TIMEOUT;
           }
         }
       }

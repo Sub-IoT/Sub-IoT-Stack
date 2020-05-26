@@ -293,6 +293,32 @@ static bool verify_payload(fifo_t* bytes, uint8_t* header)
     return true;
 }
 
+/**
+ * @brief reset modem interface because of error or reset of the other party
+ * 
+ */
+void modem_interface_clear_handler() {
+    //clear RX
+    parsed_header = false;
+    payload_len = 0;
+    fifo_clear(&rx_fifo);
+
+    //clear TX
+    request_pending = false;
+    fifo_clear(&modem_interface_tx_fifo);
+    SWITCH_STATE(STATE_IDLE);
+}
+
+
+static void uart_error_cb(uart_error_t error) {
+    log_print_string("UART ERROR %i", error);
+    if(error == UART_OVERRUN_ERROR) {
+      parsed_header = false;
+      payload_len = 0;
+      fifo_clear(&rx_fifo);
+    }
+}
+
 /** @Brief Processes received uart data
  * 1) Search for sync bytes (always)
  * 2) get header size and parse header
@@ -407,6 +433,10 @@ static void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_
 #endif
 }
 
+static void modem_interface_set_error_callback(uart_error_handler_t uart_error_cb) {
+    uart_set_error_callback(uart, uart_error_cb);
+}
+
 void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pin_id, pin_id_t target_uart_state_pin_id)
 {
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
@@ -422,6 +452,8 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
   
   fifo_init(&rx_fifo, rx_buffer, sizeof(rx_buffer));
   modem_interface_set_rx_interrupt_callback(&uart_rx_cb);
+
+  modem_interface_set_error_callback(&uart_error_cb);
 
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   assert(sched_register_task(&modem_listen) == SUCCESS);

@@ -42,6 +42,17 @@ typedef struct uart_handle uart_handle_t;
 // callback handler for received byte
 typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
+typedef enum
+{
+  UART_NO_ERROR,
+  UART_NOISE_ERROR,
+  UART_FRAMING_ERROR,
+  UART_OVERRUN_ERROR,
+  UART_PARITY_ERROR,
+} uart_error_t;
+
+typedef void (*uart_error_handler_t)(uart_error_t error);
+
 __LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins);
 __LINK_C bool           uart_disable(uart_handle_t* uart);
 __LINK_C bool           uart_get_rx_port_state(uart_handle_t* uart);
@@ -58,6 +69,8 @@ __LINK_C void           uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                                        uart_rx_inthandler_t rx_handler);
 
 __LINK_C void           cdc_set_rx_interrupt_callback(uart_rx_inthandler_t rx_handler);
+
+__LINK_C void           uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler);
 
 #endif
 

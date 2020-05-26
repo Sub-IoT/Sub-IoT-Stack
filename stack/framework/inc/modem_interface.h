@@ -59,4 +59,6 @@ void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_
  */
 void modem_interface_set_target_rebooted_callback(target_rebooted_callback_t cb);
 
+void modem_interface_clear_handler();
+
 #endif //MODEM_INTERFACE_H
