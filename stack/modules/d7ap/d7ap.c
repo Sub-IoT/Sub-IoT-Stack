@@ -80,6 +80,7 @@ void d7ap_stop()
  */
 uint8_t d7ap_register(d7ap_resource_desc_t* desc)
 {
+    assert(inited);
     assert(registered_client_nb < D7AP_MAX_CLIENT_COUNT);
     registered_client[registered_client_nb] = *desc;
     registered_client_nb++;
@@ -176,7 +177,7 @@ error_t d7ap_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* pay
 {
     error_t error;
 
-    if (client_id > registered_client_nb)
+    if (client_id >= registered_client_nb)
         return -ESIZE;
 
     error = d7ap_stack_send(client_id, config, payload, len, expected_response_len, trans_id);

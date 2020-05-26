@@ -20,6 +20,7 @@
 #include "alp_layer.h"
 #include "string.h"
 #include "log.h"
+#include "MODULE_ALP_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -73,7 +74,7 @@ static void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len,
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
     DPRINT_DATA(payload, len);
     alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
-    DPRINT(&d7_status, d7_status.len);
+    DPRINT_DATA(d7_status.itf_status, d7_status.len);
     alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
 
