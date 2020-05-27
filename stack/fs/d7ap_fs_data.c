@@ -225,7 +225,7 @@ def output_number_of_files():
   #define LINKER_SECTION_FS_PERMANENT_FILES
 #endif
 
-__attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (255 * 12)] LINKER_SECTION_FS_METADATA = {
+__attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (256 * 9)] LINKER_SECTION_FS_METADATA = {
   0x34, 0xC2, 0x00, 0x00, // FS_MAGIC_NUMBER first 2 bytes fixed, last 2 byte for version
   /*[[[cog
   output_number_of_files()
