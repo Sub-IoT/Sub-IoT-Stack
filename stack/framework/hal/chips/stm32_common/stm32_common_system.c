@@ -128,6 +128,9 @@ void hw_enter_lowpower_mode(uint8_t mode)
 {
 
   DPRINT("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
+
+  if (mode == 255) return;
+
   start_atomic();
 
   gpio_config_save();
