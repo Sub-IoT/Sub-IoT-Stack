@@ -5,7 +5,8 @@
 #include "string.h"
 
 // TODO validate embedded EEPROM works the same on stm32l1 and uses same start address and size as well
-
+// STM32L4 has no EEPROM
+#if defined (STM32L0) || defined(STM32L1)
 // forward declare driver function pointers
 static void init(blockdevice_t* bd);
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
@@ -57,3 +58,5 @@ static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, ui
 
   return SUCCESS;
 }
+
+#endif

@@ -345,6 +345,23 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     assert(false);
   }
 }
+#elif defined(STM32L4)  // TODO check if ok
+  if(GPIO_PIN(pin_id) <= 4) {
+    HAL_NVIC_SetPriority(EXTI0_IRQn + GPIO_PIN(pin_id), 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn + GPIO_PIN(pin_id));
+    return SUCCESS;
+  } else if (GPIO_PIN(pin_id) <= 9) {
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    return SUCCESS;
+  } else if (GPIO_PIN(pin_id) > 9 && GPIO_PIN(pin_id) <= 15) {
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    return SUCCESS;
+  } else {
+    assert(false);
+  }
+}
 #else
   #error "STM32 family not supported"
 #endif
@@ -373,7 +390,11 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 
 void EXTI_IRQHandler()
 {
+#if defined(STM32L4)
+  uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
+#else
   uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
+#endif
   for (uint8_t pin_nr = 0; pin_nr < EXTI_LINES_COUNT; pin_nr++)
   {
     uint16_t pin = 1 << pin_nr;

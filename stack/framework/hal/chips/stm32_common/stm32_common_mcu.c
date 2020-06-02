@@ -36,13 +36,15 @@ static void init_clock(void)
   // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+#if defined(STM32L0)
   /* Poll VOSF bit of in PWR_CSR. Wait until it is reset to 0 */
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
 
-#if defined(STM32L0)
+
   // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_MEDIUMHIGH);
 #endif
+
   __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_1);
 
   // first switch to HSI as sysclk. Switching to HSI+PLL immediately fails sometimes when calling HAL_RCC_OscConfig()
@@ -61,10 +63,22 @@ static void init_clock(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
+#if defined(STM32L4)
+  // 64 Mhz same as L0
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 8;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLP = 7;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
+#else
   RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
   RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
+#endif
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+
+#if defined(STM32L0)
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
+#endif
 
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
@@ -75,11 +89,16 @@ static void init_clock(void)
   clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+#if defined(STM32L4)
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2; // put periph and timer to 32mhz as on L0
+#else
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+#endif
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
 
 
+#if defined(STM32L0)
 #ifdef FRAMEWORK_DEBUG_ENABLE_SWD
     __HAL_RCC_DBGMCU_CLK_ENABLE( );
 
@@ -92,6 +111,7 @@ static void init_clock(void)
     HAL_DBGMCU_DisableDBGStopMode( );
     HAL_DBGMCU_DisableDBGStandbyMode( );
     __HAL_RCC_DBGMCU_CLK_DISABLE( );
+#endif
 #endif
 }
 

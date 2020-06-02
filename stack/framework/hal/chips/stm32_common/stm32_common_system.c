@@ -50,7 +50,9 @@ static void gpio_config_save() {
   gpioe_moder = GPIOE->MODER;
   gpioh_moder = GPIOH->MODER;
 
+#ifdef STM32L0
   iopenr = RCC->IOPENR;
+#endif
 }
 
 static void gpio_config_restore() {
@@ -78,7 +80,9 @@ static void gpio_config_restore() {
   GPIOH->MODER = gpioh_moder;
   __HAL_RCC_GPIOH_CLK_DISABLE();
 
+#ifdef STM32L0
   RCC->IOPENR = iopenr;
+#endif
 }
 
 system_reboot_reason_t hw_system_reboot_reason()
@@ -102,10 +106,12 @@ void hw_system_save_reboot_reason()
   {
       reboot_reason = REBOOT_REASON_SOFTWARE_REBOOT;
   }
+#ifdef STM32L0
   else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST))
   {
       reboot_reason = REBOOT_REASON_POR;
   }
+#endif
   else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST))
   {
       reboot_reason = REBOOT_REASON_RESET_PIN;
@@ -141,7 +147,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 #endif
 
       __HAL_RCC_PWR_CLK_ENABLE(); // to be able to change PWR registers
-
+#ifdef STM32L0
       PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE); // we don't need Vrefint and PVD
       //RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
@@ -149,7 +155,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
       DPRINT("EXTI->PR %x", EXTI->PR);
       //assert(EXTI->PR == 0);
       assert((PWR->CSR & PWR_CSR_WUF) == 0);
-
+#endif
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 
       // after resuming from STOP mode we should reinit the clock config
@@ -182,7 +188,9 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
       __HAL_RCC_PWR_CLK_ENABLE();
 
+#ifdef STM32L0
       PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE);
+#endif
       HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1);
       HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
 
