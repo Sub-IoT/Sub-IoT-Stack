@@ -208,45 +208,12 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     }
 
     if(initial_data != NULL) {
-        blockdevice_erase_t erase = NULL;
-        if (bd[bd_type]->driver->erase_block_size) {
-            switch(bd[bd_type]->driver->erase_block_size) {
-                case 4096:
-                    log_print_string("set erase to 4k");
-                    erase = &blockdevice_erase_sector4k;
-                    break;
-                case 32768:
-                    log_print_string("set erase to 32k");
-                    erase = &blockdevice_erase_block32k;
-                    break;
-                default:
-                    log_print_string("set erase to chip");
-                    erase = &blockdevice_erase_chip;
-                    break;
-            }
-            erase(bd[bd_type], files[file_id].addr);
-        }
-        uint32_t previous_address = files[file_id].addr;
         uint32_t current_address = files[file_id].addr;
         uint32_t remaining_length = initial_data_length;
         uint8_t* current_data = (uint8_t*)initial_data;
         do {
             /* if we can write the remaining data in one write-block, program the remaining length */
             if((remaining_length <= bd[bd_type]->driver->write_block_size) && ((bd[bd_type]->driver->write_block_size == UINT32_MAX) || ((current_address & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))) == ((current_address + remaining_length) & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1)))))) {
-                /* if erase is necessary and previous address is on a different sector than the current, erase the content */
-                if((bd[bd_type]->driver->erase_block_size) && ((previous_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))) != (current_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))))) {
-                    DPRINT("erase at 1");
-                    if (remaining_length <= bd[bd_type]->driver->erase_block_size)
-                        erase(bd[bd_type], current_address);
-                    else {
-                        uint32_t block = 0;
-                        while(block < remaining_length) {
-                            erase(bd[bd_type], current_address + block);
-                            block += bd[bd_type]->driver->erase_block_size;
-                        }
-                    }
-                }
-
                 DPRINT("program remaining length of %i", remaining_length);
 
                 blockdevice_program(bd[bd_type], current_data, current_address, remaining_length);
@@ -255,19 +222,6 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
             } else if(current_address == files[file_id].addr) {
                 remaining_length -= bd[bd_type]->driver->write_block_size - (current_address & (bd[bd_type]->driver->write_block_size - 1));
 
-                /* if erase is necessary and previous address is on a different sector than the current, erase the content */
-                if((bd[bd_type]->driver->erase_block_size) && ((previous_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))) != (current_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))))) {
-                    DPRINT("erase at 2");
-                    if (initial_data_length - remaining_length <= bd[bd_type]->driver->erase_block_size)
-                        erase(bd[bd_type], current_address);
-                    else {
-                        uint32_t block = 0;
-                        while(block < initial_data_length - remaining_length) {
-                            erase(bd[bd_type], current_address + block);
-                            block += bd[bd_type]->driver->erase_block_size;
-                        }
-                    }
-                }
                 DPRINT("program initial length of %i - %i = %i at address %i", initial_data_length, remaining_length, initial_data_length - remaining_length, current_address);
 
                 blockdevice_program(bd[bd_type], current_data, current_address, initial_data_length - remaining_length);
@@ -275,25 +229,11 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
                 current_address += initial_data_length - remaining_length;
             /* else this is a block in between, just program the maximum amount of block size */
             } else {
-                /* if erase is necessary and previous address is on a different sector than the current, erase the content */
-                if((bd[bd_type]->driver->erase_block_size) && ((previous_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))) != (current_address & (0xFFFFFFFF - (bd[bd_type]->driver->erase_block_size - 1))))) {
-                    DPRINT("erase at 3");
-                    if (bd[bd_type]->driver->write_block_size <= bd[bd_type]->driver->erase_block_size)
-                        erase(bd[bd_type], current_address);
-                    else {
-                        uint32_t block = 0;
-                        while(block < bd[bd_type]->driver->write_block_size) {
-                            erase(bd[bd_type], current_address + block);
-                            block += bd[bd_type]->driver->erase_block_size;
-                        }
-                    }
-                }
                 DPRINT("program write block size of %lu while remaining_length is %i at address %i", (uint32_t)bd[bd_type]->driver->write_block_size, remaining_length, current_address);
 
                 remaining_length -= bd[bd_type]->driver->write_block_size;
                 blockdevice_program(bd[bd_type], current_data, current_address, bd[bd_type]->driver->write_block_size);
                 current_data += bd[bd_type]->driver->write_block_size;
-                previous_address = current_address;
                 current_address += bd[bd_type]->driver->write_block_size;
             }
         } while (remaining_length > 0);
