@@ -68,12 +68,10 @@ uint32_t alp_parse_length_operand(fifo_t* cmd_fifo)
         return (uint32_t)len;
     
     uint32_t full_length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
-    while (field_len > 0) {
-        full_length <<= 8;
-        fifo_pop(cmd_fifo, (uint8_t*)&full_length, 1);
-        field_len--;
+    for(; field_len > 0; field_len--) {
+        fifo_pop(cmd_fifo, &len, 1);
+        full_length += len << (8 * (field_len - 1));
     }
-    
     return full_length;
 }
 
