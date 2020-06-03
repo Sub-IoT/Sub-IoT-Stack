@@ -43,6 +43,7 @@ static uint32_t gpioh_moder;
 static uint32_t iopenr; // GPIO clock enable register
 
 static void gpio_config_save() {
+#ifdef STM32L0
   gpioa_moder = GPIOA->MODER;
   gpiob_moder = GPIOB->MODER;
   gpioc_moder = GPIOC->MODER;
@@ -50,12 +51,13 @@ static void gpio_config_save() {
   gpioe_moder = GPIOE->MODER;
   gpioh_moder = GPIOH->MODER;
 
-#ifdef STM32L0
+
   iopenr = RCC->IOPENR;
 #endif
 }
 
 static void gpio_config_restore() {
+#ifdef STM32L0
   __HAL_RCC_GPIOA_CLK_ENABLE();
   GPIOA->MODER = gpioa_moder;
   __HAL_RCC_GPIOA_CLK_DISABLE();
@@ -80,7 +82,7 @@ static void gpio_config_restore() {
   GPIOH->MODER = gpioh_moder;
   __HAL_RCC_GPIOH_CLK_DISABLE();
 
-#ifdef STM32L0
+
   RCC->IOPENR = iopenr;
 #endif
 }
@@ -122,6 +124,8 @@ void hw_system_save_reboot_reason()
   }
 
   __HAL_RCC_CLEAR_RESET_FLAGS();
+
+  DPRINT("reboot_reason %i", reboot_reason);
 }
 
 void hw_enter_lowpower_mode(uint8_t mode)
@@ -129,7 +133,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
   DPRINT("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
 
-  if (mode == 255) return;
+  //if (mode == 255) return;
 
   start_atomic();
 
