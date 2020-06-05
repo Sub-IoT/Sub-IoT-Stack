@@ -75,6 +75,9 @@ bool uart_enable(uart_handle_t* uart) {
     case USART2_BASE:
       __HAL_RCC_USART2_CLK_ENABLE();
       break;
+    case USART3_BASE:
+      __HAL_RCC_USART3_CLK_ENABLE();
+      break;
 #ifdef USART4_BASE
     case USART4_BASE:
       __HAL_RCC_USART4_CLK_ENABLE();
@@ -136,6 +139,9 @@ bool uart_disable(uart_handle_t* uart) {
       break;
     case USART2_BASE:
       __HAL_RCC_USART2_CLK_DISABLE();
+      break;
+    case USART3_BASE:
+      __HAL_RCC_USART3_CLK_DISABLE();
       break;
     default:
       assert(false);
@@ -268,6 +274,10 @@ static void uart_irq_handler(USART_TypeDef* uart)
 
         assert(false); // we should not reach this point
     }
+}
+
+void USART3_IRQHandler(void) {
+  uart_irq_handler(USART3);
 }
 
 void USART2_IRQHandler(void) {

@@ -410,3 +410,83 @@ void EXTI_IRQHandler()
   }
 }
 
+void EXTI0_IRQHandler()
+{
+  if(__HAL_GPIO_EXTI_GET_IT(1) != RESET)
+  {
+    __HAL_GPIO_EXTI_CLEAR_IT(1);
+    gpio_int_callback(1);
+  }
+}
+
+void EXTI1_IRQHandler()
+{
+  if(__HAL_GPIO_EXTI_GET_IT(1<<1) != RESET)
+  {
+    __HAL_GPIO_EXTI_CLEAR_IT(1<<1);
+    gpio_int_callback(1<<1);
+  }
+}
+
+void EXTI2_IRQHandler()
+{
+  if(__HAL_GPIO_EXTI_GET_IT(1<<2) != RESET)
+  {
+    __HAL_GPIO_EXTI_CLEAR_IT(1<<2);
+    gpio_int_callback(1<<2);
+  }
+}
+
+void EXTI3_IRQHandler()
+{
+  if(__HAL_GPIO_EXTI_GET_IT(1<<3) != RESET)
+  {
+    __HAL_GPIO_EXTI_CLEAR_IT(1<<3);
+    gpio_int_callback(1<<3);
+  }
+}
+
+void EXTI9_5_IRQHandler()
+{
+#if defined(STM32L4)
+  uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
+#else
+  uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
+#endif
+  for (uint8_t pin_nr = 5; pin_nr <= 9; pin_nr++)
+  {
+    uint16_t pin = 1 << pin_nr;
+    if(pin & exti_interrrupts)
+    {
+      if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+      {
+        __HAL_GPIO_EXTI_CLEAR_IT(pin);
+        gpio_int_callback(pin_nr);
+        return;
+      }
+    }
+  }
+}
+
+void EXTI15_10_IRQHandler()
+{
+#if defined(STM32L4)
+  uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
+#else
+  uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
+#endif
+  for (uint8_t pin_nr = 10; pin_nr <= 15; pin_nr++)
+  {
+    uint16_t pin = 1 << pin_nr;
+    if(pin & exti_interrrupts)
+    {
+      if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+      {
+        __HAL_GPIO_EXTI_CLEAR_IT(pin);
+        gpio_int_callback(pin_nr);
+        return;
+      }
+    }
+  }
+}
+

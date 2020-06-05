@@ -286,7 +286,7 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
   return is_pending;
 }
 
-void TIMER_ISR(void)
+void LPTIM1_IRQHandler(void)
 {
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
 #if (defined(STM32L0) || defined(STM32L4))
@@ -356,6 +356,8 @@ void TIMER_ISR(void)
           compare_f();
     }
   }
+#else
+  #error should not be here
 #endif
 }
 
