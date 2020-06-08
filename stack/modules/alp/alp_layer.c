@@ -615,7 +615,7 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                 command->trans_id = command->tag_id; // interface does not provide transaction tracking, using tag_id
 
             if (error) {
-                DPRINT("transmit returned error %x", error);
+                DPRINT("transmit returned error %d", error);
                 empty_itf_status.itf_id = command->forward_itf_id;
                 alp_layer_forwarded_command_completed(command->trans_id, &error, &empty_itf_status, true);
             }
