@@ -8,10 +8,12 @@ variables:
 job 1:
   tags: 
   - linux
-  - arm-toolchain
   stage: build stack
   script: 
-  - PATH="/opt/gcc-arm-none-eabi-7-2018-q2-update/bin/:$PATH"
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y
