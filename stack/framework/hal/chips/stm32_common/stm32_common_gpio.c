@@ -388,14 +388,14 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 	return SUCCESS;
 }
 
-void EXTI_IRQHandler()
+static void handle_exti_irq(uint8_t from, uint8_t to)
 {
 #if defined(STM32L4)
   uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
 #else
   uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
 #endif
-  for (uint8_t pin_nr = 0; pin_nr < EXTI_LINES_COUNT; pin_nr++)
+  for (uint8_t pin_nr = from; pin_nr < to; pin_nr++)
   {
     uint16_t pin = 1 << pin_nr;
     if(pin & exti_interrrupts)
@@ -410,12 +410,17 @@ void EXTI_IRQHandler()
   }
 }
 
+void EXTI_IRQHandler()
+{
+  return handle_exti_irq(0, EXTI_LINES_COUNT);
+}
+
 void EXTI0_IRQHandler()
 {
   if(__HAL_GPIO_EXTI_GET_IT(1) != RESET)
   {
     __HAL_GPIO_EXTI_CLEAR_IT(1);
-    gpio_int_callback(1);
+    gpio_int_callback(0);
   }
 }
 
@@ -424,7 +429,7 @@ void EXTI1_IRQHandler()
   if(__HAL_GPIO_EXTI_GET_IT(1<<1) != RESET)
   {
     __HAL_GPIO_EXTI_CLEAR_IT(1<<1);
-    gpio_int_callback(1<<1);
+    gpio_int_callback(1);
   }
 }
 
@@ -433,7 +438,7 @@ void EXTI2_IRQHandler()
   if(__HAL_GPIO_EXTI_GET_IT(1<<2) != RESET)
   {
     __HAL_GPIO_EXTI_CLEAR_IT(1<<2);
-    gpio_int_callback(1<<2);
+    gpio_int_callback(2);
   }
 }
 
@@ -442,51 +447,17 @@ void EXTI3_IRQHandler()
   if(__HAL_GPIO_EXTI_GET_IT(1<<3) != RESET)
   {
     __HAL_GPIO_EXTI_CLEAR_IT(1<<3);
-    gpio_int_callback(1<<3);
+    gpio_int_callback(3);
   }
 }
 
 void EXTI9_5_IRQHandler()
 {
-#if defined(STM32L4)
-  uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
-#else
-  uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
-#endif
-  for (uint8_t pin_nr = 5; pin_nr <= 9; pin_nr++)
-  {
-    uint16_t pin = 1 << pin_nr;
-    if(pin & exti_interrrupts)
-    {
-      if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
-      {
-        __HAL_GPIO_EXTI_CLEAR_IT(pin);
-        gpio_int_callback(pin_nr);
-        return;
-      }
-    }
-  }
+  return handle_exti_irq(5, 10);
 }
 
 void EXTI15_10_IRQHandler()
 {
-#if defined(STM32L4)
-  uint32_t exti_interrrupts = EXTI->PR1 & EXTI->IMR1;
-#else
-  uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
-#endif
-  for (uint8_t pin_nr = 10; pin_nr <= 15; pin_nr++)
-  {
-    uint16_t pin = 1 << pin_nr;
-    if(pin & exti_interrrupts)
-    {
-      if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
-      {
-        __HAL_GPIO_EXTI_CLEAR_IT(pin);
-        gpio_int_callback(pin_nr);
-        return;
-      }
-    }
-  }
+  return handle_exti_irq(10, 16);
 }
 
