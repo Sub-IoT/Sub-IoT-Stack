@@ -21,6 +21,7 @@
  */
 
 #include "modules_defs.h"
+#include "MODULE_D7AP_FS_defs.h"
 #include "string.h"
 #include "debug.h"
 #include "fs.h"
@@ -60,7 +61,7 @@
 
 #define IS_SYSTEM_FILE(file_id) (file_id <= 0x3F)
 
-#define FILE_SIZE_MAX (256 + sizeof(d7ap_fs_file_header_t))
+#define FILE_SIZE_MAX (MODULE_D7AP_FS_FILE_SIZE_MAX + sizeof(d7ap_fs_file_header_t))
 static uint8_t file_buffer[FILE_SIZE_MAX]; // statically allocated buffer used during file operations, to prevent stack overflow at runtime
 
 
