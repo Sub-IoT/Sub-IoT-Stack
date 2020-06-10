@@ -230,7 +230,6 @@ static void execute_state_machine()
       } else {
         // TODO timeout
         static int i = 0;
-        DPRINT("waiting %d\n", i++);
         sched_post_task(&execute_state_machine); // reschedule again to prevent sleeoping
         // in principle we could go to sleep but this will cause pin to float, this can be improved later
         break;
