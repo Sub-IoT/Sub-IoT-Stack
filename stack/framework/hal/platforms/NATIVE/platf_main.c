@@ -31,9 +31,9 @@
 #define METADATA_SIZE (4 + 4 + (12 * FRAMEWORK_FS_FILE_COUNT))
 
 // on native we use a RAM blockdevice as NVM as well for now
-extern uint8_t d7ap_fs_metadata[METADATA_SIZE];
-extern uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
-extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+uint8_t d7ap_fs_metadata[METADATA_SIZE];
+uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 static blockdevice_ram_t metadata_bd = (blockdevice_ram_t){
     .base.driver = &blockdevice_driver_ram,
@@ -100,5 +100,6 @@ __LINK_C error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_c
 __LINK_C bool hw_timer_is_overflow_pending(hwtimer_id_t id) {}
 __LINK_C error_t hw_timer_cancel(hwtimer_id_t timer_id) {}
 __LINK_C uint64_t hw_get_unique_id(void) { return 0xFFFFFFFFFFFFFF;}
-
-
+__LINK_C void hw_watchdog_feed(void) {};
+__LINK_C void __watchdog_init(void) {};
+__LINK_C void hw_watchdog_get_timeout(void) {};
