@@ -181,8 +181,10 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
   fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT*sizeof(alp_command_t*));
   init_commands();
 
+#ifdef MODULE_ALP_SERIAL_INTERFACE_ENABLED
   if (use_serial_itf)
     serial_interface_register();
+#endif
 
 #ifdef MODULE_D7AP
   d7ap_interface_register();
