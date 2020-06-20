@@ -120,8 +120,6 @@ void modem_init()
 {
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
-    //alp_init_args.alp_received_unsolicited_data_cb = &on_alp_received_unsolicited_data_cb;
-
     alp_layer_init(&alp_init_args, true);
 }
 

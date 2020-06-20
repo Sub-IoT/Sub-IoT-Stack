@@ -54,7 +54,6 @@ typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_interface_s
 typedef struct {
     alp_command_completed_callback alp_command_completed_cb;
     alp_command_result_callback alp_command_result_cb;
-    alp_received_unsolicited_data_callback alp_received_unsolicited_data_cb;
     /**
      * @brief alp_unhandled_read_action_cb Called when the stack received an ALP read action which cannot be processed against the local filesystem,
      * because the requested fileID does not exist.

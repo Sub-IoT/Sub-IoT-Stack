@@ -61,13 +61,6 @@
   }
 #endif
 
-static void on_unsolicited_response_received(alp_interface_status_t* result, uint8_t *alp_command, uint8_t alp_command_size)
-{
-#if PLATFORM_NUM_LEDS > 0
-  led_blink();
-#endif
-}
-
 static alp_init_args_t alp_init_args;
 
 void bootstrap()
@@ -76,7 +69,6 @@ void bootstrap()
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
 
-  alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
   alp_layer_init(&alp_init_args, true);
 
 #ifdef HAS_LCD
