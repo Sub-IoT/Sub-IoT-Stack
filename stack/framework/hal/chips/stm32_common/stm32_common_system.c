@@ -43,7 +43,7 @@ static uint32_t gpioh_moder;
 static uint32_t iopenr; // GPIO clock enable register
 
 static void gpio_config_save() {
-#ifdef STM32L0
+
   gpioa_moder = GPIOA->MODER;
   gpiob_moder = GPIOB->MODER;
   gpioc_moder = GPIOC->MODER;
@@ -51,39 +51,43 @@ static void gpio_config_save() {
   gpioe_moder = GPIOE->MODER;
   gpioh_moder = GPIOH->MODER;
 
-
+#ifdef STM32L0
   iopenr = RCC->IOPENR;
+#elif defined STM32L4
+  iopenr = RCC->AHB2ENR;
 #endif
 }
 
 static void gpio_config_restore() {
-#ifdef STM32L0
+
   __HAL_RCC_GPIOA_CLK_ENABLE();
   GPIOA->MODER = gpioa_moder;
-  __HAL_RCC_GPIOA_CLK_DISABLE();
+  //__HAL_RCC_GPIOA_CLK_DISABLE();
 
   __HAL_RCC_GPIOB_CLK_ENABLE();
   GPIOB->MODER = gpiob_moder;
-  __HAL_RCC_GPIOB_CLK_DISABLE();
+  //__HAL_RCC_GPIOB_CLK_DISABLE();
 
   __HAL_RCC_GPIOC_CLK_ENABLE();
   GPIOC->MODER = gpioc_moder;
-  __HAL_RCC_GPIOC_CLK_DISABLE();
+  //__HAL_RCC_GPIOC_CLK_DISABLE();
 
   __HAL_RCC_GPIOD_CLK_ENABLE();
   GPIOD->MODER = gpiod_moder;
-  __HAL_RCC_GPIOD_CLK_DISABLE();
+  //__HAL_RCC_GPIOD_CLK_DISABLE();
 
   __HAL_RCC_GPIOE_CLK_ENABLE();
   GPIOE->MODER = gpioe_moder;
-  __HAL_RCC_GPIOE_CLK_DISABLE();
+  //__HAL_RCC_GPIOE_CLK_DISABLE();
 
   __HAL_RCC_GPIOH_CLK_ENABLE();
   GPIOH->MODER = gpioh_moder;
-  __HAL_RCC_GPIOH_CLK_DISABLE();
+  //__HAL_RCC_GPIOH_CLK_DISABLE();
 
-
+#ifdef STM32L0
   RCC->IOPENR = iopenr;
+#elif defined STM32L4
+  RCC->AHB2ENR = iopenr;
 #endif
 }
 
@@ -133,7 +137,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
   DPRINT("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
 
-  // if (mode == 255) return;
+  //if (mode == 255) return;
 
   start_atomic();
 
