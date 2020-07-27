@@ -91,9 +91,9 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
 /*!
  * \brief Free an allocated alp_command_t. Note that commands processed by ALP layer are always free-ed by ALP layer when completed already.
  * \param command Command to free
- * \return 
+ * \return true if command got freed successfully
  */
-void alp_layer_command_free(alp_command_t* command);
+bool alp_layer_command_free(alp_command_t* command);
 
 /*!
  * \brief Free an alp_commands with the specified forward interface id. Note that commands processed by ALP layer are always free-ed by ALP layer when completed already.

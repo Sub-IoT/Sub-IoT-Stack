@@ -128,16 +128,17 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
     return NULL;
 }
 
-void alp_layer_command_free(alp_command_t* command)
+bool alp_layer_command_free(alp_command_t* command)
 {
     for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
         if (&commands[i] == command) {
             free_command(command);
-            return;
+            return true;
         }
     }
     
     DPRINT("Could not free command");
+    return false;
 }
 
 void alp_layer_free_itf_commands(uint8_t forward_itf_id)
