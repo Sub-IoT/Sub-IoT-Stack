@@ -157,11 +157,11 @@ void modem_init()
 //  return true;
 //}
 
-int16_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
+alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 {
     alp_command_t* command = alp_layer_command_alloc(true, true);
     if (command == NULL)
-        return -1;
+        return NULL;
 
     alp_append_forward_action(command, &serial_itf_config, 0);
     alp_append_tag_request_action(command, command->tag_id, true);
@@ -169,7 +169,7 @@ int16_t modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 
     alp_layer_process(command);
     
-    return command->tag_id;
+    return command;
 }
 
 int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
