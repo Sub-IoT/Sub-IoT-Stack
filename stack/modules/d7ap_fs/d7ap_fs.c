@@ -140,7 +140,8 @@ int d7ap_fs_init_file_on_blockdevice(
     uint32_t length = sizeof(d7ap_fs_file_header_t);
     if(initial_data != NULL) {
         length += file_header->length;
-        assert(length <= FILE_SIZE_MAX);
+        if(length > FILE_SIZE_MAX)
+          return -EFBIG;
         memcpy(file_buffer + sizeof(d7ap_fs_file_header_t), initial_data, file_header->length);
     }
        

@@ -176,7 +176,8 @@ static int _fs_verify_magic(uint8_t* expected_magic_number)
 
 int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length)
 {
-    assert(file_id < FRAMEWORK_FS_FILE_COUNT);
+    if(file_id >= FRAMEWORK_FS_FILE_COUNT)
+        return -EBADF;
 
     if (_is_file_defined(file_id))
         return -EEXIST;
@@ -259,7 +260,8 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
 int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length)
 {
     assert(is_fs_init_completed);
-    assert(file_id < FRAMEWORK_FS_FILE_COUNT);
+    if(file_id >= FRAMEWORK_FS_FILE_COUNT)
+        return -EBADF;
    
     return (_fs_create_file(file_id, bd_type, initial_data, initial_data_length, length));
 }
@@ -330,7 +332,8 @@ fs_file_stat_t *fs_file_stat(uint8_t file_id)
 {
     assert(is_fs_init_completed);
 
-    assert(file_id < FRAMEWORK_FS_FILE_COUNT);
+    if(file_id >= FRAMEWORK_FS_FILE_COUNT)
+        return NULL;
 
     if (_is_file_defined(file_id))
         return (fs_file_stat_t*)&files[file_id];

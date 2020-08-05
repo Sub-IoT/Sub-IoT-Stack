@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include "framework_defs.h"
 #include "hwsystem.h"
+#include "SEGGER_RTT.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 
@@ -69,6 +70,15 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
     {
         printf(" %02X", message[i]);
     }
+}
+
+void log_print_error_string(char* format,...)
+{
+    va_list args;
+    va_start(args, format);
+    printf("\n\r%s[%03d]%s ", RTT_CTRL_BG_BRIGHT_RED, NG(counter)++, RTT_CTRL_RESET);
+    vprintf(format, args);
+    va_end(args);
 }
 
 
