@@ -205,7 +205,7 @@ __LINK_C error_t sched_register_task(task_t task)
 {
   assert(NG(num_registered_tasks) <= NUM_TASKS);
   if(get_task_id(task) != NO_TASK)
-    return EALREADY;
+    return -EALREADY;
 
 	error_t retVal;
 	check_structs_are_valid();
@@ -263,11 +263,11 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 	check_structs_are_valid();
 	uint8_t task_id = get_task_id(task);
 	if(task_id == NO_TASK)
-		retVal = EINVAL;
+		retVal = -EINVAL;
 	else if(priority > MIN_PRIORITY || priority < MAX_PRIORITY)
-		retVal = ESIZE;
+		retVal = -ESIZE;
 	else if (is_scheduled(task_id))
-		retVal = EALREADY;
+		retVal = -EALREADY;
 	else
 	{
 		if(NG(m_head)[priority] == NO_TASK)
@@ -302,9 +302,9 @@ __LINK_C error_t sched_cancel_task(task_t task)
 	start_atomic();
 	uint8_t id = get_task_id(task);
 	if(id == NO_TASK)
-		retVal = EINVAL;
+		retVal = -EINVAL;
 	else if(!is_scheduled(id))
-		retVal = EALREADY;
+		retVal = -EALREADY;
 	else
 	{
 		if (NG(m_info)[id].prev == NO_TASK)
