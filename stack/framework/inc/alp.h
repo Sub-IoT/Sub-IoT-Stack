@@ -97,13 +97,29 @@ typedef enum {
 typedef enum {
   ALP_STATUS_OK = 0x00,
   ALP_STATUS_PARTIALLY_COMPLETED = 0x01,
-  ALP_STATUS_UNKNOWN_ERROR = 0x80,
+  ALP_STATUS_FILE_ID_NOT_EXISTS = 0xFF,         //access file
+  ALP_STATUS_INSUFFICIENT_PERMISSIONS = 0xFC,   //access file
+  ALP_STATUS_OFFSET_OUT_OF_BOUNDS = 0xF9,       //write file
+  ALP_STATUS_DATA_OVERFLOW = 0xF8,              //write file
+  ALP_STATUS_WRITE_LOCATION_ERROR = 0xF7,       //write file
+  ALP_STATUS_FILE_ID_ALREADY_EXISTS = 0xFE,     //create file
+  ALP_STATUS_LENGTH_OUT_OF_BOUNDS = 0xFB,       //create file
+  ALP_STATUS_ALLOCATION_OUT_OF_BOUNDS = 0xFA,   //create file
+  ALP_STATUS_NOT_RESTORABLE = 0xFD,             //restore file
   ALP_STATUS_UNKNOWN_OPERATION = 0xF6,
-  ALP_STATUS_INSUFFICIENT_PERMISSIONS = 0xFC,
-  // TODO others
-  ALP_STATUS_INCOMPLETE_OPERAND = 0xF5,
-  ALP_STATUS_FILE_ID_ALREADY_EXISTS = 0xFE,
-  ALP_STATUS_FILE_ID_NOT_EXISTS = 0xFF,
+  ALP_STATUS_INCOMPLETE_OPERAND = 0xF5,         
+  ALP_STATUS_WRONG_OPERAND_FORMAT = 0xF4,
+  ALP_STATUS_UNKNOWN_ERROR = 0x80,
+  //custom
+  ALP_STATUS_FIFO_OUT_OF_BOUNDS = 0xE0,
+  ALP_STATUS_EXCEEDS_MAX_ALP_SIZE = 0xE1,
+  ALP_STATUS_NOT_YET_IMPLEMENTED = 0xE2,
+  ALP_STATUS_BREAK_QUERY_FAILED = 0xE3,
+  ALP_STATUS_FILE_ID_OUT_OF_BOUNDS = 0xE4,
+  ALP_STATUS_EMPTY_ITF_STATUS = 0xE5,
+  ALP_STATUS_COMMAND_NOT_FOUND = 0xE6,
+  ALP_STATUS_NO_COMMAND_LEFT = 0xE7,
+  ALP_STATUS_PARSING_FAILED = 0xE8,
 } alp_status_codes_t;
 
 typedef enum {
@@ -114,6 +130,11 @@ typedef enum {
   ARITH_COMP_TYPE_GREATER_THAN = 4,
   ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
 } alp_query_arithmetic_comparison_type_t;
+
+typedef enum {
+    ERROR_ALP = 0,
+    ERROR_ALP_LAYER = 1,
+} error_source_t;
 
 /*! \brief The ALP CTRL header
  *
@@ -203,7 +224,7 @@ typedef struct __attribute__ ((__packed__)) {
 
 typedef struct __attribute__((packed)) {
     uint8_t itf_id;
-    uint8_t len;
+    uint8_t len; //this length is actually a length operand (it can vary from 1 byte to 4 byte). As the ALP_ITF_STATUS_MAX_SIZE is now set to 40, it is not necessary to foresee multiple bytes for this
     uint8_t itf_status[ALP_ITF_STATUS_MAX_SIZE];
 } alp_interface_status_t;
 
@@ -295,27 +316,27 @@ typedef struct {
     uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;
 
-uint8_t alp_get_expected_response_length(alp_command_t* command);
+int alp_get_expected_response_length(alp_command_t* command);
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf);
-void alp_append_tag_request_action(alp_command_t* command, uint8_t tag_id, bool eop);
-void alp_append_tag_response_action(alp_command_t* command, uint8_t tag_id, bool eop, bool err);
-void alp_append_read_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
-void alp_append_write_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
-void alp_append_forward_action(alp_command_t* command, alp_interface_config_t* config, uint8_t config_len);
-void alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
-void alp_append_length_operand(alp_command_t* command, uint32_t length);
-void alp_append_create_new_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
-void alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
-void alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
+bool alp_append_tag_request_action(alp_command_t* command, uint8_t tag_id, bool eop);
+bool alp_append_tag_response_action(alp_command_t* command, uint8_t tag_id, bool eop, bool err);
+bool alp_append_read_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
+bool alp_append_write_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
+bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* config, uint8_t config_len);
+bool alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
+bool alp_append_length_operand(alp_command_t* command, uint32_t length);
+bool alp_append_create_new_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
+bool alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
+bool alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
 
-void alp_parse_action(alp_command_t* command, alp_action_t* action);
-uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
-alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
-alp_operand_file_header_t alp_parse_file_header_operand(alp_command_t* command);
+bool alp_parse_action(alp_command_t* command, alp_action_t* action);
+bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length);
+bool alp_parse_file_offset_operand(fifo_t* cmd_fifo, alp_operand_file_offset_t* operand);
 
 
 uint8_t alp_length_operand_coded_length(uint32_t length);
+alp_status_codes_t alp_handle_error(int rc, alp_operation_t operation, error_source_t source);
 
 #endif /* ALP_H_ */
 

@@ -72,11 +72,15 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...);
 /*! \brief Log raw data */
 __LINK_C void log_print_data(uint8_t* message, uint32_t length);
 
+/*! \brief Log a string using a bright red background to note an error */
+void log_print_error_string(char* format,...);
+
 #else
     #define log_counter_reset() ((void)0)
     #define log_print_string(...) ((void)0)
     #define log_print_stack_string(...) ((void)0)
     #define log_print_data(...) ((void)0)
+    #define log_print_error_string(...) ((void)0)
 #endif
 
 #endif /* __LOG_H_ */
