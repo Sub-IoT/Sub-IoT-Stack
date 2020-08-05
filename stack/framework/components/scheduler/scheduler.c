@@ -149,7 +149,7 @@ static inline void check_structs_are_valid(){}
 #if defined FRAMEWORK_USE_WATCHDOG
 static void __feed_watchdog_task(void *arg)
 {
-	hw_watchdog_feed();
+	//watchdog_feed will be called before task is executed
 }
 #endif
 
@@ -401,6 +401,7 @@ __LINK_C void scheduler_run()
 			end_atomic();
 		}
 #if defined FRAMEWORK_USE_WATCHDOG
+		hw_watchdog_feed(); //feed watchdog to account for the time the last task took to execute
 		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 #endif		
 		hw_enter_lowpower_mode(low_power_mode);

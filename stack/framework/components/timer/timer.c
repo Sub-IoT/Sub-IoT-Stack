@@ -157,7 +157,7 @@ config:
             DPRINT("next_fire_delay <%lu>" , next_fire_delay);
 
             int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
-            do_config = (next_fire_delay < old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
+            do_config = (next_fire_delay <= old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
         }
 
         if (do_config)
