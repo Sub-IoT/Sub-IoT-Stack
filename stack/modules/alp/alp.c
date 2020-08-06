@@ -317,8 +317,10 @@ static bool parse_operand_status(alp_command_t* command, alp_action_t* action, b
         if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->interface_status.itf_id, 1), ALP_OP_STATUS))
             return false;
         DPRINT("itf status (%i)", action->interface_status.itf_id);
-        if(!alp_parse_length_operand(cmd_fifo, (uint32_t*)&action->interface_status.len))
+        uint32_t temp_len;
+        if(!alp_parse_length_operand(cmd_fifo, &temp_len))
             return false;
+        action->interface_status.len = (uint8_t) temp_len;
         if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->interface_status.itf_status, action->interface_status.len), ALP_OP_STATUS))
             return false;
     } else {
