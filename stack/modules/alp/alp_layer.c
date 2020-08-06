@@ -860,8 +860,7 @@ void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, al
         return;
     }
     error_t err = SUCCESS;
-    if(status->len != 0)
-        err += !alp_append_interface_status(resp, status);
+    err += !alp_append_interface_status(resp, status);
     err += !alp_append_tag_response_action(resp, command->tag_id, command_completed, *error != SUCCESS);
 
     if(err != SUCCESS) {
