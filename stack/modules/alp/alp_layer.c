@@ -687,13 +687,14 @@ static void process_async(void* arg)
             alp_status = ALP_STATUS_UNKNOWN_OPERATION;
             alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, action.ctrl.operation, ERROR_ALP_LAYER);
         }
+        if(alp_status == ALP_STATUS_BREAK_QUERY_FAILED)
+            break;
 
         if (alp_status != ALP_STATUS_OK && alp_status != ALP_STATUS_PARTIALLY_COMPLETED) {
             DPRINT("ALP status NOK (%i), skipping", alp_status);
             log_print_error_string("process_async: processing of a parsed action went wrong with status %i", alp_status);
             free_command(command);
             free_command(resp_command);
-            sched_post_task(&process_async);
             return;
         }
 
