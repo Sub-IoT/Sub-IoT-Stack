@@ -124,20 +124,21 @@ alp_status_codes_t alp_register_interface(alp_interface_t* itf)
 
 bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
 {
+    uint8_t len = 0;
     // TODO error handling
-    *length = 0;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)length, 1), ALP_OP_READ_FILE_DATA))
+    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&len, 1), ALP_OP_READ_FILE_DATA))
         return false;
-    uint8_t field_len = *length >> 6;
-    if(field_len == 0)
+    uint8_t field_len = len >> 6;
+    if(field_len == 0) {
+        *length = (uint32_t)len;
         return true;
-    
-    uint8_t temp_len;
-    *length = (*length & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
+    }
+
+    *length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
     for(; field_len > 0; field_len--) {
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &temp_len, 1), ALP_OP_READ_FILE_DATA))
+        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &len, 1), ALP_OP_READ_FILE_DATA))
             return false;
-        *length += temp_len << (8 * (field_len - 1));
+        *length += len << (8 * (field_len - 1));
     }
     return true;
 }
@@ -408,8 +409,11 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     if(action->query_operand.code.mask)
         return alp_handle_error(ALP_STATUS_NOT_YET_IMPLEMENTED, ALP_OP_BREAK_QUERY, ERROR_ALP);
 
-    if(!alp_parse_length_operand(cmd_fifo, &action->query_operand.compare_operand_length))
+    uint32_t temp;
+    if(!alp_parse_length_operand(cmd_fifo, &temp))
         return false;
+
+    action->query_operand.compare_operand_length = temp;
 
     if (action->query_operand.compare_operand_length > ALP_QUERY_COMPARE_BODY_MAX_SIZE)
         return alp_handle_error(-EINVAL, ALP_OP_BREAK_QUERY, ERROR_ALP);
