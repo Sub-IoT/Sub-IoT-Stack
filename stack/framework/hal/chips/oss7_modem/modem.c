@@ -51,9 +51,9 @@ static alp_interface_config_t serial_itf_config = (alp_interface_config_t) {
 static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
     if (success)
-        log_print_string("Command %i completed successfully\n", tag_id);
+        DPRINT("Command %i completed successfully\n", tag_id);
     else
-        log_print_string("Command %i failed, no ack received\n", tag_id);
+        DPRINT("Command %i failed, no ack received\n", tag_id);
 
     DPRINT("command with tag %i completed @ %i", tag_id, timer_get_counter_value());
     if (callbacks->command_completed_callback)
@@ -73,11 +73,11 @@ static void on_alp_command_result_cb(alp_command_t* command)
             if (action.interface_status.itf_id == ALP_ITF_ID_D7ASP) {
                 if (action.interface_status.len > 0) {
                     d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)action.interface_status.itf_status);
-                    log_print_string("recv response @ %i dB link budget from:", d7_result->rx_level);
-                    log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
+                    DPRINT("recv response @ %i dB link budget from:", d7_result->rx_level);
+                    DPRINT_DATA(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
                 }
             } else {
-                log_print_string("itf status for itf id %i len %i", action.interface_status.itf_id, action.interface_status.len);
+                DPRINT("itf status for itf id %i len %i", action.interface_status.itf_id, action.interface_status.len);
             }
 
             if (callbacks->modem_interface_status_callback) {
@@ -103,7 +103,7 @@ static void on_alp_command_result_cb(alp_command_t* command)
             break;
 
         default:
-            log_print_string("ALP op %i not handled", action.ctrl.operation);
+            DPRINT("ALP op %i not handled", action.ctrl.operation);
             break;
         }
     }
