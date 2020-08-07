@@ -71,20 +71,26 @@ static inline bool is_file_defined(uint8_t file_id)
 }
 
 #if defined(MODULE_ALP) && defined(MODULE_D7AP)
-static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface_file_id)
+static int execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface_file_id)
 {
-  assert(is_file_defined(action_file_id));
   // TODO interface_file_id is optional, how do we code this in file header?
   // for now we assume it's always used
-  assert(is_file_defined(interface_file_id));
-
+  if(!is_file_defined(action_file_id) || !is_file_defined(interface_file_id))
+    return -ECHILD;
+    
   alp_interface_config_t itf_cfg;
-  d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&itf_cfg, sizeof(alp_interface_config_t));
+  int rc = d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&itf_cfg, sizeof(alp_interface_config_t));
+  if(rc != SUCCESS)
+    return rc;
   uint32_t action_len = d7ap_fs_get_file_length(action_file_id);
-  assert(action_len <= FILE_SIZE_MAX);
-  fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
+  if(action_len > FILE_SIZE_MAX)
+    return -EFBIG;
+  rc = fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
+  if(rc != SUCCESS)
+    return rc;
 
   alp_layer_process_d7aactp(&itf_cfg, file_buffer, action_len);
+  return SUCCESS;
 }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
@@ -172,7 +178,9 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
   if(header.file_properties.action_protocol_enabled == true
      && header.file_properties.action_condition == D7A_ACT_COND_READ)
   {
-    execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
+    rtc = execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
+    if(rtc != SUCCESS)
+      return rtc;
   }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
@@ -235,7 +243,9 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
   if(header.file_properties.action_protocol_enabled == true
     && header.file_properties.action_condition == D7A_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
   {
-    execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
+    rtc = execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
+    if(rtc != SUCCESS)
+      return rtc;
   }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
@@ -333,8 +343,10 @@ int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_n
 
 int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {
-  assert(access_class_index < 15);
-  assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
+  if(access_class_index >= 15)
+    return -EFAULT;
+  if(!is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
+    return -ENOENT;
   int result = d7ap_fs_read_file(D7A_FILE_ACCESS_PROFILE_ID + access_class_index, 0, (uint8_t*)access_class, D7A_FILE_ACCESS_PROFILE_SIZE);
   for(int i=0; i<SUBBANDS_NB; i++) {
     access_class->subbands[i].channel_index_start = __builtin_bswap16(access_class->subbands[i].channel_index_start);
@@ -345,8 +357,10 @@ int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *
 
 int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)
 {
-  assert(access_class_index < 15);
-  assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
+  if(access_class_index >= 15)
+    return -EFAULT;
+  if(!is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
+    return -ENOENT;
   dae_access_profile_t temp_access_class;
   memcpy(&temp_access_class, access_class, sizeof(dae_access_profile_t));
   for(int i=0; i<SUBBANDS_NB; i++) {
