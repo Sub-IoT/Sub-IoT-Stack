@@ -148,6 +148,13 @@ bool alp_layer_command_free(alp_command_t* command)
     return false;
 }
 
+alp_command_t* alp_layer_get_command_by_tag_id(uint8_t tag_id) {
+    for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++)
+        if(commands[i].tag_id == tag_id)
+            return &(commands[i]);
+    return NULL;
+}
+
 void alp_layer_free_itf_commands(uint8_t forward_itf_id)
 {
     for (uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
@@ -170,7 +177,7 @@ static alp_command_t* get_request_command(uint8_t tag_id, uint8_t itf_id)
     return NULL;
 }
 
-alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_t itf_id) {
+static alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_t itf_id) {
   for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     if(commands[i].forward_itf_id == itf_id && commands[i].trans_id == trans_id && commands[i].is_active) {
         DPRINT("command trans Id %i in slot %i\n", trans_id, i);
