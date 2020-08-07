@@ -59,7 +59,7 @@ alp_status_codes_t alp_handle_error(int rc, alp_operation_t operation, error_sou
             log_print_error_string("%i: action %i: supplied data goes beyond file allocation", source, operation);
             return ALP_STATUS_DATA_OVERFLOW;
         case -EFBIG:
-            log_print_error_string("%i: action %i: large format too large", source, operation);
+            log_print_error_string("%i: action %i: file format too large", source, operation);
             return ALP_STATUS_DATA_OVERFLOW;
         case -EBADF:
             log_print_error_string("%i: action %i: bad file id, probably above %i", source, operation, FRAMEWORK_FS_FILE_COUNT);
@@ -73,6 +73,9 @@ alp_status_codes_t alp_handle_error(int rc, alp_operation_t operation, error_sou
         case -EFAULT:
             log_print_error_string("%i: action %i: packet was not the expected length", source , operation);
             return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
+        case -EEXIST:
+            log_print_error_string("%i: action %i: File already exists", source, operation);
+            return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
         case ALP_STATUS_FIFO_OUT_OF_BOUNDS:
             log_print_error_string("%i: action %i: fifo put byte failed", source, operation);
             return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
@@ -290,7 +293,7 @@ static bool parse_operand_file_data(alp_command_t* command, alp_action_t* action
     }
     if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length), ALP_OP_WRITE_FILE_DATA))
         return false;
-    DPRINT("parsed write file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+    DPRINT("parsed file data operand file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
     return true;
 }
 

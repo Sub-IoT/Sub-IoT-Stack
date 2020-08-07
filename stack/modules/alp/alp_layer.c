@@ -625,6 +625,7 @@ static void process_async(void* arg)
         return;
     }
     static alp_action_t action;
+    static bool error = false;
 
     while (fifo_get_size(&command->alp_command_fifo) > 0) {
         if(!alp_parse_action(command, &action)) {
@@ -687,15 +688,11 @@ static void process_async(void* arg)
             alp_status = ALP_STATUS_UNKNOWN_OPERATION;
             alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, action.ctrl.operation, ERROR_ALP_LAYER);
         }
-        if(alp_status == ALP_STATUS_BREAK_QUERY_FAILED)
+        if(alp_status != ALP_STATUS_OK && alp_status != ALP_STATUS_PARTIALLY_COMPLETED) {
+            //should BREAK QUERY FAILED also return error?
+            //TODO put error code in action status and send to requester
+            error = (alp_status != ALP_STATUS_BREAK_QUERY_FAILED);
             break;
-
-        if (alp_status != ALP_STATUS_OK && alp_status != ALP_STATUS_PARTIALLY_COMPLETED) {
-            DPRINT("ALP status NOK (%i), skipping", alp_status);
-            log_print_error_string("process_async: processing of a parsed action went wrong with status %i", alp_status);
-            free_command(command);
-            free_command(resp_command);
-            return;
         }
 
         if (command->origin_itf_id != ALP_ITF_ID_HOST && command->is_response) {
@@ -800,7 +797,7 @@ static void process_async(void* arg)
                 // make sure to respond when requested, even if there is no response payload
                 // when the request originates from another interface it will already contain a tagresponse, since we always request a tag on forwarding
                 // TODO set err flag
-                if(!alp_append_tag_response_action(resp_command, command->tag_id, true, false)) {
+                if(!alp_append_tag_response_action(resp_command, command->tag_id, true, error)) {
                     log_print_error_string("process async: tag is requested but no room (%i) for tag", fifo_get_size(&resp_command->alp_command_fifo));
                     free_command(command);
                     free_command(resp_command);
