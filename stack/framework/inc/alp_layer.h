@@ -89,6 +89,13 @@ void alp_layer_register_interface(alp_interface_t* interface);
 alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond);
 
 /*!
+ * \brief returns a pointer to the command with the given tag_id.
+ * \param tag_id tag id from the command
+ * \return pointer to command or NULL if command does not exist
+ */
+alp_command_t* alp_layer_get_command_by_tag_id(uint8_t tag_id);
+
+/*!
  * \brief Free an allocated alp_command_t. Note that commands processed by ALP layer are always free-ed by ALP layer when completed already.
  * \param command Command to free
  * \return true if command got freed successfully
