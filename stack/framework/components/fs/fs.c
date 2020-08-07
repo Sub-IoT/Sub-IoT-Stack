@@ -111,14 +111,17 @@ void fs_init()
 int _fs_init()
 {
     uint8_t expected_magic_number[FS_MAGIC_NUMBER_SIZE] = FS_MAGIC_NUMBER;
+    uint32_t number_of_files;
     if (_fs_verify_magic(expected_magic_number) < 0)
     {
         DPRINT("fs_init: no valid magic, recreating fs...");
         _fs_create_magic();
+        number_of_files = 0;
+        blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
+        return 0;
    }
 
     // initialise system file caching
-    uint32_t number_of_files;
     blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
 #if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
     number_of_files = __builtin_bswap32(number_of_files);
@@ -168,7 +171,8 @@ static int _fs_verify_magic(uint8_t* expected_magic_number)
     uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];
     memset(magic_number,0,FS_MAGIC_NUMBER_SIZE);
     blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], magic_number, 0, FS_MAGIC_NUMBER_SIZE);
-    assert(memcmp(expected_magic_number, magic_number, FS_MAGIC_NUMBER_SIZE) == 0); // if not the FS on EEPROM is not compatible with the current code
+    if(memcmp(expected_magic_number, magic_number, FS_MAGIC_NUMBER_SIZE) != 0) // if not the FS on EEPROM is not compatible with the current code
+        return -EINVAL;
 
     return 0;
 }
@@ -269,13 +273,13 @@ int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t*
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
 {
     if(!_is_file_defined(file_id)) return -ENOENT;
-    assert(bd[files[file_id].blockdevice_index] != NULL);
+    if(bd[files[file_id].blockdevice_index] == NULL) return -EFAULT;
 
     if(files[file_id].length < offset + length) return -EINVAL;
     
     DPRINT("fs read_file(file_id %d, offset %d, addr %p, bd %i, length %d)\n",file_id, offset, files[file_id].addr, files[file_id].blockdevice_index, length);
     error_t e = blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
-    assert(e == SUCCESS);
+    if(e != SUCCESS) return e;
 
     return 0;
 }
@@ -283,7 +287,7 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)
 {
     if(!_is_file_defined(file_id)) return -ENOENT;
-    assert(bd[files[file_id].blockdevice_index] != NULL);
+    if(bd[files[file_id].blockdevice_index] == NULL) return -EFAULT;
 
     if(files[file_id].length < offset + length) return -ENOBUFS;
 
@@ -351,7 +355,8 @@ bool fs_unregister_file_modified_callback(uint8_t file_id) {
 
 bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
 {
-    assert(_is_file_defined(file_id));
+    if(!_is_file_defined(file_id))
+        return false;
 
     if(file_modified_callbacks[file_id])
         return false; // already registered
