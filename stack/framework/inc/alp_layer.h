@@ -42,9 +42,8 @@
 #include "d7ap.h"
 #endif
 
-#ifdef MODULE_ALP
-#include "lorawan_stack.h"
-#endif
+#define INTERFACE_CTRL_FILE_ID 0x1C
+#define INTERFACE_CTRL_FILE_SIZE 2
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(alp_command_t* command);
@@ -65,6 +64,21 @@ typedef struct {
      */
     alp_unhandled_read_action_callback alp_unhandled_read_action_cb;
 } alp_init_args_t;
+
+typedef enum {
+    ITF_START,
+    ITF_STOP
+} itf_ctrl_action_t;
+
+typedef struct __attribute__((__packed__)){
+    union {
+        uint16_t raw_itf_ctrl;
+        struct{
+            itf_ctrl_action_t action;
+            alp_itf_id_t destination;
+        };
+    };
+} itf_ctrl_t;
 
 
 /*!
