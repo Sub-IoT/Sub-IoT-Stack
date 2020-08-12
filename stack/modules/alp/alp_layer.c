@@ -86,12 +86,20 @@ static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically alloca
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 static alp_interface_config_t* session_config_buffer;
 
+static itf_ctrl_t current_itf_ctrl;
+static bool own_current_itf_write = false;
+
 static void process_async(void* arg);
 
 static uint8_t next_tag_id = 0;
 
 static fifo_t command_fifo;
 static alp_command_t* command_fifo_buffer[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
+
+static alp_interface_status_t empty_itf_status = {
+    .itf_id = 0,
+    .len = 0
+};
 
 static void free_command(alp_command_t* command) {
   DPRINT("!!! Free cmd %02x %p", command->trans_id, command);
@@ -189,6 +197,39 @@ static alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_
   return NULL;
 }
 
+static void itf_ctrl_file_callback(uint8_t file_id)
+{
+    if(own_current_itf_write) {
+        own_current_itf_write = false;
+        return;
+    }
+    error_t err;
+    err = d7ap_fs_read_file(INTERFACE_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, INTERFACE_CTRL_FILE_SIZE);
+    if(err != SUCCESS) {
+        log_print_error_string("alp_layer: stack ctrl file callback: read file returned error %i", err);
+        current_itf_ctrl.raw_itf_ctrl = 0;
+    }
+    if(current_itf_ctrl.action == ITF_STOP) {
+        for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++)
+            if(interfaces[i] && interfaces[i]->deinit)
+                interfaces[i]->deinit();
+        current_itf_deinit = NULL;
+    } else {
+        if(current_itf_ctrl.destination == ALP_ITF_ID_D7ASP) { //For now, we only init D7 at the start as it doesn't need any settings
+            for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+                if(interfaces[i] && (interfaces[i]->itf_id == current_itf_ctrl.destination) && interfaces[i]->init) {
+                    if(current_itf_deinit && (interfaces[i]->deinit != current_itf_deinit))
+                        current_itf_deinit();
+                    interfaces[i]->init(NULL);
+                    current_itf_deinit = interfaces[i]->deinit;
+                    return;
+            }   }
+            log_print_error_string("tried to start an interface (%i) that is not registered", current_itf_ctrl.destination);
+        }
+
+    }
+}
+
 void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 {
   init_args = alp_init_args;
@@ -210,6 +251,12 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 #endif
   
   sched_register_task(&process_async);
+
+  if(fs_file_stat(INTERFACE_CTRL_FILE_ID)) {
+    fs_register_file_modified_callback(INTERFACE_CTRL_FILE_ID, &itf_ctrl_file_callback);
+    itf_ctrl_file_callback(INTERFACE_CTRL_FILE_ID);
+  } else
+    current_itf_ctrl.raw_itf_ctrl = 0;
 }
 
 void alp_layer_register_interface(alp_interface_t* interface) {
@@ -493,18 +540,49 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
     return ALP_STATUS_OK;
 }
 
+static alp_status_codes_t write_itf_command(itf_ctrl_action_t action)
+{
+    int rc = d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, &action, 1); //gets handled in write file callback
+    if(rc != SUCCESS)
+        return alp_handle_error(rc, ALP_OP_START, ERROR_ALP_LAYER);
+    return ALP_STATUS_OK;
+}
+
+static alp_status_codes_t process_op_start(alp_action_t* action) {
+    DPRINT("START INTERFACE");
+    return write_itf_command(ITF_START);
+}
+
+static alp_status_codes_t process_op_stop(alp_action_t* action) {
+    DPRINT("STOP INTERFACE");
+    return write_itf_command(ITF_STOP);
+}
+
 static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_config)
 {
     bool found = false;
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
         if (command->forward_itf_id == interfaces[i]->itf_id) {
-            if (interfaces[i]->unique && (interfaces[i]->deinit != current_itf_deinit)) {
-                // TODO refactor? always init the interface?
-                if (current_itf_deinit != NULL)
-                    current_itf_deinit();
+            if(interfaces[i] && interfaces[i]->unique) {
+                if(current_itf_ctrl.action == ITF_STOP) {
+                    command->trans_id = command->tag_id;
+                    error_t err = ALP_STATUS_FORWARD_STOPPED;
+                    empty_itf_status.itf_id = command->forward_itf_id;
+                    alp_layer_forwarded_command_completed(command->trans_id, &err, &empty_itf_status, true);
+                    log_print_error_string("tried to forward something over a unique itf while stack stop is active");
+                    return true;
+                }else if (interfaces[i]->deinit != current_itf_deinit) {
+                    // TODO refactor? always init the interface?
+                    if (current_itf_deinit != NULL)
+                        current_itf_deinit();
 
-                interfaces[i]->init(itf_config);
-                current_itf_deinit = interfaces[i]->deinit;
+                    interfaces[i]->init(itf_config);
+                    current_itf_deinit = interfaces[i]->deinit;
+
+                    current_itf_ctrl.destination = interfaces[i]->itf_id;
+                    own_current_itf_write = true;
+                    d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, INTERFACE_CTRL_FILE_SIZE);
+                }
             }
             uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
             if(forwarded_alp_size > ALP_PAYLOAD_MAX_SIZE) {
@@ -527,11 +605,8 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
 
             if (error) {
                 DPRINT("transmit returned error %x", error);
-                alp_interface_status_t itf_status = {
-                    .itf_id = command->forward_itf_id,
-                    .len = 0
-                };
-                alp_layer_forwarded_command_completed(command->trans_id, &error, &itf_status, true);
+                empty_itf_status.itf_id = command->forward_itf_id;
+                alp_layer_forwarded_command_completed(command->trans_id, &error, &empty_itf_status, true);
             }
 
             found = true;
@@ -690,6 +765,12 @@ static void process_async(void* arg)
             break;
         case ALP_OP_CREATE_FILE:
             alp_status = process_op_create_file(&action);
+            break;
+        case ALP_OP_START:
+            alp_status = process_op_start(&action);
+            break;
+        case ALP_OP_STOP:
+            alp_status = process_op_stop(&action);
             break;
         default:
             alp_status = ALP_STATUS_UNKNOWN_OPERATION;
@@ -905,6 +986,36 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
     }
     alp_layer_process(resp);
 }
+
+// void control_interface_handler(fifo_t* fifo) 
+// {
+//     ctrl_interface_action_t action;
+//     if(fifo_get_size(fifo) == 0)
+//         return;
+//     fifo_pop(fifo, &action, 1);
+//     switch(action) {
+//         case CTRL_RESET:
+//         case CTRL_STOP:
+//             if(!current_unique_itf_inited)
+//                 break;
+//             if(current_itf_deinit)
+//                 current_itf_deinit();
+//             current_unique_itf_inited = false;
+//             if(action == CTRL_STOP)
+//                 break;
+//         case CTRL_START:
+//             // if(current_itf_deinit) {
+//             //     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+//             //         if(interfaces[i]->deinit == current_itf_deinit)
+//             //             interfaces[i]->in
+//             //     }
+//             // }
+//             // break;
+//         default:
+//             log_print_error_string("ctrl action %i not yet implemented", action);
+//     }
+//     //let modem know action got completed?
+// }
 
 #ifdef MODULE_D7AP
 void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length)

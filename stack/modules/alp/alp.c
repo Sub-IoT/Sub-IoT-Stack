@@ -528,6 +528,20 @@ static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_
     return true;
 }
 
+static bool parse_operand_start(alp_command_t* command, alp_action_t* action)
+{
+    DPRINT("start interface");
+    //add which interface should be started?
+    return true;
+}
+
+static bool parse_operand_stop(alp_command_t* command, alp_action_t* action)
+{
+    DPRINT("stop interface");
+    //add which interface should be stopped?
+    return true;
+}
+
 bool alp_parse_action(alp_command_t* command, alp_action_t* action)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
@@ -567,6 +581,12 @@ bool alp_parse_action(alp_command_t* command, alp_action_t* action)
         break;
     case ALP_OP_INDIRECT_FORWARD:
         succeeded = parse_operand_indirect_interface(command, action);
+        break;
+    case ALP_OP_START:
+        succeeded = parse_operand_start(command, action);
+        break;
+    case ALP_OP_STOP:
+        succeeded = parse_operand_stop(command, action);
         break;
     default:
         succeeded = false;
@@ -655,6 +675,9 @@ int alp_get_expected_response_length(alp_command_t* command)
             }
 
             break;
+        case ALP_OP_START:
+        case ALP_OP_STOP:
+            break;
         // TODO other operations
         default:
             alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, control.operation, ERROR_ALP);
@@ -678,6 +701,19 @@ bool alp_append_tag_request_action(alp_command_t* command, uint8_t tag_id, bool 
     int rc = fifo_put_byte(cmd_fifo, op);
     rc += fifo_put_byte(cmd_fifo, tag_id);
     return (rc == SUCCESS);
+}
+
+bool alp_append_start_action(alp_command_t* command)
+{
+    uint8_t op = ALP_OP_START;
+    return (fifo_put_byte(&command->alp_command_fifo, op) == SUCCESS);
+}
+
+
+bool alp_append_stop_action(alp_command_t* command)
+{
+    uint8_t op = ALP_OP_STOP;
+    return (fifo_put_byte(&command->alp_command_fifo, op) == SUCCESS);
 }
 
 bool alp_append_tag_response_action(alp_command_t* command, uint8_t tag_id, bool eop, bool err)
