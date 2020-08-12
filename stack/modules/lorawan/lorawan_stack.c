@@ -126,6 +126,8 @@ static lorawan_rx_callback_t rx_callback = NULL; //called when transmitting is d
 static lorawan_tx_completed_callback_t tx_callback = NULL;
 static lorawan_status_callback_t stack_status_callback = NULL;
 
+static bool inited = false;
+
 /**
  * @brief LoRaWAN state machine. Sets parameters in the LoRaWAN stack and handles callbacks
  */
@@ -503,7 +505,9 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
  * @param lorawan_session_config
  */
 void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config) {
-
+  if(inited)
+    return;
+  inited = true;
   activationMethod=ABP;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
@@ -599,7 +603,9 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
  * @param lorawan_session_config
  */
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
-
+  if(inited)
+    return;
+  inited = true;
   activationMethod=OTAA;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
@@ -683,6 +689,9 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
  * @param lorawan_session_config
  */
 void lorawan_stack_deinit(){
+    if(!inited)
+      return;
+    inited = false;
     DPRINT("Deiniting LoRaWAN stack");
     sched_cancel_task(&run_fsm);
     LoRaMacDeInit();
