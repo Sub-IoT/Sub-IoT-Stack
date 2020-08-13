@@ -41,6 +41,7 @@ typedef struct __attribute__((__packed__))
 } d7ap_fs_engineering_mode_t;
 
 error_t engineering_mode_init(); 
+error_t engineering_mode_stop();
 
 #endif //ENGINEERING_MODE_H
 

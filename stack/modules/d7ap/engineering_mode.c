@@ -266,3 +266,8 @@ error_t engineering_mode_init()
   sched_register_task(&start_per_rx);
   sched_register_task(&em_reset);
 }
+
+error_t engineering_mode_stop()
+{
+  fs_unregister_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID);
+}

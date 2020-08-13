@@ -626,6 +626,11 @@ error_t phy_init(void) {
     return ret;
 }
 
+error_t phy_stop() {
+    fs_unregister_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID);
+    timer_cancel_event(&continuous_tx_expiration_timer);
+}
+
 void status_write() {
     write_file_counter++;
     if(write_file_counter == 100) {
