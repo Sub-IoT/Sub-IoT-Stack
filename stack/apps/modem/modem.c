@@ -35,13 +35,13 @@
 #include "platform_defs.h"
 #include "modem_interface.h"
 #include "platform.h"
+#include "d7ap_interface.h"
 
 void bootstrap()
 {
     log_print_string("Device booted\n");
 
     alp_layer_init(NULL, true);
-    d7ap_init();
 
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
