@@ -20,22 +20,13 @@
 // typically used in combination with another MCU where the main application (for instance sensor reading)
 // in running. The application accesses the stack using the serial modem interface.
 
-#include "hwleds.h"
-#include "hwsystem.h"
-#include "debug.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "d7ap.h"
 #include "alp_layer.h"
 #include "d7ap_fs.h"
 #include "log.h"
-#include "dae.h"
-#include "platform_defs.h"
-#include "modem_interface.h"
 #include "platform.h"
-#include "d7ap_interface.h"
 
 void bootstrap()
 {
