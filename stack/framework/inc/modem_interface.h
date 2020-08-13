@@ -54,6 +54,8 @@ void modem_interface_transfer(char* string);
  */
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type);
 
+void modem_interface_unregister_handler(serial_message_type_t type);
+
 /** @brief Registers callback to be executed when the remote target reboots
  *  @param cb Callback function pointer
  */

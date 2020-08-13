@@ -189,6 +189,18 @@ alp_command_t* modem_stop()
     return command;
 }
 
+alp_command_t* modem_restart()
+{
+    alp_command_t* command = prepare_forward_tag_command(true, true);
+    if(!command) return NULL;
+    alp_append_stop_action(command);
+    alp_append_start_action(command);
+
+    alp_layer_process(command);
+
+    return command;
+}
+
 alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 {
     alp_command_t* command = prepare_forward_tag_command(true, true);
