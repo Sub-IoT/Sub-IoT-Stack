@@ -81,7 +81,7 @@ static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
 static alp_interface_config_t session_config_saved;
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
-static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
+static uint8_t alp_data2[ALP_QUERY_COMPARE_BODY_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 static alp_interface_config_t* session_config_buffer;
@@ -95,11 +95,6 @@ static uint8_t next_tag_id = 0;
 
 static fifo_t command_fifo;
 static alp_command_t* command_fifo_buffer[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
-
-static alp_interface_status_t empty_itf_status = {
-    .itf_id = 0,
-    .len = 0
-};
 
 static void free_command(alp_command_t* command) {
   DPRINT("!!! Free cmd %02x %p", command->trans_id, command);
@@ -567,6 +562,10 @@ static alp_status_codes_t process_op_stop(alp_action_t* action) {
 static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_config)
 {
     bool found = false;
+    alp_interface_status_t empty_itf_status = {
+        .itf_id = 0,
+        .len = 0
+    };
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
         if (command->forward_itf_id == interfaces[i]->itf_id) {
             if(interfaces[i] && interfaces[i]->unique) {
