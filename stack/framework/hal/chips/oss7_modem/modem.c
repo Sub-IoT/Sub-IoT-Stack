@@ -160,8 +160,7 @@ void modem_init()
 static alp_command_t* prepare_forward_tag_command(bool init_tag_request, bool always_respond)
 {
     alp_command_t* command = alp_layer_command_alloc(init_tag_request, always_respond);
-    if(!command)
-        return NULL;
+    if(!command) return NULL;
 
     alp_append_forward_action(command, &serial_itf_config, 0);
     alp_append_tag_request_action(command, command->tag_id, true);
@@ -171,6 +170,7 @@ static alp_command_t* prepare_forward_tag_command(bool init_tag_request, bool al
 alp_command_t* modem_start()
 {
     alp_command_t* command = prepare_forward_tag_command(true, true);
+    if(!command) return NULL;
     alp_append_start_action(command);
 
     alp_layer_process(command);
@@ -181,6 +181,7 @@ alp_command_t* modem_start()
 alp_command_t* modem_stop()
 {
     alp_command_t* command = prepare_forward_tag_command(true, true);
+    if(!command) return NULL;
     alp_append_stop_action(command);
 
     alp_layer_process(command);
@@ -191,6 +192,7 @@ alp_command_t* modem_stop()
 alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 {
     alp_command_t* command = prepare_forward_tag_command(true, true);
+    if(!command) return NULL;
     alp_append_read_file_data_action(command, file_id, offset, size, true, false);
 
     alp_layer_process(command);
@@ -200,6 +202,7 @@ alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
 
 int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
     alp_command_t* command = prepare_forward_tag_command(true, false);
+    if(!command) return -1;
     alp_append_write_file_data_action(command, file_id, offset, size, data, true, false);
 
     alp_layer_process(command);
@@ -210,6 +213,7 @@ int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_
 int16_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
                                      alp_interface_config_t* interface_config) {
     alp_command_t* command = prepare_forward_tag_command(true, false);
+    if(!command) return -1;
     alp_append_forward_action(command, interface_config, 0);
     alp_append_return_file_data_action(command, file_id, offset, length, data);
 
@@ -220,6 +224,7 @@ int16_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32
 int16_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
                                          alp_interface_config_t* interface_config) {
     alp_command_t* command = prepare_forward_tag_command(true, false);
+    if(!command) return -1;
     alp_append_forward_action(command, interface_config, 0);
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
@@ -232,6 +237,7 @@ int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t 
     uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
 {
     alp_command_t* command = prepare_forward_tag_command(true, false);
+    if(!command) return -1;
     alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)&d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
 
     alp_append_return_file_data_action(command, data_file_id, offset, length, data);
@@ -244,6 +250,7 @@ int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint3
     uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
 {
     alp_command_t* command = prepare_forward_tag_command(true, false);
+    if(!command) return -1;
     alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
