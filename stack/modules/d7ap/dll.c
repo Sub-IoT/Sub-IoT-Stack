@@ -128,6 +128,7 @@ static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
 static bool reset_noisefl_last_measurements = false;
+static bool phy_status_file_inited = false;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -946,7 +947,9 @@ void dll_init()
         .length = D7A_FILE_PHY_STATUS_SIZE,
         .allocated_length = D7A_FILE_PHY_STATUS_SIZE }; // TODO length for multiple channels
 
-    assert(d7ap_fs_init_file(D7A_FILE_PHY_STATUS_FILE_ID, &volatile_file_header, NULL) == SUCCESS); // TODO error handling
+    if(!phy_status_file_inited)
+        assert(d7ap_fs_init_file(D7A_FILE_PHY_STATUS_FILE_ID, &volatile_file_header, NULL) == SUCCESS); // TODO error handling
+    phy_status_file_inited = true;
 
     if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
@@ -987,6 +990,13 @@ void dll_stop()
     timer_cancel_event(&dll_background_scan_timer);
     timer_cancel_event(&dll_guard_period_expiration_timer);
     timer_cancel_event(&dll_process_received_packet_timer);
+
+    fs_unregister_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID);
+
+#ifdef MODULE_D7AP_EM_ENABLED
+    engineering_mode_stop();
+#endif
+    phy_stop();
 }
 
 void dll_tx_frame(packet_t* packet)

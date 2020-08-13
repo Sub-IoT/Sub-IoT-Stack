@@ -210,16 +210,20 @@ static void itf_ctrl_file_callback(uint8_t file_id)
         current_itf_ctrl.raw_itf_ctrl = 0;
     }
     if(current_itf_ctrl.action == ITF_STOP) {
-        for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++)
-            if(interfaces[i] && interfaces[i]->deinit)
-                interfaces[i]->deinit();
+        if(!current_itf_deinit)
+            return;
+        current_itf_deinit();
         current_itf_deinit = NULL;
     } else {
         if(current_itf_ctrl.destination == ALP_ITF_ID_D7ASP) { //For now, we only init D7 at the start as it doesn't need any settings
             for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
                 if(interfaces[i] && (interfaces[i]->itf_id == current_itf_ctrl.destination) && interfaces[i]->init) {
-                    if(current_itf_deinit && (interfaces[i]->deinit != current_itf_deinit))
-                        current_itf_deinit();
+                    if(current_itf_deinit) {
+                        if(interfaces[i]->deinit == current_itf_deinit) //interface is already inited
+                            return;
+                        else
+                            current_itf_deinit();
+                    }
                     interfaces[i]->init(NULL);
                     current_itf_deinit = interfaces[i]->deinit;
                     return;
@@ -236,6 +240,8 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
   use_serial_itf = use_serial_interface;
   fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT*sizeof(alp_command_t*));
   init_commands();
+
+  d7ap_fs_init();
 
 #ifdef MODULE_ALP_SERIAL_INTERFACE_ENABLED
   if (use_serial_itf)

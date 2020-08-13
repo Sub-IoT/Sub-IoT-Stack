@@ -57,8 +57,6 @@ void d7ap_init()
         return;
     inited = true;
 
-    d7ap_fs_init();
-
     // Initialize the D7AP stack
     d7ap_stack_init();
     registered_client_nb = 0;
