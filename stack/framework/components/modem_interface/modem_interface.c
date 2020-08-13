@@ -514,17 +514,26 @@ void modem_interface_transfer(char* string) {
   modem_interface_transfer_bytes((uint8_t*) string, strnlen(string, 100), SERIAL_MESSAGE_TYPE_LOGGING); 
 }
 
-
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type)
 {
-  if(type == SERIAL_MESSAGE_TYPE_ALP_DATA) 
-    alp_handler=cmd_handler;
-  else if(type == SERIAL_MESSAGE_TYPE_PING_RESPONSE) 
-    ping_response_handler=cmd_handler;
-  else if(type == SERIAL_MESSAGE_TYPE_LOGGING) 
-    logging_handler=cmd_handler;
-  else
-    DPRINT("Modem interface callback not implemented");
+  switch(type) {
+    case SERIAL_MESSAGE_TYPE_ALP_DATA:
+      alp_handler = cmd_handler;
+      break;
+    case SERIAL_MESSAGE_TYPE_PING_RESPONSE:
+      ping_response_handler = cmd_handler;
+      break;
+    case SERIAL_MESSAGE_TYPE_LOGGING:
+      logging_handler = cmd_handler;
+      break;
+    default:
+      DPRINT("Modem interface callback not implemented");
+  }
+}
+
+void modem_interface_unregister_handler(serial_message_type_t type)
+{
+  modem_interface_register_handler(NULL, type);
 }
 
 void modem_interface_set_target_rebooted_callback(target_rebooted_callback_t cb)

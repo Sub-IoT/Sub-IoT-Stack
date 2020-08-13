@@ -58,5 +58,6 @@ int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint3
                                                   uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 alp_command_t* modem_start();
 alp_command_t* modem_stop();
+alp_command_t* modem_restart();
 
 #endif
