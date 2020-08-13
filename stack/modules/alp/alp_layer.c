@@ -992,36 +992,6 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
     alp_layer_process(resp);
 }
 
-// void control_interface_handler(fifo_t* fifo) 
-// {
-//     ctrl_interface_action_t action;
-//     if(fifo_get_size(fifo) == 0)
-//         return;
-//     fifo_pop(fifo, &action, 1);
-//     switch(action) {
-//         case CTRL_RESET:
-//         case CTRL_STOP:
-//             if(!current_unique_itf_inited)
-//                 break;
-//             if(current_itf_deinit)
-//                 current_itf_deinit();
-//             current_unique_itf_inited = false;
-//             if(action == CTRL_STOP)
-//                 break;
-//         case CTRL_START:
-//             // if(current_itf_deinit) {
-//             //     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-//             //         if(interfaces[i]->deinit == current_itf_deinit)
-//             //             interfaces[i]->in
-//             //     }
-//             // }
-//             // break;
-//         default:
-//             log_print_error_string("ctrl action %i not yet implemented", action);
-//     }
-//     //let modem know action got completed?
-// }
-
 #ifdef MODULE_D7AP
 void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
