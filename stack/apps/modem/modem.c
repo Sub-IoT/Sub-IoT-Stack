@@ -40,8 +40,8 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    d7ap_init();
     alp_layer_init(NULL, true);
+    d7ap_init();
 
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
