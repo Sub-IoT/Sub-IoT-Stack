@@ -75,7 +75,7 @@ typedef struct __attribute__((__packed__)){
         uint16_t raw_itf_ctrl;
         struct{
             itf_ctrl_action_t action;
-            alp_itf_id_t destination;
+            alp_itf_id_t interface;
         };
     };
 } itf_ctrl_t;

@@ -90,8 +90,8 @@ typedef enum {
     ALP_OP_FORWARD = 50,
     ALP_OP_INDIRECT_FORWARD = 51,
     ALP_OP_REQUEST_TAG = 52,
-    ALP_OP_START = ALP_OP_CUSTOM + 0,
-    ALP_OP_STOP = ALP_OP_CUSTOM + 1,
+    ALP_OP_START_ITF = ALP_OP_CUSTOM + 0,
+    ALP_OP_STOP_ITF = ALP_OP_CUSTOM + 1,
 } alp_operation_t;
 
 // define the (max) size for all ALP operation types
@@ -114,7 +114,7 @@ typedef enum {
   ALP_STATUS_INCOMPLETE_OPERAND = 0xF5,         
   ALP_STATUS_WRONG_OPERAND_FORMAT = 0xF4,
   ALP_STATUS_UNKNOWN_ERROR = 0x80,
-  //custom
+  //custom alp status commands that are not in the current spec:
   ALP_STATUS_FIFO_OUT_OF_BOUNDS = 0xE0,
   ALP_STATUS_EXCEEDS_MAX_ALP_SIZE = 0xE1,
   ALP_STATUS_NOT_YET_IMPLEMENTED = 0xE2,
@@ -124,7 +124,7 @@ typedef enum {
   ALP_STATUS_COMMAND_NOT_FOUND = 0xE6,
   ALP_STATUS_NO_COMMAND_LEFT = 0xE7,
   ALP_STATUS_PARSING_FAILED = 0xE8,
-  ALP_STATUS_FORWARD_STOPPED = 0xE9,
+  ALP_STATUS_ITF_STOPPED = 0xE9,
 } alp_status_codes_t;
 
 typedef enum {
@@ -334,8 +334,8 @@ bool alp_append_length_operand(alp_command_t* command, uint32_t length);
 bool alp_append_create_new_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
 bool alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
 bool alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
-bool alp_append_start_action(alp_command_t* command);
-bool alp_append_stop_action(alp_command_t* command);
+bool alp_append_start_itf_action(alp_command_t* command);
+bool alp_append_stop_itf_action(alp_command_t* command);
 
 bool alp_parse_action(alp_command_t* command, alp_action_t* action);
 bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length);
