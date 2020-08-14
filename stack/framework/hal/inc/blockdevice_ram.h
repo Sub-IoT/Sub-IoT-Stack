@@ -27,7 +27,6 @@
 // extend blockdevice_t
 typedef struct {
   blockdevice_t base;
-  uint32_t size;
   uint8_t* buffer;
 } blockdevice_ram_t;
 

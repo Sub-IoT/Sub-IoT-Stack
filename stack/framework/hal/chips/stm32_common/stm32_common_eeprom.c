@@ -28,9 +28,9 @@ static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t si
   blockdevice_stm32_eeprom_t* bd_eeprom = (blockdevice_stm32_eeprom_t*)bd;
 
   if(size == 0) return SUCCESS;
-  if(size > bd_eeprom->size) return -ESIZE;
+  if(size > bd_eeprom->base.size) return -ESIZE;
 
-  addr += DATA_EEPROM_BASE + bd_eeprom->offset;
+  addr += DATA_EEPROM_BASE + bd_eeprom->base.offset;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
   memcpy(data, (const void*)(intptr_t)(addr), size);
@@ -42,9 +42,9 @@ static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, ui
   blockdevice_stm32_eeprom_t* bd_eeprom = (blockdevice_stm32_eeprom_t*)bd;
 
   if(size == 0) return SUCCESS;
-  if(size > bd_eeprom->size) return -ESIZE;
+  if(size > bd_eeprom->base.size) return -ESIZE;
 
-  addr += DATA_EEPROM_BASE + bd_eeprom->offset;
+  addr += DATA_EEPROM_BASE + bd_eeprom->base.offset;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
   // TODO optimize by writing per word when possible

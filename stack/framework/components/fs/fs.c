@@ -290,31 +290,18 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
     uint8_t* current_data = (uint8_t*)buffer;
     fs_blockdevice_types_t bd_type = files[file_id].blockdevice_index;
 
+    log_print_string("offset: %d, current_address: %d", offset, files[file_id].addr);
+
     do {
-        /* if we can write the remaining data in one write-block, program the remaining length */
-        if((remaining_length <= bd[bd_type]->driver->write_block_size) && ((bd[bd_type]->driver->write_block_size == UINT32_MAX) || ((current_address & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1))) == ((current_address + remaining_length) & (0xFFFFFFFF - (bd[bd_type]->driver->write_block_size - 1)))))) {
-            DPRINT("program remaining length of %i", remaining_length);
+        // calculate the number of bytes that can be written till the end of the block/page
+        uint32_t bytes_until_end_of_block = bd[bd_type]->driver->write_block_size - ((current_address + bd[bd_type]->offset) % bd[bd_type]->driver->write_block_size);
+        uint8_t bytes_to_program = remaining_length > bytes_until_end_of_block ? bytes_until_end_of_block : remaining_length;
+        DPRINT("Programming %i bytes", bytes_to_program);
+        blockdevice_program(bd[bd_type], current_data, current_address, bytes_to_program);
+        remaining_length -= bytes_to_program;
+        current_data += bytes_to_program;
+        current_address += bytes_to_program;
 
-            blockdevice_program(bd[bd_type], current_data, current_address, remaining_length);
-            remaining_length = 0;
-        /* else if this is the starting block, only write untill the end of the first write_block */
-        } else if(current_address == (files[file_id].addr + offset)) {
-            remaining_length -= bd[bd_type]->driver->write_block_size - (current_address & (bd[bd_type]->driver->write_block_size - 1));
-
-            DPRINT("program initial length of %i - %i = %i at address %i", length, remaining_length, length - remaining_length, current_address);
-
-            blockdevice_program(bd[bd_type], current_data, current_address, length - remaining_length);
-            current_data += length - remaining_length;
-            current_address += length - remaining_length;
-        /* else this is a block in between, just program the maximum amount of block size */
-        } else {
-            DPRINT("program write block size of %lu while remaining_length is %i at address %i", (uint32_t)bd[bd_type]->driver->write_block_size, remaining_length, current_address);
-
-            remaining_length -= bd[bd_type]->driver->write_block_size;
-            blockdevice_program(bd[bd_type], current_data, current_address, bd[bd_type]->driver->write_block_size);
-            current_data += bd[bd_type]->driver->write_block_size;
-            current_address += bd[bd_type]->driver->write_block_size;
-        }
     } while (remaining_length > 0);
 
     DPRINT("fs write_file (file_id %d, offset %d, addr %lu, length %d)\n",

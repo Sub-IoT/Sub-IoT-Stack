@@ -23,6 +23,8 @@ typedef error_t (*blockdevice_erase_t )(blockdevice_t* bd, uint32_t addr);
 
 struct blockdevice {
   blockdevice_driver_t* driver;
+  uint32_t size;
+  uint32_t offset;
 };
 
 void blockdevice_init(blockdevice_t* bd);

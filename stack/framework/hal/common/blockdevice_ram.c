@@ -58,7 +58,7 @@ static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t si
   DPRINT("BD READ %i @ %x\n", size, addr);
 
   if(size == 0) return SUCCESS;
-  if(addr + size > bd_ram->size) return -ESIZE;
+  if(addr + size > bd_ram->base.size) return -ESIZE;
 
   memcpy((void*)data, bd_ram->buffer + addr, size);
 
@@ -70,7 +70,7 @@ static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, ui
   DPRINT("BD WRITE %i @ %x\n", size, addr);
 
   if(size == 0) return SUCCESS;
-  if(addr + size > bd_ram->size) return -ESIZE;
+  if(addr + size > bd_ram->base.size) return -ESIZE;
 
   memcpy(bd_ram->buffer + addr, data, size);
 
