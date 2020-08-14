@@ -290,12 +290,10 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
     uint8_t* current_data = (uint8_t*)buffer;
     fs_blockdevice_types_t bd_type = files[file_id].blockdevice_index;
 
-    log_print_string("offset: %d, current_address: %d", offset, files[file_id].addr);
-
     do {
         // calculate the number of bytes that can be written till the end of the block/page
         uint32_t bytes_until_end_of_block = bd[bd_type]->driver->write_block_size - ((current_address + bd[bd_type]->offset) % bd[bd_type]->driver->write_block_size);
-        uint8_t bytes_to_program = remaining_length > bytes_until_end_of_block ? bytes_until_end_of_block : remaining_length;
+        uint32_t bytes_to_program = remaining_length > bytes_until_end_of_block ? bytes_until_end_of_block : remaining_length;
         DPRINT("Programming %i bytes", bytes_to_program);
         blockdevice_program(bd[bd_type], current_data, current_address, bytes_to_program);
         remaining_length -= bytes_to_program;
