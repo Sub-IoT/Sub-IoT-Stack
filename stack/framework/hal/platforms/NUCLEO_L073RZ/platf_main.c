@@ -142,15 +142,15 @@ void __platform_init()
     // the embedded EEPROM is divided in 2 logical block devices, 1 for metadata and 1 for permanent files
     blockdevice_stm32_eeprom_t* stm32_eeprom_metadata_bd = (blockdevice_stm32_eeprom_t*)metadata_blockdevice;
     stm32_eeprom_metadata_bd->base.driver = &blockdevice_driver_stm32_eeprom;
-    stm32_eeprom_metadata_bd->offset = 0;
-    stm32_eeprom_metadata_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start);
+    stm32_eeprom_metadata_bd->base.offset = 0;
+    stm32_eeprom_metadata_bd->base.size = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start);
 
     blockdevice_init(metadata_blockdevice);
 
     blockdevice_stm32_eeprom_t* stm32_eeprom_permanent_files_bd = (blockdevice_stm32_eeprom_t*)persistent_files_blockdevice;
     stm32_eeprom_permanent_files_bd->base.driver = &blockdevice_driver_stm32_eeprom;
-    stm32_eeprom_permanent_files_bd->offset = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start); // blockdevices begins after metadata block device // TODO aligment on sector?
-    stm32_eeprom_permanent_files_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_permanent_files_end - (uint8_t*)&__d7ap_fs_permanent_files_start);
+    stm32_eeprom_permanent_files_bd->base.offset = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start); // blockdevices begins after metadata block device // TODO aligment on sector?
+    stm32_eeprom_permanent_files_bd->base.size = (uint32_t)((uint8_t*)&__d7ap_fs_permanent_files_end - (uint8_t*)&__d7ap_fs_permanent_files_start);
 
     blockdevice_init(persistent_files_blockdevice);
     blockdevice_init(volatile_blockdevice);
