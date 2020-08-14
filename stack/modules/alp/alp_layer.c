@@ -205,7 +205,7 @@ void alp_layer_register_interface(alp_interface_t* interface) {
 static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command)
 {
     alp_operand_file_data_request_t operand = action->file_data_request_operand;
-    DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
+    DPRINT("READ FILE %i LEN %i OFFSET %i", operand.file_offset.file_id, operand.requested_data_length, operand.file_offset.offset);
 
     if (operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
@@ -269,7 +269,7 @@ static alp_status_codes_t process_op_write_file_properties(alp_action_t* action)
 }
 
 static alp_status_codes_t process_op_write_file_data(alp_action_t* action) {
-    DPRINT("WRITE FILE %i LEN %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+    DPRINT("WRITE FILE %i LEN %i OFFSET %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length, action->file_data_operand.file_offset.offset);
     if (action->file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
     
@@ -567,7 +567,7 @@ static alp_interface_t* find_interface(uint8_t itf_id)
 
 static void transmit_response(alp_command_t* req, alp_command_t* resp)
 {
-    DPRINT("async response to cmd tag %i, ori itf %i completed %i", req->tag_id, req->origin_itf_id, resp->is_response_completed);
+    DPRINT("async response to cmd tag %i, ori itf %i completed %i length %i", req->tag_id, req->origin_itf_id, resp->is_response_completed);
     // when the command originates from the app code call callbacks directly, since this is not a 'real' interface
     if (req->origin_itf_id == ALP_ITF_ID_HOST) {
         transmit_response_to_app(resp);
@@ -691,7 +691,7 @@ static void process_async(void* arg)
 #endif
     
     DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
-        command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
+            command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
     if (command->is_response) {
         // when the command is an async response to a preceding request we first find the original request and send the response to the origin itf
         // find original request
