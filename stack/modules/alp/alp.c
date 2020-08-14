@@ -582,10 +582,10 @@ bool alp_parse_action(alp_command_t* command, alp_action_t* action)
     case ALP_OP_INDIRECT_FORWARD:
         succeeded = parse_operand_indirect_interface(command, action);
         break;
-    case ALP_OP_START:
+    case ALP_OP_START_ITF:
         succeeded = parse_operand_start(command, action);
         break;
-    case ALP_OP_STOP:
+    case ALP_OP_STOP_ITF:
         succeeded = parse_operand_stop(command, action);
         break;
     default:
@@ -675,8 +675,8 @@ int alp_get_expected_response_length(alp_command_t* command)
             }
 
             break;
-        case ALP_OP_START:
-        case ALP_OP_STOP:
+        case ALP_OP_START_ITF:
+        case ALP_OP_STOP_ITF:
             break;
         // TODO other operations
         default:
@@ -703,16 +703,16 @@ bool alp_append_tag_request_action(alp_command_t* command, uint8_t tag_id, bool 
     return (rc == SUCCESS);
 }
 
-bool alp_append_start_action(alp_command_t* command)
+bool alp_append_start_itf_action(alp_command_t* command)
 {
-    uint8_t op = ALP_OP_START;
+    uint8_t op = ALP_OP_START_ITF;
     return (fifo_put_byte(&command->alp_command_fifo, op) == SUCCESS);
 }
 
 
-bool alp_append_stop_action(alp_command_t* command)
+bool alp_append_stop_itf_action(alp_command_t* command)
 {
-    uint8_t op = ALP_OP_STOP;
+    uint8_t op = ALP_OP_STOP_ITF;
     return (fifo_put_byte(&command->alp_command_fifo, op) == SUCCESS);
 }
 
