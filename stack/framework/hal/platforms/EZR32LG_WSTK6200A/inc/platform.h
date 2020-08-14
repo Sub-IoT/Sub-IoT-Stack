@@ -85,7 +85,7 @@
 
 static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
- .size = sizeof(fs_systemfiles),
+ .base.size = sizeof(fs_systemfiles),
  .buffer = (uint8_t*)&fs_systemfiles
 };
 
@@ -94,13 +94,13 @@ extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 static blockdevice_ram_t permanent_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
- .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
+ .base.size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
  .buffer = d7ap_files_data
 };
 
 static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
- .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+ .base.size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
  .buffer = d7ap_volatile_files_data
 };
 

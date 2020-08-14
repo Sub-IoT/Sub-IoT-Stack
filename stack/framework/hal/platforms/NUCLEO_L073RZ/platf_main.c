@@ -41,7 +41,7 @@ static blockdevice_stm32_eeprom_t permanent_files_bd;
 extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
     .base.driver = &blockdevice_driver_ram,
-    .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+    .base.size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
     .buffer = d7ap_volatile_files_data
 };
 

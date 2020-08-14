@@ -82,7 +82,7 @@ extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
- .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+ .base.size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
  .buffer = d7ap_volatile_files_data
 };
 
