@@ -121,10 +121,10 @@ void modem_init()
     alp_layer_init(&alp_init_args, true);
 }
 
-// void modem_send_ping() {
-//  uint8_t ping_request[1]={0x01};
-//  modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
-//}
+void modem_send_ping() {
+ uint8_t ping_request[1]={0x01};
+ modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
+}
 
 // bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
 //  modem_interface_transfer_bytes(alp, len, SERIAL_MESSAGE_TYPE_ALP_DATA);

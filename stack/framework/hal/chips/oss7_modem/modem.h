@@ -56,6 +56,7 @@ int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t 
                                               uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
                                                   uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
+void modem_send_ping();
 alp_command_t* modem_start();
 alp_command_t* modem_stop();
 alp_command_t* modem_restart();
