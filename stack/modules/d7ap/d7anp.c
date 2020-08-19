@@ -40,6 +40,7 @@
 #define DPRINT_DATA(...)
 #endif
 
+#define CRC_SIZE 2
 
 typedef enum {
     D7ANP_STATE_STOPPED,
@@ -240,7 +241,7 @@ void d7anp_init()
      */
     uint8_t key[AES_BLOCK_SIZE];
 
-    assert (d7ap_fs_read_nwl_security_key(key) == ALP_STATUS_OK); // TODO permission
+    assert (d7ap_fs_read_nwl_security_key(key) == SUCCESS); // TODO permission
     DPRINT("KEY");
     DPRINT_DATA(key, AES_BLOCK_SIZE);
     AES128_init(key);
@@ -306,7 +307,7 @@ security:
         DPRINT("Frame counter %ld", packet->d7anp_security.frame_counter);
 
         // Update the frame counter in the D7A file
-        fs_write_nwl_security(&security_state);
+        d7ap_fs_write_nwl_security(&security_state);
     }
 #else
     assert(packet->d7anp_ctrl.nls_method == AES_NONE); // when encryption is requested the MODULE_D7AP_NLS_ENABLED cmake option should be set
@@ -467,7 +468,8 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
 
     nls_method = packet->d7anp_ctrl.nls_method;
 
-    payload_len = packet->hw_radio_packet.length + 1 - index - 2; // exclude the headers CRC bytes // TODO exclude footers
+    //this said payload_len = packet->hw_radio_packet.length + 1 - index - CRC_SIZE; but I don't know why we would add 1 and it seems to only work without it.
+    payload_len = packet->hw_radio_packet.length - index - CRC_SIZE; // exclude the headers CRC bytes // TODO exclude footers
     auth_len = get_auth_len(nls_method); // the authentication length is given in bytes
 
     /* remove the authentication tag from the payload length if relevant */

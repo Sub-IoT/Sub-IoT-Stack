@@ -128,7 +128,7 @@ static alp_init_args_t alp_init_args;
 void bootstrap()
 {
     log_print_string("Device booted\n");
-
+    d7ap_fs_init();
     d7ap_init();
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
