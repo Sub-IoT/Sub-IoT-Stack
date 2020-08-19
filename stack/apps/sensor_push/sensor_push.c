@@ -68,7 +68,7 @@ static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
     .dormant_timeout = 0,
     .addressee = {
         .ctrl = {
-            .nls_method = AES_NONE,
+            .nls_method = AES_CTR,
             .id_type = ID_TYPE_NOID,
         },
         .access_class = 0x01,
