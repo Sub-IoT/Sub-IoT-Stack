@@ -343,7 +343,7 @@ bool alp_parse_file_offset_operand(fifo_t* cmd_fifo, alp_operand_file_offset_t* 
 
 
 uint8_t alp_length_operand_coded_length(uint32_t length);
-alp_status_codes_t alp_handle_error(int rc, alp_operation_t operation, error_source_t source);
+alp_status_codes_t alp_translate_error(int rc);
 
 #endif /* ALP_H_ */
 

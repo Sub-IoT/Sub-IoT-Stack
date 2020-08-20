@@ -278,10 +278,7 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
     if(files[file_id].length < offset + length) return -EINVAL;
     
     DPRINT("fs read_file(file_id %d, offset %d, addr %p, bd %i, length %d)\n",file_id, offset, files[file_id].addr, files[file_id].blockdevice_index, length);
-    error_t e = blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
-    if(e != SUCCESS) return e;
-
-    return 0;
+    return blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
 }
 
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)

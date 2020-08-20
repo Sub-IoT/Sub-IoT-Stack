@@ -44,71 +44,32 @@
 
 alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 
-alp_status_codes_t alp_handle_error(int rc, alp_operation_t operation, error_source_t source) {
-    switch(rc) {
-        case -ENOENT:
-            log_print_error_string("%i: action %i: file id not found", source, operation);
-            return ALP_STATUS_FILE_ID_NOT_EXISTS;
-        case -EINVAL:
-            log_print_error_string("%i: action %i: length and offset out of bounds", source, operation);
-            return ALP_STATUS_LENGTH_OUT_OF_BOUNDS;
-        case -ESIZE:
-            log_print_error_string("%i: action %i: parameter was outside the expected range", source, operation);
-            return ALP_STATUS_WRONG_OPERAND_FORMAT;
-        case -ENOBUFS:
-            log_print_error_string("%i: action %i: supplied data goes beyond file allocation", source, operation);
-            return ALP_STATUS_DATA_OVERFLOW;
-        case -EFBIG:
-            log_print_error_string("%i: action %i: file format too large", source, operation);
-            return ALP_STATUS_DATA_OVERFLOW;
-        case -EBADF:
-            log_print_error_string("%i: action %i: bad file id, probably above %i", source, operation, FRAMEWORK_FS_FILE_COUNT);
-            return ALP_STATUS_FILE_ID_OUT_OF_BOUNDS;
-        case -ENOEXEC:
-            log_print_error_string("%i: action %i: can't execute because command is wrong", source, operation);
-            return ALP_STATUS_UNKNOWN_OPERATION;
-        case -EPERM:
-            log_print_error_string("%i: action %i: operation not permitted, probably calling a function that's not implemented", source, operation);
-            return ALP_STATUS_NOT_YET_IMPLEMENTED;
-        case -EFAULT:
-            log_print_error_string("%i: action %i: packet was not the expected length", source , operation);
-            return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
-        case -EEXIST:
-            log_print_error_string("%i: action %i: File already exists", source, operation);
-            return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
-        case ALP_STATUS_FIFO_OUT_OF_BOUNDS:
-            log_print_error_string("%i: action %i: fifo put byte failed", source, operation);
-            return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
-        case ALP_STATUS_EXCEEDS_MAX_ALP_SIZE:
-            log_print_error_string("%i: action %i: exceeds max alp size of %i", source, operation, ALP_PAYLOAD_MAX_SIZE);
-            return ALP_STATUS_EXCEEDS_MAX_ALP_SIZE;
-        case ALP_STATUS_NOT_YET_IMPLEMENTED:
-            log_print_error_string("%i: action %i: trying to access not implemented actions", source, operation);
-            return ALP_STATUS_NOT_YET_IMPLEMENTED;
-        case ALP_STATUS_WRONG_OPERAND_FORMAT:
-            log_print_error_string("%i: action %i: operand had wrong format or impossible values", source, operation);
-            return ALP_STATUS_WRONG_OPERAND_FORMAT;
-        case ALP_STATUS_EMPTY_ITF_STATUS:
-            log_print_error_string("%i: action %i: expected interface status", source, operation);
-            return ALP_STATUS_EMPTY_ITF_STATUS;
-        case ALP_STATUS_COMMAND_NOT_FOUND:
-            log_print_error_string("%i: action %i: no command found with given transid and itf-id", source, operation);
-            return ALP_STATUS_COMMAND_NOT_FOUND;
-        case ALP_STATUS_UNKNOWN_OPERATION:
-            log_print_error_string("%i: action %i: unknown operation", source, operation);
-            return ALP_STATUS_UNKNOWN_OPERATION;
-        default:
-            log_print_error_string("%i: action %i: unknown error %i", source, operation, rc);
-            return ALP_STATUS_UNKNOWN_ERROR;
+alp_status_codes_t alp_translate_error(int rc)
+{
+    switch (rc) {
+    case -ENOENT:
+        return ALP_STATUS_FILE_ID_NOT_EXISTS;
+    case -EINVAL:
+        return ALP_STATUS_LENGTH_OUT_OF_BOUNDS;
+    case -ESIZE:
+        return ALP_STATUS_WRONG_OPERAND_FORMAT;
+    case -ENOBUFS:
+        return ALP_STATUS_DATA_OVERFLOW;
+    case -EFBIG:
+        return ALP_STATUS_DATA_OVERFLOW;
+    case -EBADF:
+        return ALP_STATUS_FILE_ID_OUT_OF_BOUNDS;
+    case -ENOEXEC:
+        return ALP_STATUS_UNKNOWN_OPERATION;
+    case -EPERM:
+        return ALP_STATUS_NOT_YET_IMPLEMENTED;
+    case -EFAULT:
+        return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
+    case -EEXIST:
+        return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
+    default:
+        return ALP_STATUS_UNKNOWN_ERROR;
     }
-}
-
-static bool check_fifo_succeeded(int rc, alp_operation_t operation) {
-    if(rc != SUCCESS) {
-        alp_handle_error(ALP_STATUS_FIFO_OUT_OF_BOUNDS, operation, ERROR_ALP);
-        return false;
-    }
-    return true;
 }
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf)
@@ -129,7 +90,7 @@ bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
 {
     uint8_t len = 0;
     // TODO error handling
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&len, 1), ALP_OP_READ_FILE_DATA))
+    if(fifo_pop(cmd_fifo, (uint8_t*)&len, 1) != SUCCESS)
         return false;
     uint8_t field_len = len >> 6;
     if(field_len == 0) {
@@ -139,7 +100,7 @@ bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
 
     *length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
     for(; field_len > 0; field_len--) {
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &len, 1), ALP_OP_READ_FILE_DATA))
+        if(fifo_pop(cmd_fifo, &len, 1) != SUCCESS)
             return false;
         *length += len << (8 * (field_len - 1));
     }
@@ -173,11 +134,9 @@ bool alp_append_length_operand(alp_command_t* command, uint32_t length) {
 
 bool alp_parse_file_offset_operand(fifo_t* cmd_fifo, alp_operand_file_offset_t* operand)
 {
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &operand->file_id, 1), ALP_OP_CREATE_FILE))
+    if(fifo_pop(cmd_fifo, &operand->file_id, 1) != SUCCESS)
         return false;
-    if(!alp_parse_length_operand(cmd_fifo, &operand->offset))
-        return false;
-    return true;
+    return alp_parse_length_operand(cmd_fifo, &operand->offset);
 }
 
 bool alp_append_file_offset_operand(alp_command_t* command, uint8_t file_id, uint32_t offset) {
@@ -186,11 +145,7 @@ bool alp_append_file_offset_operand(alp_command_t* command, uint8_t file_id, uin
     rc = fifo_put_byte(cmd_fifo, file_id);
     rc += !alp_append_length_operand(command, offset);
 
-    if(rc != SUCCESS) {
-        alp_handle_error(ALP_STATUS_FIFO_OUT_OF_BOUNDS, ALP_OP_CREATE_FILE, ERROR_ALP);
-        return false;
-    }
-    return true;
+    return (rc == SUCCESS);
 }
 
 bool alp_append_indirect_forward_action(
@@ -206,20 +161,15 @@ bool alp_append_indirect_forward_action(
     }
 
     DPRINT("INDIRECT FORWARD");
-    if(rc != SUCCESS) {
-        alp_handle_error(ALP_STATUS_FIFO_OUT_OF_BOUNDS, ALP_OP_INDIRECT_FORWARD, ERROR_ALP);
-        return false;
-    }
-    return true;
+    return (rc == SUCCESS);
 }
 
 bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* itf_config, uint8_t config_len)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    if(!itf_config) {
-        alp_handle_error(ALP_STATUS_EMPTY_ITF_STATUS, ALP_OP_FORWARD, ERROR_ALP);
+    if(!itf_config)
         return false;
-    }
+    
     error_t rc = SUCCESS;
     rc = fifo_put_byte(cmd_fifo, ALP_OP_FORWARD);
     rc += fifo_put_byte(cmd_fifo, itf_config->itf_id);
@@ -260,13 +210,8 @@ bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* i
         rc += fifo_put(cmd_fifo, itf_config->itf_config, config_len);
     }
 
-    if(rc != SUCCESS) {
-        alp_handle_error(ALP_STATUS_FIFO_OUT_OF_BOUNDS, ALP_OP_FORWARD, ERROR_ALP);
-        return false;
-    }
-
     DPRINT("FORWARD");
-    return true;
+    return (rc == SUCCESS);
 }
 
 bool alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
@@ -287,11 +232,9 @@ static bool parse_operand_file_data(alp_command_t* command, alp_action_t* action
         return false;
     if(!alp_parse_length_operand(cmd_fifo, &action->file_data_operand.provided_data_length))
         return false;
-    if(action->file_data_operand.provided_data_length > sizeof(action->file_data_operand.data)) {
-        alp_handle_error(ALP_STATUS_LENGTH_OUT_OF_BOUNDS, ALP_OP_WRITE_FILE_DATA, ERROR_ALP);
+    if(action->file_data_operand.provided_data_length > sizeof(action->file_data_operand.data))
         return false;
-    }
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length), ALP_OP_WRITE_FILE_DATA))
+    if(fifo_pop(cmd_fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length) != SUCCESS)
         return false;
     DPRINT("parsed file data operand file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
     return true;
@@ -318,18 +261,17 @@ static bool parse_operand_status(alp_command_t* command, alp_action_t* action, b
         //TODO implement handling of action status
     } else if (!b7 && b6) {
         //interface status operation
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->interface_status.itf_id, 1), ALP_OP_STATUS))
+        if(fifo_pop(cmd_fifo, &action->interface_status.itf_id, 1) != SUCCESS)
             return false;
         DPRINT("itf status (%i)", action->interface_status.itf_id);
         uint32_t temp_len;
         if(!alp_parse_length_operand(cmd_fifo, &temp_len))
             return false;
         action->interface_status.len = (uint8_t) temp_len;
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->interface_status.itf_status, action->interface_status.len), ALP_OP_STATUS))
+        if(fifo_pop(cmd_fifo, action->interface_status.itf_status, action->interface_status.len) != SUCCESS)
             return false;
     } else {
         DPRINT("op_status ext not defined b6=%i, b7=%i", b6, b7);
-        alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, ALP_OP_STATUS, ERROR_ALP);
         return false;
     }
 
@@ -339,42 +281,34 @@ static bool parse_operand_status(alp_command_t* command, alp_action_t* action, b
 
 static bool parse_op_forward(alp_command_t* command, alp_action_t* action)
 {
-    bool found = false;
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1), ALP_OP_FORWARD))
+    if(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1) != SUCCESS)
         return false;
 
     if (action->interface_config.itf_id == ALP_ITF_ID_D7ASP) {
         uint8_t min_size = sizeof (d7ap_session_config_t) - 8; // substract max size of responder ID
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->interface_config.itf_config, min_size), ALP_OP_FORWARD))
+        if(fifo_pop(cmd_fifo, action->interface_config.itf_config, min_size) != SUCCESS)
             return false;
         uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)&(action->interface_config))->d7ap_session_config.addressee.ctrl.id_type);
-        if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->interface_config.itf_config + min_size, id_len), ALP_OP_FORWARD))
-            return false;
-        return true;
+        return (fifo_pop(cmd_fifo, action->interface_config.itf_config + min_size, id_len) == SUCCESS);
     }
 
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
         if (action->interface_config.itf_id == interfaces[i]->itf_id) {
-            if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len), ALP_OP_FORWARD))
+            if(fifo_pop(cmd_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
                 return false;
-            found = true;
             DPRINT("FORWARD %02X", action->interface_config.itf_id);
-            break;
+            return true;
         }
     }
 
-    if (!found) {
-        DPRINT("FORWARD interface %02X not found", action->interface_config.itf_id);
-        alp_handle_error(ALP_STATUS_WRONG_OPERAND_FORMAT, ALP_OP_FORWARD, ERROR_ALP);
-        return false;
-    }
-    return true;
+    DPRINT("FORWARD interface %02X not found", action->interface_config.itf_id);
+    return false;
 }
 
 static bool parse_operand_file_id(alp_command_t* command, alp_action_t* action)
 {
-    if(!check_fifo_succeeded(fifo_pop(&command->alp_command_fifo, &action->file_id_operand.file_id, 1), ALP_OP_EXIST_FILE))
+    if(fifo_pop(&command->alp_command_fifo, &action->file_id_operand.file_id, 1) != SUCCESS)
         return false;
     DPRINT("READ FILE PROPERTIES %i", action->file_id_operand.file_id);
     return true;
@@ -383,9 +317,9 @@ static bool parse_operand_file_id(alp_command_t* command, alp_action_t* action)
 static bool parse_operand_file_header(alp_command_t* command, alp_action_t* action)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->file_header_operand.file_id, 1), ALP_OP_WRITE_FILE_PROPERTIES))
+    if(fifo_pop(cmd_fifo, &action->file_header_operand.file_id, 1) != SUCCESS)
         return false;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&action->file_header_operand.file_header, sizeof(d7ap_fs_file_header_t)), ALP_OP_WRITE_FILE_PROPERTIES))
+    if(fifo_pop(cmd_fifo, (uint8_t*)&action->file_header_operand.file_header, sizeof(d7ap_fs_file_header_t)) != SUCCESS)
         return false;
 
     // convert to little endian (native)
@@ -402,15 +336,15 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     fifo_t* cmd_fifo = &command->alp_command_fifo;
     error_t err;
     DPRINT("BREAK QUERY");
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->query_operand.code.raw, 1), ALP_OP_BREAK_QUERY))
+    if(fifo_pop(cmd_fifo, &action->query_operand.code.raw, 1) != SUCCESS)
         return false;
 
     if(action->query_operand.code.type != QUERY_CODE_TYPE_ARITHM_COMP_WITH_VALUE_IN_QUERY)
-        return alp_handle_error(ALP_STATUS_NOT_YET_IMPLEMENTED, ALP_OP_BREAK_QUERY, ERROR_ALP);
+        return false;
     
     // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
     if(action->query_operand.code.mask)
-        return alp_handle_error(ALP_STATUS_NOT_YET_IMPLEMENTED, ALP_OP_BREAK_QUERY, ERROR_ALP);
+        return false;
 
     uint32_t temp;
     if(!alp_parse_length_operand(cmd_fifo, &temp))
@@ -419,9 +353,9 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     action->query_operand.compare_operand_length = temp;
 
     if (action->query_operand.compare_operand_length > ALP_QUERY_COMPARE_BODY_MAX_SIZE)
-        return alp_handle_error(-EINVAL, ALP_OP_BREAK_QUERY, ERROR_ALP);
+        return false;
 
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->query_operand.compare_body, (uint16_t)action->query_operand.compare_operand_length), ALP_OP_BREAK_QUERY))
+    if(fifo_pop(cmd_fifo, action->query_operand.compare_body, (uint16_t)action->query_operand.compare_operand_length) != SUCCESS)
         return false;
     
     // parse the file offset operand(s), using a temp fifo
@@ -431,7 +365,7 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     alp_operand_file_offset_t temp_offset;
     if(!alp_parse_file_offset_operand(&temp_fifo, &temp_offset)) // TODO assuming only 1 file offset operant. Why does this get discarded?
         return false;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, action->query_operand.compare_body + action->query_operand.compare_operand_length, temp_fifo.head_idx), ALP_OP_BREAK_QUERY))
+    if(fifo_pop(cmd_fifo, action->query_operand.compare_body + action->query_operand.compare_operand_length, temp_fifo.head_idx) != SUCCESS)
         return false;
 
     return true;
@@ -439,18 +373,14 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
 
 static bool parse_operand_tag_id(alp_command_t* command, alp_action_t* action)
 {
-    if(!check_fifo_succeeded(fifo_pop(&command->alp_command_fifo, &action->tag_id_operand.tag_id, 1), ALP_OP_REQUEST_TAG))
-        return false;
-
-    return true;
+    return (fifo_pop(&command->alp_command_fifo, &action->tag_id_operand.tag_id, 1) == SUCCESS);
 }
 
 static bool parse_operand_interface_config(alp_command_t* command, alp_action_t* action)
 {
     error_t err;
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    bool found = false;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1), ALP_OP_FORWARD))
+    if(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1) != SUCCESS)
         return false;
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
         if (action->interface_config.itf_id == interfaces[i]->itf_id) {
@@ -458,72 +388,58 @@ static bool parse_operand_interface_config(alp_command_t* command, alp_action_t*
             if (action->interface_config.itf_id == ALP_ITF_ID_D7ASP) {
 #ifdef MODULE_D7AP
                 uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
-                if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&action->interface_config.itf_config, min_size), ALP_OP_FORWARD))
+                if(fifo_pop(cmd_fifo, (uint8_t*)&action->interface_config.itf_config, min_size) != SUCCESS)
                     return false;
                 uint8_t id_len
                     = d7ap_addressee_id_length(((d7ap_session_config_t*)action->interface_config.itf_config)
                                                    ->addressee.ctrl.id_type);
-                if(!check_fifo_succeeded(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config + min_size, id_len), ALP_OP_FORWARD))
-                        return false;
+                if(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config + min_size, id_len) != SUCCESS)
+                    return false;
 #endif
             } else {
-                if(!check_fifo_succeeded(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config, interfaces[i]->itf_cfg_len), ALP_OP_FORWARD))
-                        return false;
+                if(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
+                    return false;
             }
 
-            found = true;
             DPRINT("FORWARD %02X", action->interface_config.itf_id);
-            break;
+            return true;
         }
     }
     
-    if (!found) {
-        DPRINT("FORWARD interface %02X not found", action->interface_config.itf_id);
-        alp_handle_error(ALP_STATUS_WRONG_OPERAND_FORMAT, ALP_OP_FORWARD, ERROR_ALP);
-        return false;
-    }
-    return true;
+    DPRINT("FORWARD interface %02X not found", action->interface_config.itf_id);
+    return false;
 }
 
 static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_t* action)
 {
     DPRINT("indirect fwd");
-    error_t err;
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->indirect_interface_operand.interface_file_id, 1), ALP_OP_INDIRECT_FORWARD))
+    if(fifo_pop(cmd_fifo, &action->indirect_interface_operand.interface_file_id, 1) != SUCCESS)
         return false;
 
     if (action->ctrl.b7) {
         // overload bit set. To determine the overload length currently we need to read the itf_id from the file
         // since it is not coded in the ALP. // TODO discuss in protocol action group
         uint8_t itf_id;
-        err = d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1);
-        if(err != SUCCESS) {
-            alp_handle_error(err, ALP_OP_INDIRECT_FORWARD, ERROR_ALP);
+        if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1) != SUCCESS)
             return false;
-        }
-        bool found = false;
         for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
             if (itf_id == interfaces[i]->itf_id) {
 #ifdef MODULE_D7AP
-                if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data, 2), ALP_OP_INDIRECT_FORWARD))
+                if(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data, 2) != SUCCESS)
                     return false;
                 uint8_t id_len = d7ap_addressee_id_length(
                     ((alp_interface_config_d7ap_t*)action->indirect_interface_operand.overload_data)
                         ->d7ap_session_config.addressee.ctrl.id_type);
-                if(!check_fifo_succeeded(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data + 2, id_len), ALP_OP_INDIRECT_FORWARD))
+                if(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data + 2, id_len) != SUCCESS)
                     return false;
 #endif
-                found = true;
                 DPRINT("indirect forward %02X", action->indirect_interface_operand.interface_file_id);
-                break;
+                return true;
             }
         }
-        if (!found) {
-            DPRINT("interface %02X is not registered", action->indirect_interface_operand.interface_file_id);
-            alp_handle_error(ALP_STATUS_WRONG_OPERAND_FORMAT, ALP_OP_INDIRECT_FORWARD, ERROR_ALP);
-            return false;
-        }
+        DPRINT("interface %02X is not registered", action->indirect_interface_operand.interface_file_id);
+        return false;
     }
     return true;
 }
@@ -545,10 +461,10 @@ static bool parse_operand_stop(alp_command_t* command, alp_action_t* action)
 bool alp_parse_action(alp_command_t* command, alp_action_t* action)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
-    if(!check_fifo_succeeded(fifo_pop(cmd_fifo, &action->ctrl.raw, 1), ALP_OP_NOP))
+    if(fifo_pop(cmd_fifo, &action->ctrl.raw, 1) != SUCCESS)
         return false;
     DPRINT("ALP op %i", action->ctrl.operation);
-    bool succeeded = false;
+    bool succeeded;
     
     switch (action->ctrl.operation) {
     case ALP_OP_WRITE_FILE_DATA:
@@ -590,7 +506,6 @@ bool alp_parse_action(alp_command_t* command, alp_action_t* action)
         break;
     default:
         succeeded = false;
-        alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, action->ctrl.operation, ERROR_ALP);
     }
     return succeeded;
 }
@@ -606,7 +521,7 @@ int alp_get_expected_response_length(alp_command_t* command)
     
     while (fifo_get_size(command_copy_fifo) > 0) {
         alp_control_t control;
-        if(!check_fifo_succeeded(fifo_pop(command_copy_fifo, &control.raw, 1), ALP_OP_NOP))
+        if(fifo_pop(command_copy_fifo, &control.raw, 1) != SUCCESS)
             return -EINVAL;
         
         switch (control.operation) {
@@ -641,10 +556,8 @@ int alp_get_expected_response_length(alp_command_t* command)
             break;
         case ALP_OP_INDIRECT_FORWARD:;
             e += fifo_skip(command_copy_fifo, 1); // skip interface file id
-            if(control.b7) {
-                alp_handle_error(ALP_STATUS_NOT_YET_IMPLEMENTED, ALP_OP_INDIRECT_FORWARD, ERROR_ALP);
+            if(control.b7)
                 return -EPERM;
-            }
             break;
         case ALP_OP_WRITE_FILE_PROPERTIES:
         case ALP_OP_CREATE_FILE:
@@ -669,10 +582,8 @@ int alp_get_expected_response_length(alp_command_t* command)
                 uint32_t length;
                 e += !alp_parse_length_operand(command_copy_fifo, &length);
                 e += fifo_skip(command_copy_fifo, (uint16_t)length); // itf_status_len + itf status
-            } else {
-                alp_handle_error(-ENOEXEC, ALP_OP_STATUS, ERROR_ALP);
+            } else
                 return -ENOEXEC; 
-            }
 
             break;
         case ALP_OP_START_ITF:
@@ -680,14 +591,11 @@ int alp_get_expected_response_length(alp_command_t* command)
             break;
         // TODO other operations
         default:
-            alp_handle_error(ALP_STATUS_UNKNOWN_OPERATION, control.operation, ERROR_ALP);
             return -ENOEXEC;
         }
     }
-    if(e != SUCCESS) {
-        alp_handle_error(ALP_STATUS_FIFO_OUT_OF_BOUNDS, ALP_OP_NOP, ERROR_ALP);
+    if(e != SUCCESS)
         return -EFAULT;
-    }
 
     DPRINT("Expected ALP response length=%i", expected_response_length);
     return (int)expected_response_length;
