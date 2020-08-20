@@ -634,7 +634,6 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_t *ctr_blk)
 {
 #ifdef HAL_SUPPORT_HW_AES
-#error
     // Hardware AES support for CTR through the low level peripheral library EMLIB
     hw_aes_ctr128(output, input, length, Key, ctr_blk);
 #else

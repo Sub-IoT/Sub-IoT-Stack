@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-SET(HAL_SUPPORT_HW_AES "TRUE" CACHE BOOL "AES is supported by an hardware accelerated module")
-
 #list all subdirectories to get a list of components
 LIST_SUBDIRS(COMPONENTS ${CMAKE_CURRENT_SOURCE_DIR})
 #add the individual libraries
