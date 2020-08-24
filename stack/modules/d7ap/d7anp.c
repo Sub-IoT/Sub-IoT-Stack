@@ -209,6 +209,15 @@ void d7anp_set_address_id(uint8_t file_id)
     d7ap_fs_read_uid(address_id);
 }
 
+static void set_key(uint8_t file_id)
+{
+    uint8_t key[AES_BLOCK_SIZE];
+    assert(d7ap_fs_read_nwl_security_key(key) == SUCCESS); // TODO permission
+    DPRINT("KEY");
+    DPRINT_DATA(key, AES_BLOCK_SIZE);
+    AES128_init(key);
+}
+
 void d7anp_init()
 {
     assert(d7anp_state == D7ANP_STATE_STOPPED);
@@ -239,12 +248,9 @@ void d7anp_init()
      * Init Security
      * Read the 128 bits key from the "NWL Security Key" file
      */
-    uint8_t key[AES_BLOCK_SIZE];
 
-    assert (d7ap_fs_read_nwl_security_key(key) == SUCCESS); // TODO permission
-    DPRINT("KEY");
-    DPRINT_DATA(key, AES_BLOCK_SIZE);
-    AES128_init(key);
+    fs_register_file_modified_callback(D7A_FILE_NWL_SECURITY_KEY, &set_key);
+    set_key(D7A_FILE_NWL_SECURITY_KEY);
 
     /* Read the NWL security parameters */
     d7ap_fs_read_nwl_security(&security_state);
