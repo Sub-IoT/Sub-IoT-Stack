@@ -44,34 +44,6 @@
 
 alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 
-alp_status_codes_t alp_translate_error(int rc)
-{
-    switch (rc) {
-    case -ENOENT:
-        return ALP_STATUS_FILE_ID_NOT_EXISTS;
-    case -EINVAL:
-        return ALP_STATUS_LENGTH_OUT_OF_BOUNDS;
-    case -ESIZE:
-        return ALP_STATUS_WRONG_OPERAND_FORMAT;
-    case -ENOBUFS:
-        return ALP_STATUS_DATA_OVERFLOW;
-    case -EFBIG:
-        return ALP_STATUS_DATA_OVERFLOW;
-    case -EBADF:
-        return ALP_STATUS_FILE_ID_OUT_OF_BOUNDS;
-    case -ENOEXEC:
-        return ALP_STATUS_UNKNOWN_OPERATION;
-    case -EPERM:
-        return ALP_STATUS_NOT_YET_IMPLEMENTED;
-    case -EFAULT:
-        return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
-    case -EEXIST:
-        return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
-    default:
-        return ALP_STATUS_UNKNOWN_ERROR;
-    }
-}
-
 alp_status_codes_t alp_register_interface(alp_interface_t* itf)
 {
   for(uint8_t i=0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
@@ -89,7 +61,6 @@ alp_status_codes_t alp_register_interface(alp_interface_t* itf)
 bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
 {
     uint8_t len = 0;
-    // TODO error handling
     if(fifo_pop(cmd_fifo, (uint8_t*)&len, 1) != SUCCESS)
         return false;
     uint8_t field_len = len >> 6;

@@ -119,12 +119,9 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
             DPRINT("alloc cmd %p in slot %i", &commands[i], i);
             if (with_tag_request) {
                 next_tag_id++;
-                if(!alp_append_tag_request_action(&commands[i], next_tag_id, always_respond)) {
-                    free_command(&commands[i]); //try freeing command again to reinit fifo
-                    commands[i].is_active = true;
-                    if(!alp_append_tag_request_action(&commands[i], next_tag_id, always_respond))
-                        return NULL;
-                }
+                if(!alp_append_tag_request_action(&commands[i], next_tag_id, always_respond))
+                    return NULL;
+
                 commands[i].tag_id = next_tag_id;
             }
 
@@ -188,6 +185,34 @@ static alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_
 
   DPRINT("No active command found with transaction Id = %i transmitted over itf %i\n", trans_id, itf_id);
   return NULL;
+}
+
+static alp_status_codes_t alp_translate_error(int rc)
+{
+    switch (rc) {
+    case -ENOENT:
+        return ALP_STATUS_FILE_ID_NOT_EXISTS;
+    case -EINVAL:
+        return ALP_STATUS_LENGTH_OUT_OF_BOUNDS;
+    case -ESIZE:
+        return ALP_STATUS_WRONG_OPERAND_FORMAT;
+    case -ENOBUFS:
+        return ALP_STATUS_DATA_OVERFLOW;
+    case -EFBIG:
+        return ALP_STATUS_DATA_OVERFLOW;
+    case -EBADF:
+        return ALP_STATUS_FILE_ID_OUT_OF_BOUNDS;
+    case -ENOEXEC:
+        return ALP_STATUS_UNKNOWN_OPERATION;
+    case -EPERM:
+        return ALP_STATUS_NOT_YET_IMPLEMENTED;
+    case -EFAULT:
+        return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
+    case -EEXIST:
+        return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
+    default:
+        return ALP_STATUS_UNKNOWN_ERROR;
+    }
 }
 
 static void itf_ctrl_file_callback(uint8_t file_id)
