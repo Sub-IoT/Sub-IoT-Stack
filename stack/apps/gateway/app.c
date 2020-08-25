@@ -65,6 +65,7 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
+  d7ap_fs_init();
   d7ap_init();
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
