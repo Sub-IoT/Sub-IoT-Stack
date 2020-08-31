@@ -59,7 +59,8 @@ static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
         callbacks->command_completed_callback(!success, tag_id);
 }
 
-static void on_alp_command_result_cb(alp_command_t* command)
+// origin itf status is unused as this is always the serial interface status
+static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__unused__)) alp_interface_status_t* origin_itf_status)
 {
     alp_action_t action;
     while (fifo_get_size(&command->alp_command_fifo) > 0) {

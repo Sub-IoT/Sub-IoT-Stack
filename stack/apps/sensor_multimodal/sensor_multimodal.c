@@ -102,21 +102,26 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success) {
     log_print_string("Command failed, no ack received");
 }
 
-void on_alp_command_result_cb(alp_interface_status_t* result, uint8_t* payload, uint8_t payload_length) {
-  if(result->itf_id == ALP_ITF_ID_D7ASP) {
-      d7ap_session_result_t d7_result;
-      memcpy(&d7_result, result->itf_status, result->len);
-      log_print_string("recv response @ %i dB link budget from:", d7_result.link_budget);
-      log_print_data(d7_result.addressee.id, 8);
-  }
-
-  log_print_string("response payload:");
-  log_print_data(payload, payload_length);
-
+void on_alp_command_result_cb(alp_command_t* alp_command, alp_interface_status_t* origin_itf_status)
+{
+    if (origin_itf_status && (origin_itf_status->itf_id == ALP_ITF_ID_D7ASP) && (origin_itf_status->len > 0)) {
+        d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)origin_itf_status->itf_status);
+        log_print_string("recv response @ %i dB link budget from:", d7_result->rx_level);
+        log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
+    }
+    log_print_string("response payload:");
+    log_print_data(alp_command->alp_command, fifo_get_size(&alp_command->alp_command_fifo));
+    fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
 }
 
 static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
-  alp_layer_execute_command_over_itf(alp, len, &itf_cfg);
+  alp_command_t* command = alp_layer_command_alloc(false, false);
+  
+  // forward to the D7 interface
+  alp_append_forward_action(command, (alp_interface_config_t*)&itf_cfg, sizeof(itf_cfg));
+
+  fifo_put(&command->alp_command_fifo, alp, len);
+  
   return 0;
 }
 

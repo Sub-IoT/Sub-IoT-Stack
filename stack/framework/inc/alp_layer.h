@@ -46,7 +46,7 @@
 #define INTERFACE_CTRL_FILE_SIZE 2
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
-typedef void (*alp_command_result_callback)(alp_command_t* command);
+typedef void (*alp_command_result_callback)(alp_command_t* command, alp_interface_status_t* origin_itf_status);
 typedef void (*alp_received_unsolicited_data_callback)(alp_interface_status_t* result, uint8_t *alp_command, uint8_t alp_command_size);
 typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_interface_status_t* result, alp_operand_file_data_request_t operand, uint8_t* alp_response);
 

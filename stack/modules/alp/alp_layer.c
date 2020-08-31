@@ -84,7 +84,6 @@ static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocat
 static uint8_t alp_data2[ALP_QUERY_COMPARE_BODY_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
-static alp_interface_config_t* session_config_buffer;
 
 static itf_ctrl_t current_itf_ctrl;
 static bool ignore_itf_ctrl_write_callback = false;
@@ -627,32 +626,6 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
     return false;
 }
 
-static void transmit_response_to_app(alp_command_t* resp)
-{
-    if (init_args && init_args->alp_command_result_cb) {
-        init_args->alp_command_result_cb(resp);
-    }
-}
-
-static void transmit_response_to_serial(alp_command_t* resp, alp_interface_status_t* origin_itf_status)
-{
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) { 
-        if ((interfaces[i] != NULL) && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)) {
-            DPRINT("serial itf found, sending");
-            if(!alp_append_interface_status(resp, origin_itf_status)) {
-                log_print_error_string("there was no more room in the respond command to fit the serial interface status. Abort.");
-                return;
-            }
-            uint32_t len = fifo_get_size(&resp->alp_command_fifo);
-            fifo_pop(&resp->alp_command_fifo, alp_data, len);
-            interfaces[i]->send_command(alp_data, len, 0, NULL, NULL);
-            return;
-        }
-    }
-    DPRINT("serial itf not found");
-    assert(false); //Leaving this assert as it is technically not possible to answer a request from serial without a registered interface
-}
-
 static alp_interface_t* find_interface(uint8_t itf_id)
 {
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
@@ -665,28 +638,34 @@ static alp_interface_t* find_interface(uint8_t itf_id)
     return NULL;
 }
 
-static error_t transmit_response(alp_command_t* req, alp_command_t* resp)
+static error_t transmit_response(
+    alp_command_t* resp, alp_itf_id_t transmit_itf, alp_interface_status_t* origin_itf_status)
 {
-    DPRINT("async response to cmd tag %i, ori itf %i completed %i length %i", req->tag_id, req->origin_itf_id, resp->is_response_completed);
+    DPRINT("async response to ori itf %i completed %i", transmit_itf, resp->is_response_completed);
     // when the command originates from the app code call callbacks directly, since this is not a 'real' interface
-    if (req->origin_itf_id == ALP_ITF_ID_HOST) {
-        transmit_response_to_app(resp);
+    if ((transmit_itf == ALP_ITF_ID_HOST) && init_args && init_args->alp_command_result_cb) {
+        init_args->alp_command_result_cb(resp, origin_itf_status);
         return SUCCESS;
     }
 
-    alp_interface_t* interface = find_interface(req->origin_itf_id);
-    if(interface == NULL)  {
-        DPRINT("interface %i not found", req->origin_itf_id);
-        assert(false); //Leaving this assert as it is technically not possible to answer a request without a registered interface
+    if (origin_itf_status) {
+        if (!alp_append_interface_status(resp, origin_itf_status))
+            return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
     }
-    
+
+    alp_interface_t* interface = find_interface(transmit_itf);
+    if (interface == NULL) {
+        DPRINT("interface %i not found", transmit_itf);
+        assert(false); // Leaving this assert as it is technically not possible to answer a request without a registered
+                       // interface
+    }
+
     uint8_t alp_response_length = (uint8_t)fifo_get_size(&resp->alp_command_fifo);
     uint8_t expected_response_length = 0; // TODO alp_get_expected_response_length(&resp->alp_command_fifo);
     DPRINT("interface found, sending len %i, expect %i answer", alp_response_length, expected_response_length);
-    return interface->send_command(resp->alp_command, alp_response_length, expected_response_length, &resp->trans_id, session_config_buffer);
+    return interface->send_command(
+        resp->alp_command, alp_response_length, expected_response_length, &resp->trans_id, NULL);
 }
-
-
 
 static void process_async(void* arg)
 {
@@ -842,22 +821,13 @@ static void process_async(void* arg)
                         return;
                     }
                 }
-                        
-                
-                if(!alp_append_interface_status(resp_command, &command->origin_itf_status)) {
-                    log_print_error_string("process_async: command is response but no room (%i) in resp_command to add interface status", fifo_get_size(&resp_command->alp_command_fifo));
-                    free_command(resp_command);
-                    free_command(command);
-                    free_command(request_command);
-                    return;
-                }
             }
 
             resp_command->is_response = true;
             resp_command->is_response_completed = command->is_response_completed;
             fifo_pop(&command->alp_command_fifo, alp_data, cmd_size);
             fifo_put(&resp_command->alp_command_fifo, alp_data, cmd_size);
-            transmit_response(request_command, resp_command);
+            transmit_response(resp_command, request_command->origin_itf_id, &command->origin_itf_status);
         }
 
         if (command->is_response_completed) {
@@ -869,15 +839,9 @@ static void process_async(void* arg)
             free_command(request_command);
         }
     } else {
-        // Check if unsollicited response
         if (resp_command->is_unsollicited) {
-            if (use_serial_itf) {
-                DPRINT("Unsollicited response, sending to serial");
-                transmit_response_to_serial(resp_command, &command->origin_itf_status);
-            } else {
-                DPRINT("Unsollicited response, sending to app");
-                transmit_response_to_app(resp_command);
-            }
+            DPRINT("Unsollicited data with serial enabled: %i", use_serial_itf);
+            transmit_response(resp_command, use_serial_itf ? ALP_ITF_ID_SERIAL : ALP_ITF_ID_HOST, &command->origin_itf_status);
         }
 
         // uint8_t resp_cmd_size = fifo_get_size(&resp_command->alp_command_fifo);
@@ -898,7 +862,7 @@ static void process_async(void* arg)
                 }
 
             }
-            transmit_response(command, resp_command);
+            transmit_response(resp_command, command->origin_itf_id, NULL);
         }
     }
     
