@@ -45,13 +45,13 @@
 
 // Define the maximum length of the user data according the size occupied already by the parameters length, counter, id and crc
 #define PACKET_METADATA_SIZE (2*sizeof(uint16_t) /* word for crc + counter */  + 1 /*byte length*/)
-#define PACKET_SIZE 10
+#define PACKET_SIZE 20
 #if(PACKET_SIZE <= 5)
 # error
 #endif
 
 #define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
-#define PER_PACKET_DELAY 20
+#define PER_PACKET_DELAY (TIMER_TICKS_PER_SEC * 2)//20
 
 typedef struct packet packet_t;
 
@@ -81,11 +81,16 @@ static void transmit_per_packet();
 #ifdef MODULE_LORAWAN
 bool previous_message_lorawan = false;
 
+static uint8_t delay_seconds = 0;
+
 static void em_lorawan_send_abp(){
   // uint8_t temp[300];
   // lorawan_stack_send(temp, sizeof(temp), 2, false);
   lorawan_stack_send(lora_packet, lora_packet_size, 2, false);
-  sched_post_task(&em_lorawan_send_abp);
+  if(delay_seconds == 0)
+    sched_post_task(&em_lorawan_send_abp);
+  else 
+    timer_post_task_delay(&em_lorawan_send_abp, TIMER_TICKS_PER_SEC * delay_seconds);
 }
 #endif
 
@@ -293,6 +298,8 @@ static void em_file_change_callback(uint8_t file_id) {
               lorawan_stack_set_region(LORAWAN_REGION_US915);
               break;
           }
+
+          delay_seconds = em_command->timeout;
 
           if(em_command->flags) //Hybrid mode --> DR 4
             lora_packet_size = 242;
