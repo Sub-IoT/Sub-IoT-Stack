@@ -299,13 +299,15 @@ static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_co
 
     int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length);
     
+    if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL) // give the application layer the chance to fullfill this request ...
+        rc = init_args->alp_unhandled_read_action_cb(&current_status, operand, alp_data);
+
     if (rc == SUCCESS) {
         // fill response
         if(!alp_append_return_file_data_action(resp_command, operand.file_offset.file_id, operand.file_offset.offset, operand.requested_data_length, alp_data))
             return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
-    } else if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL) // give the application layer the chance to fullfill this request ...
-        return init_args->alp_unhandled_read_action_cb(&current_status, operand, alp_data);
-    else
+
+    } else
         return alp_translate_error(rc);
 
 
