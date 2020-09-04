@@ -22,7 +22,6 @@
 #See cmake/module_macros.cmake for more information
 
 MODULE_OPTION(${MODULE_PREFIX}_USE_DEFAULT_SYSTEMFILES "Use the default D7AP systemfiles values" TRUE)
-MODULE_HEADER_DEFINE()
 
 MODULE_PARAM(${MODULE_PREFIX}_FILE_SIZE_MAX "256"  STRING "The default buffer size for file operations" )
 MODULE_HEADER_DEFINE(
