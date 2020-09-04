@@ -71,9 +71,6 @@ bool use_serial_itf;
 static alp_command_t NGDEF(_commands)[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
 #define commands NG(_commands)
 
-static alp_interface_status_t NGDEF( current_status);
-#define current_status NG(current_status)
-
 static alp_init_args_t* NGDEF(_init_args);
 #define init_args NG(_init_args)
 
@@ -289,7 +286,7 @@ void alp_layer_register_interface(alp_interface_t* interface) {
   alp_register_interface(interface);
 }
 
-static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command)
+static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command, alp_command_t* command)
 {
     alp_operand_file_data_request_t operand = action->file_data_request_operand;
     DPRINT("READ FILE %i LEN %i OFFSET %i", operand.file_offset.file_id, operand.requested_data_length, operand.file_offset.offset);
@@ -300,7 +297,7 @@ static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_co
     int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length);
     
     if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL) // give the application layer the chance to fullfill this request ...
-        rc = init_args->alp_unhandled_read_action_cb(&current_status, operand, alp_data);
+        rc = init_args->alp_unhandled_read_action_cb(&command->origin_itf_status, operand, alp_data);
 
     if (rc == SUCCESS) {
         // fill response
@@ -706,7 +703,7 @@ static void process_async(void* arg)
         alp_status_codes_t alp_status;
         switch (action.ctrl.operation) {
         case ALP_OP_READ_FILE_DATA:
-            alp_status = process_op_read_file_data(&action, resp_command);
+            alp_status = process_op_read_file_data(&action, resp_command, command);
             break;
         case ALP_OP_READ_FILE_PROPERTIES:
             alp_status = process_op_read_file_properties(&action, resp_command);
