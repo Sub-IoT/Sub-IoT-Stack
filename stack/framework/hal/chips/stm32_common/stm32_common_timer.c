@@ -199,7 +199,8 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 
         target_after_overflow = (tick > 0) ? tick : 1;
         return SUCCESS;
-    }
+    } else
+        target_after_overflow = 0;
     #endif
 
     return do_schedule(tick);
