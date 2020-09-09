@@ -61,5 +61,6 @@ typedef struct {
 } i2c_port_t;
 
 void stm32_common_mcu_init();
+uint8_t stm32_get_readout_protection_level();
 
 #endif

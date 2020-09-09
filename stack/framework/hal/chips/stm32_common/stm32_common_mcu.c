@@ -107,3 +107,9 @@ uint32_t HAL_GetTick(void)
 	return timer_get_counter_value();
 }
 
+uint8_t stm32_get_readout_protection_level()
+{
+  FLASH_OBProgramInitTypeDef pOBInit;
+  HAL_FLASHEx_OBGetConfig(&pOBInit);
+  return pOBInit.RDPLevel;
+}
