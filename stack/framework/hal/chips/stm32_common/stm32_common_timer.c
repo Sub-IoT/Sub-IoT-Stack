@@ -196,7 +196,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
     // the next overflow (IRQ calls do_schedule()).
     hwtimer_tick_t current_tick = hw_timer_getvalue(timer_id);
     if(tick < current_tick) {
-
+        hw_timer_cancel(timer_id);
         target_after_overflow = (tick > 0) ? tick : 1;
         return SUCCESS;
     } else
