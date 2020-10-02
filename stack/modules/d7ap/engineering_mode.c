@@ -51,7 +51,8 @@
 #endif
 
 #define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
-#define PER_PACKET_DELAY (TIMER_TICKS_PER_SEC * 2)//20
+
+static timer_tick_t per_packet_delay = 20;
 
 typedef struct packet packet_t;
 
@@ -103,7 +104,7 @@ void packet_transmitted_callback(packet_t* packet) {
     return;
   }
 
-  timer_post_task_delay(&transmit_per_packet, PER_PACKET_DELAY);
+  timer_post_task_delay(&transmit_per_packet, per_packet_delay);
 }
 
 static void packet_received_em(packet_t* packet) {
@@ -215,7 +216,7 @@ static void em_file_change_callback(uint8_t file_id) {
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
   #ifdef MODULE_LORAWAN
-    if(previous_message_lorawan && !((em_command->channel_id.channel_header.ch_class == PHY_CLASS_LORA) && (em_command->mode == EM_CONT_TX_DUTY_CYCLE))) {
+    if(previous_message_lorawan && !((em_command->channel_id.channel_header.ch_class == PHY_CLASS_LORA) && (em_command->mode == EM_CONT_TX_DUTY_CYCLE)) && (em_command->mode != EM_OFF)) {
       lorawan_stack_deinit();
       d7ap_init();
       previous_message_lorawan = false;
@@ -279,6 +280,8 @@ static void em_file_change_callback(uint8_t file_id) {
         tx_cfg.channel_id = em_command->channel_id;
         tx_cfg.eirp = em_command->eirp;
         per_packet_limit = em_command->timeout * 100;
+        per_packet_delay = (em_command->flags ? (TIMER_TICKS_PER_SEC * 2) : 20);
+        DPRINT("using per packet delay %i with flags %i ? 2 sec : 20 -> %i", per_packet_delay, em_command->flags, em_command->flags ? (TIMER_TICKS_PER_SEC * 2) : 20);
         hw_radio_set_idle();
         timer_post_task_delay(&transmit_per_packet, 500);
         break;
@@ -333,6 +336,7 @@ static void em_file_change_callback(uint8_t file_id) {
         }
         break;
     }
+    DPRINT("done\n");
 }
 
 error_t engineering_mode_init()
