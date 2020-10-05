@@ -96,14 +96,25 @@ void HW_SPI_DeInit( void )
 //  /*##-2- Configure the SPI GPIOs */
 //  HW_SPI_IoDeInit( );
 }
+
+/*!
+ * @brief Enables the SPI object
+ *
+ * @param [IN] none
+ */
 void HW_SPI_enable( void )
 {
   spi_enable(spi_handle);
 }
+
+/*!
+ * @brief Disables the SPI object
+ *
+ * @param [IN] none
+ */
 void HW_SPI_disable( void )
 {
   spi_disable(spi_handle);
-
 }
 
 

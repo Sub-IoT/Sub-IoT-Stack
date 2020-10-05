@@ -54,6 +54,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include "sx1276.h"
 #include "timeServer.h"
 #include "delay.h"
+#include "platform.h"
 
 /*
  * Local types definition
@@ -212,6 +213,7 @@ const FskBandwidth_t FskBandwidths[] =
 /*
  * Private global variables
  */
+static bool io_inited = false;
 
 /*!
  * Radio callbacks variable
@@ -247,6 +249,19 @@ DioIrqHandler *DioIrq[] = { SX1276OnDio0Irq, SX1276OnDio1Irq,
 TimerEvent_t TxTimeoutTimer;
 TimerEvent_t RxTimeoutTimer;
 TimerEvent_t RxTimeoutSyncWord;
+
+/*
+ * Enable spi and radio io
+ */
+static void enable_spi_io() 
+{
+    if(!io_inited)
+    {
+        hw_radio_io_init();
+        io_inited = true;
+    }
+    HW_SPI_enable();
+}
 
 /*
  * Radio driver functions implementation
@@ -1254,6 +1269,8 @@ void SX1276SetOpMode( uint8_t opMode )
       
       LoRaBoardCallbacks->SX1276BoardSetXO( RESET ); 
       HW_SPI_disable();
+      hw_radio_io_deinit();
+      io_inited = false;
     }
     else
     {
@@ -1318,8 +1335,9 @@ uint8_t SX1276Read( uint8_t addr )
 
 void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
-  HW_SPI_enable();
     uint8_t i;
+
+    enable_spi_io();
 
     //NSS = 0;
     HW_GPIO_Write( RADIO_NSS_PORT, RADIO_NSS_PIN, 0 );
@@ -1336,8 +1354,9 @@ void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 
 void SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
- HW_SPI_enable();
     uint8_t i;
+
+    enable_spi_io();
 
     //NSS = 0;
     HW_GPIO_Write( RADIO_NSS_PORT, RADIO_NSS_PIN, 0 );

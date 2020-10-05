@@ -262,6 +262,10 @@ typedef struct sBoardCallback
  * Public functions prototypes
  * ============================================================================
  */
+extern void hw_radio_io_init(void); 
+
+extern void hw_radio_io_deinit(void); 
+
 void SX1276BoardInit( LoRaBoardCallback_t *callbacks );
 /*!
  * \brief Initializes the radio

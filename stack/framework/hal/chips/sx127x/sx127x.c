@@ -179,17 +179,16 @@ static bool io_inited = false;
 
 static bool lora_mode = false;
 
-void enable_spi_io() {
+void set_opmode(uint8_t opmode);
+static void fifo_threshold_isr();
+
+static void enable_spi_io() {
   if(!io_inited){
     hw_radio_io_init();
     io_inited = true;
   }
   spi_enable(spi_handle);
 }
-
-void set_opmode(uint8_t opmode);
-static void fifo_threshold_isr();
-
 
 static uint8_t read_reg(uint8_t addr) {
   enable_spi_io();

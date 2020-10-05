@@ -107,7 +107,18 @@ void HW_SPI_IoDeInit( void );
  */
 uint16_t HW_SPI_InOut( uint16_t outData );
 
+/*!
+ * @brief Enables the SPI object
+ *
+ * @param [IN] none
+ */
 void HW_SPI_enable( void );
+
+/*!
+ * @brief Disables the SPI object
+ *
+ * @param [IN] none
+ */
 void HW_SPI_disable( void );
 
 
