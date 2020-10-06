@@ -585,7 +585,7 @@ void d7atp_signal_transmission_failure()
 void d7atp_process_received_packet(packet_t* packet)
 {
     bool extension = false;
-    timer_tick_t Tc;
+    timer_tick_t Tc = 0;
 
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD

@@ -629,6 +629,8 @@ error_t phy_init(void) {
 error_t phy_stop() {
     d7ap_fs_unregister_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID);
     timer_cancel_event(&continuous_tx_expiration_timer);
+
+    return SUCCESS;
 }
 
 void status_write() {
