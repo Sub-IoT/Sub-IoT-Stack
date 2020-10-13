@@ -21,6 +21,18 @@
 #MODULE_OPTION and MODULE_PARAMETER
 #See cmake/module_macros.cmake for more information
 
+MODULE_PARAM(${MODULE_PREFIX}_US_MINIMUM_DATARATE "DR_1" STRING "Minimum datarate used for US LoRAWAN")
+SET_PROPERTY(CACHE ${MODULE_PREFIX}_US_MINIMUM_DATARATE PROPERTY STRINGS "DR_0;DR_1")
+
+MODULE_PARAM(${MODULE_PREFIX}_REGION "EU868" STRING "Region for LoRaWAN")
+SET_PROPERTY(CACHE ${MODULE_PREFIX}_REGION PROPERTY STRINGS "EU868;US915")
+
+
+MODULE_HEADER_DEFINE(
+    ID ${MODULE_PREFIX}_US_MINIMUM_DATARATE
+    ID ${MODULE_PREFIX}_REGION
+)
+
 #Generate the 'module_defs.h'
 MODULE_BUILD_SETTINGS_FILE()
 
@@ -32,7 +44,8 @@ ADD_LIBRARY(lorawan STATIC
     LoRaMAC/Mac/LoRaMac.c
     LoRaMAC/Mac/region/Region.c
     LoRaMAC/Mac/region/RegionCommon.c
-    LoRaMAC/Mac/region/RegionEU868.c    # TODO only this region for now
+    #LoRaMAC/Mac/region/RegionEU868.c    # TODO only this region for now
+    LoRaMAC/Mac/region/Region${${MODULE_PREFIX}_REGION}.c
     LoRaMAC/Mac/LoRaMacCrypto.c
     LoRaMAC/Crypto/aes.c
     LoRaMAC/Crypto/cmac.c
@@ -49,7 +62,7 @@ ADD_LIBRARY(lorawan STATIC
     lorawan_stack.c
 )
 
-ADD_DEFINITIONS("-DUSE_B_L072Z_LRWAN1" "-DSTM32L072xx" "-DREGION_EU868" "-DDEBUG" "-DTRACE") # TODO tmp
+ADD_DEFINITIONS("-DUSE_B_L072Z_LRWAN1" "-DSTM32L072xx" "-DREGION_${${MODULE_PREFIX}_REGION}" "-DDEBUG" "-DTRACE") # TODO tmp
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
 target_include_directories(lorawan PUBLIC

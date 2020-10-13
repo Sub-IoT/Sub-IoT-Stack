@@ -72,6 +72,7 @@
 #include "LoRaMacTest.h"
 #include "debug.h"
 #include "scheduler.h"
+#include "MODULE_LORAWAN_defs.h"
 
 #define LORAWAN_LOG_ENABLED 1
 
@@ -88,6 +89,15 @@
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            48 // (>=48 according to spec)
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
+
+#define EU868 5
+#define US915 8
+
+#if MODULE_LORAWAN_REGION == EU868
+  const LoRaMacRegion_t region = LORAMAC_REGION_EU868;
+#elif MODULE_LORAWAN_REGION == US915
+  const LoRaMacRegion_t region = LORAMAC_REGION_US915;
+#endif
 
 typedef enum
 {
@@ -553,7 +563,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, region);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
@@ -639,7 +649,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, region);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {

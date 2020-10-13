@@ -35,6 +35,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 
 // Definitions
 #define CHANNELS_MASK_SIZE              6
+#define DBG_PRINTF(...)
 
 // Global attributes
 /*!

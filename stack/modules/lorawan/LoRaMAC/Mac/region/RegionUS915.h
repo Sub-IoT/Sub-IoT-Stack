@@ -35,6 +35,8 @@
 #ifndef __REGION_US915_H__
 #define __REGION_US915_H__
 
+#include "MODULE_LORAWAN_defs.h"
+
 /*!
  * LoRaMac maximum number of channels
  */
@@ -43,7 +45,7 @@
 /*!
  * Minimal datarate that can be used by the node
  */
-#define US915_TX_MIN_DATARATE                       DR_0
+#define US915_TX_MIN_DATARATE                       MODULE_LORAWAN_US_MINIMUM_DATARATE
 
 /*!
  * Maximal datarate that can be used by the node
@@ -63,7 +65,7 @@
 /*!
  * Default datarate used by the node
  */
-#define US915_DEFAULT_DATARATE                      DR_0
+#define US915_DEFAULT_DATARATE                      MODULE_LORAWAN_US_MINIMUM_DATARATE
 
 /*!
  * Minimal Rx1 receive datarate offset
