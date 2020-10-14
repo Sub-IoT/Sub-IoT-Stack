@@ -851,7 +851,8 @@ static void process_async(void* arg)
     if (command->use_d7aactp) {
         DPRINT("Using D7AActP, transmit response to the configured interface");
         resp_command->forward_itf_id = command->d7aactp_interface_config.itf_id;
-        forward_command(resp_command, &command->d7aactp_interface_config);
+        if (forward_command(resp_command, &command->d7aactp_interface_config) == false) // if interface is not registered, free the resp command
+            free_command(resp_command);
         free_command(command);
         return;
     }
