@@ -148,6 +148,7 @@ typedef struct {
 typedef struct __attribute__((__packed__)) {
     d7ap_session_qos_t qos;
     uint8_t dormant_timeout;
+    uint8_t te;
     d7ap_addressee_t addressee;
 } d7ap_session_config_t;
 
