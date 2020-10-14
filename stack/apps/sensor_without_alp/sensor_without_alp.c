@@ -117,6 +117,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
+    d7ap_fs_init();
     d7ap_init();
     d7_client_id = d7ap_register(&callbacks);
 

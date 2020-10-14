@@ -149,6 +149,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
+    d7ap_fs_init();
     d7ap_init();
 
     alp_layer_init(NULL, false);
