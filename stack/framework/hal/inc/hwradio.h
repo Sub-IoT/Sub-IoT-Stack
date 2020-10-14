@@ -301,7 +301,7 @@ __LINK_C void hw_radio_stop(void);
 /** \brief Initializes all GPIO pins required by the radio.
  * This is a weak symbol which needs to be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_radio_io_init(void);
+__LINK_C __attribute__((weak)) void hw_radio_io_init(bool disable_interrupts);
 
 /** \brief Reset the radio.
  * This is a weak symbol which can be implemented in the platform if you want to use this

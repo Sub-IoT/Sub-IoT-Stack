@@ -262,7 +262,7 @@ typedef struct sBoardCallback
  * Public functions prototypes
  * ============================================================================
  */
-extern void hw_radio_io_init(void); 
+extern void hw_radio_io_init(bool disable_interrupts); 
 
 extern void hw_radio_io_deinit(void); 
 

@@ -184,7 +184,7 @@ static void fifo_threshold_isr();
 
 static void enable_spi_io() {
   if(!io_inited){
-    hw_radio_io_init();
+    hw_radio_io_init(true);
     io_inited = true;
   }
   spi_enable(spi_handle);
@@ -688,7 +688,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   }
 
   spi_enable(spi_handle);
-  hw_radio_io_init();
+  hw_radio_io_init(true);
   io_inited = true;
   hw_radio_reset();
 
@@ -1149,7 +1149,7 @@ __attribute__((weak)) void hw_radio_reset() {
   // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 
-__attribute__((weak)) void hw_radio_io_init() {
+__attribute__((weak)) void hw_radio_io_init(bool disable_interrupts) {
   // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 

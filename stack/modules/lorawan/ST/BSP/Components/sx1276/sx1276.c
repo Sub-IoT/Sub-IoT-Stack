@@ -257,7 +257,7 @@ static void enable_spi_io()
 {
     if(!io_inited)
     {
-        hw_radio_io_init();
+        hw_radio_io_init(false);
         io_inited = true;
     }
     HW_SPI_enable();

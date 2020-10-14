@@ -61,7 +61,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #define IRQ_HIGH_PRIORITY  0
 
-extern void hw_radio_io_init(void); // TODO refactor
+extern void hw_radio_io_init(bool disable_interrupts); // TODO refactor
 
 /* Delay in ms between radio set in sleep mode and TCXO off*/
 #define TCXO_OFF_DELAY 3
@@ -158,7 +158,7 @@ void SX1276IoInit( void )
   GPIO_InitTypeDef initStruct={0};
   
   SX1276BoardInit( &BoardCallbacks );
-  hw_radio_io_init();
+  hw_radio_io_init(true);
 // done by platform
 //  initStruct.Mode =GPIO_MODE_IT_RISING;
 //  initStruct.Pull = GPIO_PULLUP;
