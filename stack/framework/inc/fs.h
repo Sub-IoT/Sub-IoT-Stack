@@ -87,7 +87,7 @@ typedef struct __attribute__((__packed__))
     uint32_t addr;
 } fs_file_t;
 
-void fs_init();
+void fs_init(void);
 int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);

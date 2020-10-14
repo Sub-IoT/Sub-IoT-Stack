@@ -118,7 +118,7 @@ bool d7ap_fs_unregister_file_modified_callback(uint8_t file_id);
 bool d7ap_fs_register_file_modifying_callback(uint8_t file_id, d7ap_fs_modifying_file_callback_t callback);
 bool d7ap_fs_unregister_file_modifying_callback(uint8_t file_id);
 
-void d7ap_fs_init();
+void d7ap_fs_init(void);
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 int d7ap_fs_init_file_on_blockdevice(uint8_t file_id, uint8_t blockdevice_index, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 

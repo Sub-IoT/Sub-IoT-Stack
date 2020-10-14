@@ -37,8 +37,10 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_FS_LOG_ENABLED)
   #define DPRINT(...) log_print_string( __VA_ARGS__)
+  #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
   #define DPRINT(...)
+  #define DPRINT_DATA(...)
 #endif
 
 static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 }; // TODO do not keep all file metadata in RAM but use smaller MRU cache to save RAM
@@ -87,7 +89,7 @@ error_t fs_register_block_device(blockdevice_t* block_device, uint8_t bd_index)
 
 uint32_t fs_get_address(uint8_t file_id) { return files[file_id].addr; }
 
-void fs_init()
+void fs_init(void)
 {
     if (is_fs_init_completed)
         return /*0*/;
@@ -106,7 +108,7 @@ void fs_init()
     DPRINT("fs_init OK");
 }
 
-int _fs_init()
+int _fs_init(void)
 {
     uint8_t expected_magic_number[FS_MAGIC_NUMBER_SIZE] = FS_MAGIC_NUMBER;
     uint32_t number_of_files;
@@ -126,6 +128,7 @@ int _fs_init()
 #endif
 
     assert(number_of_files < FRAMEWORK_FS_FILE_COUNT);
+    DPRINT("number_of_files: %ld", number_of_files);
     for(int file_id = 0; file_id < FRAMEWORK_FS_FILE_COUNT; file_id++)
     {
         blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id],
@@ -146,12 +149,12 @@ int _fs_init()
                 bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
         }
     }
-    
+
     return 0;
 }
 
 //TODO: CRC MAGIC
-static int _fs_create_magic()
+static int _fs_create_magic(void)
 {
     assert(!is_fs_init_completed);
     uint8_t magic[] = FS_MAGIC_NUMBER;
@@ -169,6 +172,9 @@ static int _fs_verify_magic(uint8_t* expected_magic_number)
     uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];
     memset(magic_number,0,FS_MAGIC_NUMBER_SIZE);
     blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], magic_number, 0, FS_MAGIC_NUMBER_SIZE);
+
+    DPRINT("READ MAGIC NUMBER:");
+    DPRINT_DATA(magic_number, FS_MAGIC_NUMBER_SIZE);
     if(memcmp(expected_magic_number, magic_number, FS_MAGIC_NUMBER_SIZE) != 0) // if not the FS on EEPROM is not compatible with the current code
         return -EINVAL;
 
@@ -191,7 +197,7 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     if (bd_type == FS_BLOCKDEVICE_TYPE_VOLATILE)
     {
         files[file_id].addr = bd_data_offset[bd_type];
-        bd_data_offset[bd_type] += length;        
+        bd_data_offset[bd_type] += length;
     }
     else
     {
@@ -221,7 +227,7 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
 
                 blockdevice_program(bd[bd_type], current_data, current_address, remaining_length);
                 remaining_length = 0;
-            /* else if this is the starting block, only write untill the end of the first write_block */
+            /* else if this is the starting block, only write until the end of the first write_block */
             } else if(current_address == files[file_id].addr) {
                 remaining_length -= bd[bd_type]->driver->write_block_size - (current_address & (bd[bd_type]->driver->write_block_size - 1));
 
@@ -303,7 +309,7 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
 
     } while (remaining_length > 0);
 
-    DPRINT("fs write_file (file_id %d, offset %d, addr %lu, length %d)\n",
+    DPRINT("fs write_file (file_id %d, offset %lu, addr %lu, length %lu)",
            file_id, offset, files[file_id].addr, length);
 
     return 0;
