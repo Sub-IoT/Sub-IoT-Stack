@@ -480,7 +480,7 @@ static alp_status_codes_t process_op_indirect_forward(
 {
     DPRINT("indirect fwd");
     bool re_read = false;
-    alp_control_t ctrl;
+    alp_control_t ctrl = action->ctrl;
     if ((previous_interface_file_id != action->indirect_interface_operand.interface_file_id)
         || interface_file_changed) {
         re_read = true;
