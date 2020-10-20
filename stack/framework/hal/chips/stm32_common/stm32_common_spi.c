@@ -278,8 +278,10 @@ error_t spi_init_dma(spi_handle_t* spi)
     /* Associate the initialized DMA handle to the the SPI handle */
     __HAL_LINKDMA(hspi, hdmarx, hdma_spi1_rx);
     /* NVIC configuration for DMA transfer complete interrupt (SPI4_RX) */
+  #ifdef DMA1_Channel2_IRQn
     HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+  #endif
 
 
     hdma_spi1_tx.Instance = DMA1_Channel3;
@@ -298,8 +300,10 @@ error_t spi_init_dma(spi_handle_t* spi)
 
     __HAL_LINKDMA(hspi, hdmatx, hdma_spi1_tx);
     /* NVIC configuration for DMA transfer complete interrupt (SPI4_RX) */
+  #ifdef DMA1_Channel3_IRQn
     HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+  #endif
 
     return SUCCESS;
 }
