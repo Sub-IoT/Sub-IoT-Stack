@@ -32,6 +32,11 @@
 #include "hwgpio.h"
 #include "errors.h"
 #include "hwatomic.h"
+#include "log.h"
+#include "errors.h"
+
+//#define DPRINT(...)
+#define DPRINT(...) log_print_string(__VA_ARGS__)
 
 
 #define MAX_SPI_SLAVE_HANDLES 5        // TODO expose this in chip configuration
@@ -249,6 +254,63 @@ spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_
   return &slave_handle[next_spi_slave_handle-1];
 }
 
+DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
+
+error_t spi_init_dma(spi_handle_t* spi)
+{
+    SPI_HandleTypeDef *hspi = &spi->hspi;
+    /* Enable DMA1 clock */
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    /* Configure the DMA handler for Recieving process */
+    hdma_spi1_rx.Instance = DMA1_Channel2;
+    hdma_spi1_rx.Init.Request = DMA_REQUEST_1;
+    hdma_spi1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_spi1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.MemDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.Mode = DMA_NORMAL;
+    if (HAL_DMA_Init(&hdma_spi1_rx)) {
+        DPRINT("Error ininit DMA PSI");
+        return ERROR;
+    }
+    /* Associate the initialized DMA handle to the the SPI handle */
+    __HAL_LINKDMA(hspi, hdmarx, hdma_spi1_rx);
+    /* NVIC configuration for DMA transfer complete interrupt (SPI4_RX) */
+    HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+
+
+    hdma_spi1_tx.Instance = DMA1_Channel3;
+    hdma_spi1_tx.Init.Request = DMA_REQUEST_1;
+    hdma_spi1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_spi1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.Mode = DMA_NORMAL;
+    hdma_spi1_tx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_spi1_tx)) {
+        DPRINT("Error ininit DMA PSI");
+        return ERROR;
+    }
+
+    __HAL_LINKDMA(hspi, hdmatx, hdma_spi1_tx);
+    /* NVIC configuration for DMA transfer complete interrupt (SPI4_RX) */
+    HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+
+    return SUCCESS;
+}
+
+void DMA1_Channel2_IRQHandler(void) {
+    HAL_DMA_IRQHandler(&hdma_spi1_rx); 
+}
+void DMA1_Channel3_IRQHandler(void) {
+    HAL_DMA_IRQHandler(&hdma_spi1_tx); 
+}
+
 void spi_select(spi_slave_handle_t* slave) {
   if( slave->selected ) { return; } // already selected
 
@@ -330,4 +392,8 @@ void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxD
       assert(false); //1line direction should exchange address as txData and the buffer as rxdata
     }
   }
+}
+
+uint8_t spi_receive_bytes_dma(spi_slave_handle_t* slave,  uint8_t* RxData, size_t length) {
+    return HAL_SPI_Receive_DMA(&slave->spi->hspi, RxData, length);
 }

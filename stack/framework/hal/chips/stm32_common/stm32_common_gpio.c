@@ -29,6 +29,10 @@
 #include "hwatomic.h"
 #include "errors.h"
 #include "framework_defs.h"
+#include "log.h"
+
+//#define DPRINT(...)
+#define DPRINT(...) log_print_string(__VA_ARGS__)
 
 #define PORT_BASE(pin)  ((GPIO_TypeDef*)(pin & ~0x0F))
 #define EXTI_LINES_COUNT 16

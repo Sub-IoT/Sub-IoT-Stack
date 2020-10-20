@@ -59,6 +59,7 @@ __LINK_C void                spi_disable(spi_handle_t* spi);
 // initializes a pin to be used as Chip Select pin
 __LINK_C spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin,
                                             bool          cs_is_active_low);
+__LINK_C error_t spi_init_dma(spi_handle_t* spi);
 
 // (de)selection of a slave
 __LINK_C void                spi_select(spi_slave_handle_t* slave);
@@ -72,6 +73,11 @@ __LINK_C void                spi_send_byte_with_control(spi_slave_handle_t* spi,
 __LINK_C void                spi_exchange_bytes(spi_slave_handle_t* spi,
                                                 uint8_t *TxData,
                                                 uint8_t *RxData, size_t length);
+
+
+__LINK_C uint8_t spi_receive_bytes_dma(spi_slave_handle_t* slave,  uint8_t* RxData, size_t length);
+
+
 #endif
 
 /** @}*/

@@ -56,7 +56,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 #
     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c
     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c
-#     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c
+    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c
     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c
     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c
 #     Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c
