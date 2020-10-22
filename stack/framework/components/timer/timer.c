@@ -335,6 +335,12 @@ static void configure_next_event()
 			//set hw_event_scheduled explicitly to false to allow timer_overflow
 			//to schedule the event when needed
 			NG(hw_event_scheduled) = false;
+
+            // Cancel the timer, it will eventually be re-programmed on overflow.
+            // Note that multiple overflows may happen during one fire_delay.
+            // In that case, the timer is only re-programmed after the last
+            // overflow, so the timer should be canceled in the meantime.
+            hw_timer_cancel(HW_TIMER_ID);
 		}
     }
     timer_busy_programming = false;
