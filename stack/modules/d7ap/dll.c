@@ -888,6 +888,11 @@ static void conf_file_changed_callback(uint8_t file_id)
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
 
+        if (dll_state == DLL_STATE_FOREGROUND_SCAN)
+        {
+            dll_stop_foreground_scan();
+        }
+
         // when doing scan automation restart this
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
         {
