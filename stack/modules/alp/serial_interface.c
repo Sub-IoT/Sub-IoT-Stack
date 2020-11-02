@@ -75,6 +75,7 @@ static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
 }
 
 void serial_interface_register() {
+#ifdef PLATFORM_MODEM_INTERFACE_UART
     alp_modem_interface = (alp_interface_t) {
         .itf_id = ALP_ITF_ID_SERIAL,
         .itf_cfg_len = 0,
@@ -94,6 +95,7 @@ void serial_interface_register() {
 #endif
 
     modem_interface_register_handler(&serial_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
+#endif
 }
 
 static error_t serial_interface_send(uint8_t* payload, uint8_t payload_length,

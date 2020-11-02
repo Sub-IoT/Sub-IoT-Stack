@@ -33,9 +33,31 @@
 #include "framework_defs.h"
 #include "hwsystem.h"
 #include "SEGGER_RTT.h"
+#include "timer.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 
+static char stack_layer_str[19][4] =
+{
+    "APP",
+	"PHY",
+	"DLL",
+	"MAC",
+	"NWL",
+	"TRN",
+	"SES",
+	"D7A",
+	"ALP",
+	"RAD",
+	"TIM",
+	"---",
+	"---",
+	"---",
+	"---",
+	"---",
+	"FWK",
+	"EM "
+};
 
 static uint32_t NGDEF(counter);
 
@@ -49,7 +71,7 @@ __LINK_C void log_print_string(char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    printf("\n\r[%03d] ", NG(counter)++);
+    printf("\n\r[%u] [%03d] ", timer_get_counter_value(), NG(counter)++ );
     vprintf(format, args);
     va_end(args);
 }
@@ -58,14 +80,14 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    printf("\n\r[%03d] ", NG(counter)++);
+    printf("\n\r[%u] [%03d] [%s] ", timer_get_counter_value(), NG(counter)++, stack_layer_str[type]);
     vprintf(format, args);
     va_end(args);
 }
 
 __LINK_C void log_print_data(uint8_t* message, uint32_t length)
 {
-    printf("\n\r[%03d]", NG(counter)++);
+    printf("\n\r[%u] [%03d]", timer_get_counter_value(), NG(counter)++);
     for( uint32_t i=0 ; i<length ; i++ )
     {
         printf(" %02X", message[i]);
@@ -79,7 +101,7 @@ void log_print_error_string(char* format,...)
 {
     va_list args;
     va_start(args, format);
-    printf("\n\r%s[%03d]%s ", RTT_CTRL_BG_BRIGHT_RED, NG(counter)++, RTT_CTRL_RESET);
+    printf("\n\r%s[%u] [%03d]%s ", RTT_CTRL_BG_BRIGHT_RED, timer_get_counter_value(), NG(counter)++, RTT_CTRL_RESET);
     vprintf(format, args);
     va_end(args);
 }

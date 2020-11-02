@@ -457,6 +457,10 @@ void hw_radio_set_tx_power(int8_t eirp);
 
 void hw_radio_set_rx_timeout(uint32_t timeout);
 
+void hwradio_set_addr(int);
+void hwradio_enter_low_power_mode();
+bool hwradio_wakeup_from_lowpower_mode();
+
 #endif //__HW_RADIO_H_
 
 /** @}*/

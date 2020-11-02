@@ -44,6 +44,7 @@
 /*! \brief The source in the stack from which the log originates  */
 typedef enum
 {
+    LOG_STACK_APP = 0x00,
     LOG_STACK_PHY = 0x01,
     LOG_STACK_DLL = 0x02,
     LOG_STACK_MAC = 0x03,
@@ -52,6 +53,8 @@ typedef enum
     LOG_STACK_SESSION = 0x06,
     LOG_STACK_D7AP = 0x07,
     LOG_STACK_ALP = 0x08,
+    LOG_STACK_RADIO = 0x09,
+    LOG_STACK_TIMER = 0x0A,
     LOG_STACK_FWK = 0x10,
     LOG_STACK_EM = 0x11
 } log_stack_layer_t; // TODO stack specific, move to stack component?

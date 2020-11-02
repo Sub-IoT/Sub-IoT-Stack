@@ -48,6 +48,7 @@
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(alp_command_t* command, alp_interface_status_t* origin_itf_status);
 typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(const alp_interface_status_t* origin_itf_status, alp_operand_file_data_request_t operand, uint8_t* alp_response);
+typedef alp_status_codes_t (*alp_unhandled_write_action_callback)(const alp_interface_status_t* origin_itf_status, alp_operand_file_data_t *operand);
 
 typedef struct {
     alp_command_completed_callback alp_command_completed_cb;
@@ -62,6 +63,7 @@ typedef struct {
      * It is important to know this callback is called while a D7AP transaction is in process thus be sure to return within transaction timeout limits!
      */
     alp_unhandled_read_action_callback alp_unhandled_read_action_cb;
+    alp_unhandled_write_action_callback alp_unhandled_write_action_cb;
 } alp_init_args_t;
 
 typedef enum {

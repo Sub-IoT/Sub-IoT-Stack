@@ -36,7 +36,7 @@ static const spi_port_t spi_ports[SPI_COUNT] = {
   }
 };
 
-#define UART_COUNT 2
+#define UART_COUNT 3
 static const uart_port_t uart_ports[UART_COUNT] = {
   {
     // USART2, connected to VCOM of debugger USB connection
@@ -53,7 +53,15 @@ static const uart_port_t uart_ports[UART_COUNT] = {
     .alternate = GPIO_AF4_USART1,
     .uart = USART1,
     .irq = USART1_IRQn
-  }
+  },
+	{
+	  // USART4, exposed on CN6 header: TX=PA0 (only)
+	  .tx = PIN(GPIO_PORTA, 0),
+	  .rx = PIN(GPIO_PORTA, 1),
+	  .alternate = GPIO_AF6_USART4,
+	  .uart = USART4,
+	  .irq = USART4_5_IRQn
+	}
 };
 
 #define I2C_COUNT 1

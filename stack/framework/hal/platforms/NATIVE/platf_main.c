@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
 #include "bootstrap.h"
 #include "hwgpio.h"
 #include "hwleds.h"
@@ -27,13 +28,14 @@
 #include "errors.h"
 #include "blockdevice_ram.h"
 #include "framework_defs.h"
+#include "button.h"
 
 #define METADATA_SIZE (4 + 4 + (12 * FRAMEWORK_FS_FILE_COUNT))
 
 // on native we use a RAM blockdevice as NVM as well for now
-uint8_t d7ap_fs_metadata[METADATA_SIZE];
-uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
-uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+extern uint8_t d7ap_fs_metadata[METADATA_SIZE];
+extern uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 static blockdevice_ram_t metadata_bd = (blockdevice_ram_t){
     .base.driver = &blockdevice_driver_ram,
@@ -63,16 +65,19 @@ void __platform_init()
     blockdevice_init(metadata_blockdevice);
     blockdevice_init(persistent_files_blockdevice);
     blockdevice_init(volatile_blockdevice);
+    // The emulated radio library for native platform requires a unique address
+    // per application instance, so we use the PID to provide this
+    hwradio_set_addr(getpid());
 }
 
 void __platform_post_framework_init()
 {
+    __ubutton_init();
 }
 
-int main()
+int main(void)
 {
-    //initialise the platform itself
-    __platform_init();
+	__platform_init();
     //do not initialise the scheduler, this is done by __framework_bootstrap()
     __framework_bootstrap();
     //initialise platform functionality that depends on the framework
@@ -83,23 +88,27 @@ int main()
 }
 
 // empty stubs
-__LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {}
-__LINK_C bool uart_enable(uart_handle_t* uart) {}
-__LINK_C bool uart_disable(uart_handle_t* uart) {}
-__LINK_C void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {}
-__LINK_C error_t uart_rx_interrupt_enable(uart_handle_t* uart) {}
-__LINK_C void uart_set_rx_interrupt_callback(uart_handle_t* uart, uart_rx_inthandler_t rx_handler) {}
-__LINK_C void uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler) {}
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id) {}
 system_reboot_reason_t hw_system_reboot_reason(void) {}
-__LINK_C void hw_enter_lowpower_mode(uint8_t mode) {}
-__LINK_C hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id) {}
-__LINK_C const hwtimer_info_t* hw_timer_get_info(hwtimer_id_t timer_id) {}
-__LINK_C error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick ) {}
-__LINK_C error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback) {}
-__LINK_C bool hw_timer_is_overflow_pending(hwtimer_id_t id) {}
-__LINK_C error_t hw_timer_cancel(hwtimer_id_t timer_id) {}
+
+// We don't really support low power mode, but we can sleep this process until an "interrupt"
+// arises.  We use the timer tick or radio IRQ to force a wake-up.
+__LINK_C void hw_enter_lowpower_mode(uint8_t mode)
+{
+	hwradio_enter_low_power_mode();   // Informs radio module we are entering low power state
+	hwtimer_tick_t tick = hw_timer_getvalue(0);
+	while (hw_timer_getvalue(0) == tick && !hwradio_wakeup_from_lowpower_mode())
+		usleep(10);
+}
+
 __LINK_C uint64_t hw_get_unique_id(void) { return 0xFFFFFFFFFFFFFF;}
 __LINK_C void hw_watchdog_feed(void) {};
 __LINK_C void __watchdog_init(void) {};
 __LINK_C void hw_watchdog_get_timeout(void) {};
+
+void hw_reset() {
+	printf("\n!!! hw_reset !!!");
+	for (;;) usleep(1000);
+}
+
+void hw_busy_wait(int16_t us) { usleep(us); }
