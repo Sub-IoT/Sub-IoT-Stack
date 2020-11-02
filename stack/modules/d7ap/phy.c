@@ -293,10 +293,11 @@ static void packet_transmitted(timer_tick_t timestamp)
 
 static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
-    assert(state == STATE_RX || state == STATE_BG_SCAN);
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
-    DPRINT("packet received @ %i , RSSI = %d", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
+    DPRINT("state %i packet received @ %i , RSSI = %d", state, hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
+
+    assert(state == STATE_RX || state == STATE_BG_SCAN);
 
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
 
@@ -635,11 +636,14 @@ void status_write() {
     write_file_counter++;
     if(write_file_counter == 100) {
         write_file_counter = 0;
-        uint16_t bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
-        uint16_t scan_timeout_ratio = 1024 * (total_fg - total_succeeded_fg) / total_fg;
-        uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
-        d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
-        DPRINT("wrote to file 0x%02X the bg trigger ratio %d and scan timeout ratio %d", D7A_FILE_DLL_STATUS_FILE_ID, bg_trigger_ratio, scan_timeout_ratio);
+        if (total_fg && total_bg)
+        {
+			uint16_t bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
+			uint16_t scan_timeout_ratio = 1024 * (total_fg - total_succeeded_fg) / total_fg;
+			uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
+			d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
+			DPRINT("wrote to file 0x%02X the bg trigger ratio %d and scan timeout ratio %d", D7A_FILE_DLL_STATUS_FILE_ID, bg_trigger_ratio, scan_timeout_ratio);
+        }
     }
 }
 
@@ -766,6 +770,7 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_
     DPRINT("start sending @ %i\n", timer_get_counter_value());
 
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
+    hw_radio_set_opmode(HW_STATE_TX);  // Put radio into TX mode explicitly
 
     return SUCCESS; // TODO other return codes
 }
@@ -871,6 +876,8 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     memcpy(&fg_frame.encoded_packet[preamble_len], &sync_word, 2);
     fg_frame.encoded_length = encode_packet(packet, &fg_frame.encoded_packet[preamble_len + 2]);
     fg_frame.encoded_length += preamble_len + 2; // add preamble + syncword
+    DPRINT("FG packet: %d", fg_frame.encoded_length);
+    DPRINT_DATA(fg_frame.encoded_packet, fg_frame.encoded_length);
 
     uint8_t payload_len;
     payload_len = assemble_background_payload();
@@ -913,12 +920,14 @@ static void fill_in_fifo(uint16_t remaining_bytes_len)
     {
         DEBUG_BG_END();
         timer_tick_t current = timer_get_counter_value();
-        // DPRINT("fill in fifo, bg adv, currently %d untill %d\n", current, bg_adv.stop_time);
+        DPRINT("fill in fifo, bg adv, remaining %u currently %d untill %d\n", remaining_bytes_len, current, bg_adv.stop_time);
 
         // calculate the time needed to flush the remaining bytes in the TX
         uint16_t flush_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                             PHY_CODING_PN9, // override FEC, we need the time for the BG_THRESHOLD bytes in the fifo, regardless of coding
                                                             remaining_bytes_len, true); // don't take syncword and preamble into account
+
+        DPRINT("flush_duration=%u calc=%u", flush_duration, current + 2 * bg_adv.tx_duration + flush_duration);
 
         if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration)
             bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration; // ETA is updated according the real current time
@@ -953,15 +962,23 @@ static void fill_in_fifo(uint16_t remaining_bytes_len)
             uint8_t preamble[24];
 
             preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
+
+            // We have to prevent the preamble_len calculation from exceeding the size of the FIFO and truncate
+            // it if necessary otherwise we'll trample over the stack
+            if (preamble_len > sizeof(preamble))
+            {
+            	DPRINT("WARN: truncated preamble length from %u to %u", preamble_len, sizeof(preamble));
+            	preamble_len = sizeof(preamble);
+            }
             DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d\n", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());
+
+            bg_adv.eta = 0;
+            fg_frame.bg_adv = false;
 
             DPRINT("Add preamble_bytes: %d\n", preamble_len);
             memset(preamble, 0xAA, preamble_len);
             hw_radio_send_payload(preamble, preamble_len);
             DEBUG_BG_END();
-
-            bg_adv.eta = 0;
-            fg_frame.bg_adv = false;
         }
     }
     else
@@ -980,7 +997,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     received_callback = rx_cb;
     uint8_t packet_len;
 
-    //DPRINT("START BG scan @ %i", timer_get_counter_value());
+    DPRINT("START BG scan @ %i", timer_get_counter_value());
 
     // We should not initiate a background scan before TX is completed
     assert(state != STATE_TX);
@@ -1001,6 +1018,13 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     total_bg++;
 
     DEBUG_RX_START();
+
+    // This code looks a bit dubious to me. It seems to rely on packets being received whilst the RSSI
+    // is being sampled.  However, the timing of RSSI sampling may not always align with the BG transmit timing
+    // and the RSSI event could be missed i.e., sampling could be perfectly out-of-phase with the transmitter.
+    // Ideally the RSSI scanning would be happening asynchronously inside the radio hardware with a wake-up interrupt.
+    // Alternatively, the BG RSSI scan period should be set to be tsched/2 (Nyquist) or at least some number lower
+    // to avoid this issue.
 
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= config->rssi_thr)

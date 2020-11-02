@@ -82,7 +82,8 @@ static uint8_t alp_data2[ALP_QUERY_COMPARE_BODY_MAX_SIZE]; // temp buffer static
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 
-static itf_ctrl_t current_itf_ctrl;
+// Use a default interface of D7 to ensure that an interface at least gets initialised at start-up
+static itf_ctrl_t current_itf_ctrl = { .interface = ALP_ITF_ID_D7ASP };
 static bool ignore_itf_ctrl_write_callback = false;
 
 static void process_async(void* arg);
@@ -342,13 +343,17 @@ static alp_status_codes_t process_op_write_file_properties(alp_action_t* action)
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
-static alp_status_codes_t process_op_write_file_data(alp_action_t* action) {
+static alp_status_codes_t process_op_write_file_data(alp_action_t* action, alp_command_t* command) {
     DPRINT("WRITE FILE %i LEN %i OFFSET %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length, action->file_data_operand.file_offset.offset);
     if (action->file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_EXCEEDS_MAX_ALP_SIZE;
-    
+
     int rc = d7ap_fs_write_file(action->file_data_operand.file_offset.file_id, action->file_data_operand.file_offset.offset,
         action->file_data_operand.data, action->file_data_operand.provided_data_length);
+
+    if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_write_action_cb != NULL) // give the application layer the chance to fullfill this request ...
+        return init_args->alp_unhandled_write_action_cb(&command->origin_itf_status, &action->file_data_operand);
+
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
@@ -552,7 +557,7 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
 
 static alp_status_codes_t write_itf_command(itf_ctrl_action_t action)
 {
-    int rc = d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, &action, 1); // gets handled in write file callback
+    int rc = d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, (uint8_t *)&action, 1); // gets handled in write file callback
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
@@ -709,7 +714,7 @@ static void process_async(void* arg)
             alp_status = process_op_read_file_properties(&action, resp_command);
             break;
         case ALP_OP_WRITE_FILE_DATA:
-            alp_status = process_op_write_file_data(&action);
+            alp_status = process_op_write_file_data(&action, command);
             break;
         case ALP_OP_WRITE_FILE_PROPERTIES:
             alp_status = process_op_write_file_properties(&action);

@@ -20,8 +20,39 @@
 #Check that the correct toolchain for the platform is being used
 REQUIRE_TOOLCHAIN(gcc)
 
+# Dummy UART for console interface
+PLATFORM_PARAM(USE_DUMMY_RADIO     "1"      STRING "A dummy radio is used by this platform."   )
+PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART port used by the console UART configuration."   )
+PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "0" STRING "The baudrate used by the second console configuration."       )
+PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "0" STRING "The location") # TODO remove after removing the pins param from the API
+
+# Dummy timers
+PLATFORM_PARAM(PLATFORM_NUM_TIMERS "4" STRING "The number of dummy timers supported." )
+
+# UART emulation
+PLATFORM_PARAM(PLATFORM_UART_DEV0 "/tmp/S0" STRING "A virtual terminal created using socat for serial comms." )
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_UART "0" STRING "Virtual TTY number to use for modem interface." )
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_BAUDRATE "115200" STRING "Virtual TTY dummy baudrate for modem interface." )
+
+# Button emulation
+PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "10" STRING "Buttons emulated by keyboard input keys using keys 0-9." )
+
+# No LEDs
+PLATFORM_PARAM(PLATFORM_NUM_LEDS "0" STRING "The number of LEDs.")
+
+# GPS
+PLATFORM_OPTION(PLATFORM_USE_NEO_M8N_GPS "Platform uses M8N GPS module" TRUE)
+PLATFORM_PARAM(PLATFORM_UART_DEV1 "/dev/ttyUSB0" STRING "A real serial UART connected to an M8N GPS board" )
+PLATFORM_PARAM(PLATFORM_GPS_UART     "1" STRING "The UART port used by the GPS configuration."   )
+PLATFORM_PARAM(PLATFORM_GPS_BAUDRATE "115200" STRING "The baudrate used by the GPS configuration."       )
+
 #Make the 'inc' directory available so 'platform.h' can be found
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
+
+# Add platform specific linker flags
+INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-gc-sections")
+INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group")
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lgcc -lc -Wl,--end-group")
 
 
 INCLUDE_DIRECTORIES(inc)
@@ -33,9 +64,32 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT
     platf_main.c
-	libc_overrides.c
+    platf_button.c
+    platf_uart.c
+    platf_radio.c
+    platf_timer.c
+    libc_overrides.c
     inc/platform.h
 )
+
+PLATFORM_HEADER_DEFINE(
+	BOOL    USE_DUMMY_RADIO
+		PLATFORM_USE_NEO_M8N_GPS
+	STRING	PLATFORM_UART_DEV0
+		PLATFORM_UART_DEV1
+	NUMBER  PLATFORM_NUM_TIMERS
+		PLATFORM_NUM_LEDS
+		PLATFORM_MODEM_INTERFACE_UART
+		PLATFORM_MODEM_INTERFACE_BAUDRATE
+		PLATFORM_NUM_BUTTONS
+		PLATFORM_GPS_UART
+		PLATFORM_GPS_BAUDRATE
+	)
+
+#Include the source for GPS chip
+IF(${PLATFORM_USE_NEO_M8N_GPS})
+    ADD_CHIP("neo_m8n_gps")
+ENDIF()
 
 #Build the 'platform_defs.h' settings file
 PLATFORM_BUILD_SETTINGS_FILE()

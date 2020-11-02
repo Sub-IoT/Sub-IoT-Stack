@@ -53,8 +53,8 @@
   #error "sensor_pull app is not compatible with LoRaWAN, so disable MODULE_LORAWAN in cmake"
 #endif
 
-#if !defined(USE_SX127X) && !defined(USE_NETDEV_DRIVER)
-  #error "background frames are only supported by the sx127x driver for now"
+#if !defined(USE_SX127X) && !defined(USE_NETDEV_DRIVER) && !defined(USE_DUMMY_RADIO)
+  #error "background frames are only supported by the sx127x or dummy driver for now"
 #endif
 
 
@@ -99,10 +99,13 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
+    d7ap_fs_init();
+
     d7ap_init();
 
     alp_layer_init(NULL, false);
     d7ap_fs_write_dll_conf_active_access_class(0x11); // use scanning AC
+
     init_user_files();
 
 #if defined USE_HTS221
@@ -114,5 +117,5 @@ void bootstrap()
 #endif
 
     sched_register_task(&execute_sensor_measurement);
-    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
+    timer_post_task_delay(&execute_sensor_measurement, 0);
 }

@@ -68,7 +68,9 @@ typedef enum
     AES_CCM_32 = 0x07, /* data confidentiality and authenticity*/
 } nls_method_t;
 
-typedef struct {
+#pragma pack(1)
+
+typedef struct __attribute__((__packed__)) {
     union {
         uint8_t raw;
         struct {
@@ -91,7 +93,7 @@ typedef struct __attribute__((__packed__)) {
     uint8_t id[8]; // TODO assuming 8 byte id for now
 } d7ap_addressee_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     union {
         uint8_t raw;
         struct {
@@ -137,7 +139,7 @@ typedef enum {
     SESSION_RETRY_MODE_NO = 0
 } d7ap_session_retry_mode_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     union {
         uint8_t raw;
         struct {
@@ -172,10 +174,12 @@ typedef struct{
 } d7ap_resource_desc_t;
 
 // override alp_interface_config_t
-typedef struct {
+typedef struct __attribute__ ((__packed__)) {
     uint8_t itf_id;
     d7ap_session_config_t d7ap_session_config;
-} __attribute__ ((__packed__)) alp_interface_config_d7ap_t;
+} alp_interface_config_d7ap_t;
+
+#pragma pack()
 
 
 //=========================== prototypes ======================================

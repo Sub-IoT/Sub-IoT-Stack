@@ -42,10 +42,8 @@
 //     length($data) == $header.length == $header.allocated_length
 ///////////////////////////////////////
 
-
-
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_FS_LOG_ENABLED)
-#define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
