@@ -147,10 +147,7 @@ static inline void check_structs_are_valid(){}
 #endif
 
 #if defined FRAMEWORK_USE_WATCHDOG
-static void __feed_watchdog_task(void *arg)
-{
-	hw_watchdog_feed();
-}
+static void __feed_watchdog_task(void *arg) { }
 #endif
 
 __LINK_C void scheduler_init()
@@ -401,8 +398,10 @@ __LINK_C void scheduler_run()
 			end_atomic();
 		}
 #if defined FRAMEWORK_USE_WATCHDOG
+		// timer_cancel_task(&__feed_watchdog_task); //cancelling this task currently breaks background advertising. TBC
 		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
-#endif		
+		hw_watchdog_feed();
+#endif
 		hw_enter_lowpower_mode(low_power_mode);
 	}
 
