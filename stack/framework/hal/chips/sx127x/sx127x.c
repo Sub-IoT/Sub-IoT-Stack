@@ -120,6 +120,8 @@ static uint8_t rx_bw_number = 21;
 static uint8_t rx_bw_khz = 0;
 static uint8_t rssi_smoothing_full = 0;
 
+static volatile bool fifo_level_irq_triggered = false;
+
 typedef enum {
   OPMODE_SLEEP = 0,
   OPMODE_STANDBY = 1,
@@ -517,6 +519,18 @@ static void fifo_level_isr()
     tx_refill_callback(remaining_bytes_len);
 }
 
+static void wait_for_fifo_level_isr() { 
+  // We're holding the MCU from going to sleep as this sometimes takes to long to fill the newer data
+  // TODO make this non-blocking without breaking it, for example by telling scheduler it can't go to sleep
+  fifo_level_irq_triggered = false;
+  while(!fifo_level_irq_triggered) 
+  {
+      if(state == STATE_IDLE)
+          return; //if radio gets put in sleep mode, cancel this action
+  }
+  fifo_level_isr();
+}
+
 static void reinit_rx() {
  FskPacketHandler_sx127x.NbBytes = 0;
  FskPacketHandler_sx127x.Size = 0;
@@ -638,7 +652,7 @@ static void dio1_isr(void *arg) {
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
-      sched_post_task(&fifo_level_isr);
+      fifo_level_irq_triggered = true;
     }
 }
 
@@ -726,7 +740,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   sched_register_task(&lora_rxdone_isr);
   sched_register_task(&packet_transmitted_isr);
   sched_register_task(&fifo_threshold_isr);
-  sched_register_task(&fifo_level_isr);
+  sched_register_task(&wait_for_fifo_level_isr);
 
   return SUCCESS; // TODO FAIL return code
 }
@@ -747,7 +761,7 @@ error_t hw_radio_set_idle() {
       release_packet_callback(current_packet);
     }
     sched_cancel_task(&fifo_threshold_isr);
-    sched_cancel_task(&fifo_level_isr);
+    sched_cancel_task(&wait_for_fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
     timer_cancel_task(&rx_timeout);
@@ -999,6 +1013,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
       remaining_bytes_len = remaining_bytes_len - available_size;
       hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
+      sched_post_task(&wait_for_fifo_level_isr);
     } else {
       if(!enable_refill) {
         previous_threshold = 0;
@@ -1012,7 +1027,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
         write_fifo(data + start, remaining_bytes_len);
         remaining_bytes_len = 0;
         hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
-        hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
+        hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+        sched_post_task(&wait_for_fifo_level_isr);
       }
     }
 

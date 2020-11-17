@@ -398,7 +398,7 @@ __LINK_C void scheduler_run()
 			end_atomic();
 		}
 #if defined FRAMEWORK_USE_WATCHDOG
-		// timer_cancel_task(&__feed_watchdog_task); //cancelling this task currently breaks background advertising. TBC
+		timer_cancel_task(&__feed_watchdog_task);
 		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 		hw_watchdog_feed();
 #endif
