@@ -77,7 +77,8 @@ typedef enum {
   STATE_REQ_WAIT,
   STATE_REQ_BUSY,
   STATE_RESP,
-  STATE_RESP_PENDING_REQ
+  STATE_RESP_PENDING_REQ,
+  STATE_REC
 } state_t;
 
 static state_t state = STATE_IDLE;
@@ -185,10 +186,14 @@ static void modem_listen(void* arg)
 static void execute_state_machine()
 {
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  switch(state) {
+    switch (state) {
+    case STATE_REC:
+      if(hw_gpio_get_in(target_uart_state_pin))
+          break;
+      SWITCH_STATE(STATE_RESP);
+      //Intentional fall through
     case STATE_RESP:
       // response period completed, process the request
-      assert(!hw_gpio_get_in(target_uart_state_pin));
       sched_post_task(&process_rx_fifo);
       if(request_pending) {
         SWITCH_STATE(STATE_RESP_PENDING_REQ);
@@ -203,7 +208,7 @@ static void execute_state_machine()
     case STATE_IDLE:
       if(hw_gpio_get_in(target_uart_state_pin)) {
         // wake-up requested
-        SWITCH_STATE(STATE_RESP);
+        SWITCH_STATE(STATE_REC);
         modem_listen(NULL);
         break;
       } else if(request_pending) { //check if we are really requesting a start

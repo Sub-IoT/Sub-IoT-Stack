@@ -51,6 +51,12 @@ uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {
   return &handle[port_idx];
 }
 
+uart_handle_t* uart_get_handle(uint8_t port_idx) {
+  if((handle[port_idx].uart_port) && (handle[port_idx].baudrate))
+      return &handle[port_idx];
+  return NULL;
+}
+
 bool uart_enable(uart_handle_t* uart) {
   // enable GPIO
   GPIO_InitTypeDef GPIO_InitStruct;
@@ -153,6 +159,12 @@ bool uart_disable(uart_handle_t* uart) {
 
   //log_print_string("!!! uart disabled");
   return true;
+}
+
+bool uart_is_enabled(uart_handle_t* uart)
+{
+  /* HAL_UART_STATE_RESET means UART is currently disabled */
+  return (uart->handle.gState == HAL_UART_STATE_RESET);
 }
 
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,

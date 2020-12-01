@@ -54,6 +54,8 @@ typedef enum
 typedef void (*uart_error_handler_t)(uart_error_t error);
 
 __LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins);
+__LINK_C uart_handle_t* uart_get_handle(uint8_t port_idx);
+__LINK_C bool           uart_is_enabled(uart_handle_t* uart);
 __LINK_C bool           uart_disable(uart_handle_t* uart);
 __LINK_C bool           uart_get_rx_port_state(uart_handle_t* uart);
 __LINK_C bool           uart_enable(uart_handle_t* uart);
