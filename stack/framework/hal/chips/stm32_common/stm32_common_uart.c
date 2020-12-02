@@ -164,7 +164,7 @@ bool uart_disable(uart_handle_t* uart) {
 bool uart_is_enabled(uart_handle_t* uart)
 {
   /* HAL_UART_STATE_RESET means UART is currently disabled */
-  return (uart->handle.gState == HAL_UART_STATE_RESET);
+  return (uart->handle.gState != HAL_UART_STATE_RESET);
 }
 
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,
