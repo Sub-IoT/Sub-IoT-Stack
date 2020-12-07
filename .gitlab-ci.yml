@@ -27,7 +27,7 @@ job 1:
    - build/apps/sensor_push/*
 job 2:
   tags:
-  - JLink
+  - testsuite
   stage: flash test boards
   dependencies: 
   - job 1
@@ -41,7 +41,7 @@ job 2:
   - if grep -q FAILED "flashOutput2.txt"; then exit 1; fi
 job 3:
   tags:
-  - JLink
+  - testsuite
   stage: run tests
   script:
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git
