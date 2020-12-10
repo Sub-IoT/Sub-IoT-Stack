@@ -364,14 +364,17 @@ void sched_set_low_power_mode(uint8_t mode) {
 
 __LINK_C void scheduler_run()
 {
+	
 	while(1)
 	{
+		bool task_list_empty = true;
 		while(NG(current_priority) < NUM_PRIORITIES)
 		{
 			check_structs_are_valid();
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
 #if defined FRAMEWORK_USE_WATCHDOG
+				task_list_empty = false;
 				hw_watchdog_feed();
 #endif
 				check_structs_are_valid();
@@ -398,8 +401,11 @@ __LINK_C void scheduler_run()
 			end_atomic();
 		}
 #if defined FRAMEWORK_USE_WATCHDOG
-		timer_cancel_task(&__feed_watchdog_task);
-		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
+		if(!task_list_empty) //avoid rescheduling watchdog tasks when we didn't execute any tasks
+		{
+			timer_cancel_task(&__feed_watchdog_task);
+			timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
+		}
 		hw_watchdog_feed();
 #endif
 		hw_enter_lowpower_mode(low_power_mode);
