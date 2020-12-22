@@ -67,8 +67,8 @@ static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__un
         alp_parse_action(command, &action);
         switch (action.ctrl.operation) {
         case ALP_OP_STATUS:
-            if (action.interface_status.itf_id == ALP_ITF_ID_SERIAL) {
-                break; // skip the serial interface status
+            if (action.interface_status.len == 0) {
+                break; // skip interface status with no content
             }
             if (action.interface_status.itf_id == ALP_ITF_ID_D7ASP) {
                 if (action.interface_status.len > 0) {

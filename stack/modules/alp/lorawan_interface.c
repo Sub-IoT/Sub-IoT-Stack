@@ -41,10 +41,8 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
 
 static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
 static alp_interface_t interface_lorawan_otaa;
-static alp_interface_t interface_lorawan_abp;
 static uint16_t lorawan_trans_id;
 static bool otaa_just_inited = false;
-static bool abp_just_inited = false;
 
 void lorawan_rx(lorawan_AppData_t *AppData)
 {
@@ -90,7 +88,7 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
     };
     add_interface_status_lorawan(result.itf_status, attempts, status);
 
-    alp_layer_forwarded_command_completed(lorawan_trans_id, NULL, &result, false); 
+    alp_layer_forwarded_command_completed(lorawan_trans_id, NULL, &result, (status == LORAWAN_STACK_JOIN_FAILED) || (status == LORAWAN_STACK_JOINED)); 
 }
 
 static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
@@ -110,23 +108,6 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
         // TODO why? fifo_put(&command->alp_response_fifo, payload, payload_length);
         lorawan_error_handler(trans_id, LORAWAN_STACK_ERROR_NOT_JOINED);
     }
-    return SUCCESS;
-}
-
-static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
-    (void)expected_response_length; // suppress unused warning
-    alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
-    (*trans_id) = ++lorawan_trans_id;    
-    if(!abp_just_inited) {
-        lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);
-        lorawan_itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.network_id);
-        lorawan_abp_is_joined(&lorawan_itf_cfg->lorawan_session_config_abp);
-    } else
-        abp_just_inited = false;
-    DPRINT("sending abp payload");
-    current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_ABP;
-    lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_abp.application_port, lorawan_itf_cfg->lorawan_session_config_abp.request_ack);
-    lorawan_error_handler(trans_id, status);
     return SUCCESS;
 }
 
@@ -150,14 +131,6 @@ static void lorawan_init_otaa(alp_interface_config_t* itf_cfg) {
     otaa_just_inited = true;
 }
 
-static void lorawan_init_abp(alp_interface_config_t* itf_cfg) {
-    alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
-    lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);
-    lorawan_itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.network_id);
-    lorawan_stack_init_abp(&lorawan_itf_cfg->lorawan_session_config_abp);
-    abp_just_inited = true;
-}
-
 void lorawan_interface_register() {
     lorawan_register_cbs(lorawan_rx, lorawan_command_completed, lorawan_status_callback);
 
@@ -171,16 +144,4 @@ void lorawan_interface_register() {
         .unique = true
     };
     alp_layer_register_interface(&interface_lorawan_otaa);
-
-    interface_lorawan_abp = (alp_interface_t) {
-        .itf_id = ALP_ITF_ID_LORAWAN_ABP,
-        .itf_cfg_len = sizeof(lorawan_session_config_abp_t),
-        .itf_status_len = 7,
-        .init = lorawan_init_abp,
-        .deinit = lorawan_stack_deinit,
-        .send_command = lorawan_send_abp,
-        .unique = true
-    };
-    alp_layer_register_interface(&interface_lorawan_abp);
-
 }

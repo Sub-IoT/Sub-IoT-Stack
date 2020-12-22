@@ -33,7 +33,6 @@
 #include "stdint.h"
 
 #include "dae.h"
-#include "fs.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
@@ -41,7 +40,7 @@
 #define D7A_FILE_FIRMWARE_VERSION_FILE_ID 0x02
 #define D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE 6
 #define D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE 7
-#define D7A_FILE_FIRMWARE_VERSION_SIZE (2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE)
+#define D7A_FILE_FIRMWARE_VERSION_SIZE (2 + 2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE)
 
 #define D7A_FILE_FACTORY_SETTINGS_FILE_ID 0x01
 #define D7A_FILE_FACTORY_SETTINGS_SIZE 53
@@ -79,7 +78,11 @@
 #define D7AP_FS_SYSTEMFILES_COUNT 0x2F // reserved up until 0x3F but used only until 0x2F so use this for limiting memory usage
 #define D7AP_FS_USERFILES_COUNT (FRAMEWORK_FS_FILE_COUNT - D7AP_FS_SYSTEMFILES_COUNT)
 
+#define USER_FILE_ALP_CTRL_FILE_ID 0x40
+#define USER_FILE_ALP_CTRL_SIZE    2
 
+#define USER_FILE_LORAWAN_KEYS_FILE_ID 0x41
+#define USER_FILE_LORAWAN_KEYS_SIZE    24
 
 typedef enum {
   EM_OFF = 0,
@@ -89,6 +92,27 @@ typedef enum {
   EM_PER_TX = 4
 } engineering_mode_t;
 
+/* \brief The callback function for when a user file is modified
+ *
+ * \param file_id		The id of the modified user file
+ * **/
+typedef void (*d7ap_fs_modified_file_callback_t)(uint8_t file_id);
+
+
+/* \brief The callback function for when a file is going to be modified, mostly used to validate the data
+ *
+ * \param file_id		The id of the modifying file
+ * \param offset    the offset of the data compared to the d7 file start
+ * \param buffer    the buffer which will be written at the given offset with the given length
+ * \param length    the length of the data which will be written to the file
+ * \return bool     this will decide whether the file write will go through (true) or will get cancelled (false)
+ * **/
+typedef bool (*d7ap_fs_modifying_file_callback_t)(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
+
+bool d7ap_fs_register_file_modified_callback(uint8_t file_id, d7ap_fs_modified_file_callback_t callback);
+bool d7ap_fs_unregister_file_modified_callback(uint8_t file_id);
+bool d7ap_fs_register_file_modifying_callback(uint8_t file_id, d7ap_fs_modifying_file_callback_t callback);
+bool d7ap_fs_unregister_file_modifying_callback(uint8_t file_id);
 
 void d7ap_fs_init();
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
@@ -96,12 +120,14 @@ int d7ap_fs_init_file_on_blockdevice(uint8_t file_id, uint8_t blockdevice_index,
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
+int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, bool trigger_cb);
 
 int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 
 int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
 int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
+int d7ap_fs_write_file_header_with_callback(uint8_t file_id, d7ap_fs_file_header_t* file_header, bool trigger_modified_cb);
 
 int d7ap_fs_read_uid(uint8_t* buffer);
 int d7ap_fs_read_vid(uint8_t* buffer);

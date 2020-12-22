@@ -73,6 +73,7 @@
 #include "debug.h"
 #include "scheduler.h"
 #include "MODULE_LORAWAN_defs.h"
+#include "d7ap_fs.h"
 
 #define LORAWAN_LOG_ENABLED 1
 
@@ -111,15 +112,9 @@ static state_t state = STATE_NOT_JOINED;
 static LoRaMacPrimitives_t loraMacPrimitives;
 static LoRaMacCallback_t loraMacCallbacks;
 static LoRaMacStatus_t loraMacStatus;
-static activationMethod_t activationMethod;
 static uint8_t devEui[8] = { 0 };     //used for OTAA
 static uint8_t appEui[8] = { 0 };     //used for OTAA
 static uint8_t appKey[16] = { 0 };    //used for OTAA
-
-static uint8_t NwkSKey[16] = { 0 };   //used for ABP
-static uint8_t AppSKey[16]= { 0 };    //used for ABP
-static uint32_t DevAddr=0;            //used for ABP
-static uint32_t LORAWAN_NETWORK_ID=0; //used for ABP
 
 static uint8_t app_port;
 static bool request_ack;
@@ -137,6 +132,7 @@ static lorawan_tx_completed_callback_t tx_callback = NULL;
 static lorawan_status_callback_t stack_status_callback = NULL;
 
 static bool inited = false;
+static bool first_init = true;
 
 /**
  * @brief LoRaWAN state machine. Sets parameters in the LoRaWAN stack and handles callbacks
@@ -147,59 +143,20 @@ static void run_fsm()
   {
     case STATE_JOINING:
     {
-      if(activationMethod==OTAA)
+      MlmeReq_t mlmeReq;
+
+      mlmeReq.Type = MLME_JOIN;
+      mlmeReq.Req.Join.DevEui = devEui;
+      mlmeReq.Req.Join.AppEui = appEui;
+      mlmeReq.Req.Join.AppKey = appKey;
+      mlmeReq.Req.Join.NbTrials = JOINREQ_NBTRIALS;
+
+      //if(next_tx == true)
       {
-            MlmeReq_t mlmeReq;
-
-            mlmeReq.Type = MLME_JOIN;
-            mlmeReq.Req.Join.DevEui = devEui;
-            mlmeReq.Req.Join.AppEui = appEui;
-            mlmeReq.Req.Join.AppKey = appKey;
-            mlmeReq.Req.Join.NbTrials = JOINREQ_NBTRIALS;
-
-            //if(next_tx == true)
-            {
-                LoRaMacMlmeRequest(&mlmeReq);
-            }
-
-            //sched_post_task_prio(&run_fsm, MIN_PRIORITY);
+          LoRaMacMlmeRequest(&mlmeReq);
       }
-      else{
-            LoRaMacStatus_t status=LORAMAC_STATUS_OK;
-            MibRequestConfirm_t mibReq;
-            mibReq.Type = MIB_NET_ID;
-            mibReq.Param.NetID = LORAWAN_NETWORK_ID;
-            status=LoRaMacMibSetRequestConfirm( &mibReq );
-            if(status!=LORAMAC_STATUS_OK) {
-              assert(false);}
 
-            mibReq.Type = MIB_DEV_ADDR;
-            mibReq.Param.DevAddr = DevAddr;
-            status=LoRaMacMibSetRequestConfirm( &mibReq );
-            if(status!=LORAMAC_STATUS_OK) {
-              assert(false);}
-            
-            mibReq.Type = MIB_NWK_SKEY;
-            mibReq.Param.NwkSKey = NwkSKey;
-            status=LoRaMacMibSetRequestConfirm( &mibReq );
-            if(status!=LORAMAC_STATUS_OK) {
-              assert(false);}
-
-            mibReq.Type = MIB_APP_SKEY;
-            mibReq.Param.AppSKey = AppSKey;
-            status=LoRaMacMibSetRequestConfirm( &mibReq );
-            if(status!=LORAMAC_STATUS_OK) {
-              assert(false);}
-              
-
-            mibReq.Type = MIB_NETWORK_JOINED;
-            mibReq.Param.IsNetworkJoined = true;
-            status=LoRaMacMibSetRequestConfirm( &mibReq );
-            state = STATE_JOINED;
-            if(status!=LORAMAC_STATUS_OK) {
-              assert(false);}
-            sched_post_task(&run_fsm);
-      }
+      //sched_post_task_prio(&run_fsm, MIN_PRIORITY);
       break;
     }
     case STATE_JOINED:
@@ -348,6 +305,37 @@ static bool is_joined()
 }
 
 /**
+ * @brief updates the otaa keys
+ * @param file_id
+ */
+static void lorawan_otaa_register_keys(uint8_t file_id)
+{
+    uint8_t keys[USER_FILE_LORAWAN_KEYS_SIZE];
+    d7ap_fs_read_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, keys, USER_FILE_LORAWAN_KEYS_SIZE);
+    if (memcmp(appEui, keys, 8) != 0) {
+        state = STATE_NOT_JOINED;
+        memcpy(appEui, keys, 8);
+    }
+    if (memcmp(appKey, &keys[8], 16) != 0) {
+        state = STATE_NOT_JOINED;
+        memcpy(appKey, &keys[8], 16);
+    }
+}
+
+/**
+ * @brief init lorawan, this has to be used only once
+ */
+static void set_initial_keys()
+{
+    first_init = false;
+
+    d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, devEui, D7A_FILE_UID_SIZE);
+
+    d7ap_fs_register_file_modified_callback(USER_FILE_LORAWAN_KEYS_FILE_ID, &lorawan_otaa_register_keys);
+    lorawan_otaa_register_keys(USER_FILE_LORAWAN_KEYS_FILE_ID);
+}
+
+/**
  * @brief Register the different callbacks
  * @param lorawan_rx_cb: LoRaWAN received data
  * @param lorawan_tx_cb: LoRaWAN transmitted data
@@ -360,78 +348,6 @@ void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_compl
   rx_callback = lorawan_rx_cb;
   tx_callback = lorawan_tx_cb;
   stack_status_callback = lorawan_status_cb;
-}
-
-/**
- * @brief Updates the abp network paramters
- * @param lorawan_session_config
- * @return bool represents if a change has occured
- */
-bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
-{
-  DPRINT("Checking for change in config");
-  bool joined=true;
-  sched_cancel_task(&run_fsm);
-  if(state!=STATE_JOINED)
-    joined=false;
-  if (state==STATE_JOINING)
-    return false;
-  app_port=lorawan_session_config->application_port;
-  request_ack=lorawan_session_config->request_ack;
-  datarate = lorawan_session_config->data_rate;
-  adr_enabled = lorawan_session_config->adr_enabled;
-  
-  if(activationMethod!=ABP)
-  {
-    activationMethod=ABP;
-    joined=false;
-  }
-
-  if(DevAddr!=lorawan_session_config->devAddr)
-  {
-    DevAddr=lorawan_session_config->devAddr;
-    joined=false;
-  }
-
-  if(LORAWAN_NETWORK_ID!=lorawan_session_config->network_id)
-  {
-    LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
-    joined=false;
-  }
-  if(memcmp(NwkSKey,&lorawan_session_config->nwkSKey ,16)!=0)
-  {
-    joined=false;
-    memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
-  }
-  if(memcmp( AppSKey,&lorawan_session_config->appSKey ,16)!=0)
-  {
-    joined=false;
-    memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
-  }
-  
-  if(!joined)
-  {
-    LoRaMacStatus_t status=LORAMAC_STATUS_OK;
-    MibRequestConfirm_t mibReq;
-    mibReq.Type = MIB_NETWORK_JOINED;
-    mibReq.Param.IsNetworkJoined = false;
-    status=LoRaMacMibSetRequestConfirm( &mibReq );
-    if(status!=LORAMAC_STATUS_OK) {
-      assert(false);}
-
-    DPRINT("Change found - Init using ABP");
-    DPRINT("NwkSKey:");
-    DPRINT_DATA(lorawan_session_config->nwkSKey, 16);
-    DPRINT("AppSKey:");
-    DPRINT_DATA(lorawan_session_config->appSKey, 16);
-    DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
-    DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
-    DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
-    
-    state = STATE_JOINING;
-    run_fsm();
-  }
-    return joined;
 }
 
 /**
@@ -462,27 +378,6 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
     mibReq.Param.AdrEnable = adr_enabled;
     LoRaMacMibSetRequestConfirm( &mibReq );
   }
-  
-  if(activationMethod!=OTAA)
-  {
-    activationMethod=OTAA;
-    joined=false;
-  }
-  if(memcmp(devEui,&lorawan_session_config->devEUI ,8)!=0)
-  {
-    joined=false;
-    memcpy(devEui,&lorawan_session_config->devEUI ,8);
-  }
-  if(memcmp( appEui,&lorawan_session_config->appEUI,8)!=0)
-  {
-    joined=false;
-    memcpy( appEui,&lorawan_session_config->appEUI,8);
-  }
-  if(memcmp( appKey,&lorawan_session_config->appKey,16)!=0)
-  {
-    joined=false;
-    memcpy( appKey,&lorawan_session_config->appKey,16);
-  }
  
   if(!joined)
   {
@@ -496,11 +391,11 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
 
     DPRINT("Change found - Init using OTAA");
     DPRINT("DevEui:");
-    DPRINT_DATA(lorawan_session_config->devEUI, 8);
+    DPRINT_DATA(devEui, 8);
     DPRINT("AppEui:");
-    DPRINT_DATA(lorawan_session_config->appEUI, 8);
+    DPRINT_DATA(appEui, 8);
     DPRINT("AppKey:");
-    DPRINT_DATA(lorawan_session_config->appKey, 16);
+    DPRINT_DATA(appKey, 16);
     DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
 
    
@@ -511,120 +406,19 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
 }
 
 /**
- * @brief Inits the LoRaWAN stack using activation by personalization
- * @param lorawan_session_config
- */
-void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config) {
-  if(inited)
-    return;
-  inited = true;
-  activationMethod=ABP;
-  app_port=lorawan_session_config->application_port;
-  request_ack=lorawan_session_config->request_ack;
-  datarate = lorawan_session_config->data_rate;
-
-  if( adr_enabled != lorawan_session_config->adr_enabled)
-  {
-    adr_enabled = lorawan_session_config->adr_enabled;
-    MibRequestConfirm_t mibReq;
-    mibReq.Type = MIB_ADR;
-    mibReq.Param.AdrEnable = adr_enabled;
-    LoRaMacMibSetRequestConfirm( &mibReq );
-  }
-
-  memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
-  memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
-  DevAddr= lorawan_session_config->devAddr;
-  LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
-  
-  
-  HW_Init(); // TODO refactor
-
-  state = STATE_JOINING;
-  
-  
-  DPRINT("Init using ABP");
-  DPRINT("NwkSKey:");
-  DPRINT_DATA(lorawan_session_config->nwkSKey, 16);
-  DPRINT("AppSKey:");
-  DPRINT_DATA(lorawan_session_config->appSKey, 16);
-  DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
-  DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
-  DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
-  
-
-  sched_register_task(&run_fsm);
-  //sched_post_task(&run_fsm);
-
-  loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
-  loraMacPrimitives.MacMcpsIndication = &mcps_indication;
-  loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
-  loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
-  loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
-
-  // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, region);
-  if(loraMacStatus == LORAMAC_STATUS_OK) {
-    DPRINT("init OK");
-  } else {
-    DPRINT("init failed %d", loraMacStatus);
-  }
-
-  MibRequestConfirm_t mibReq;
-  mibReq.Type = MIB_ADR;
-  mibReq.Param.AdrEnable = lorawan_session_config->adr_enabled;
-  LoRaMacMibSetRequestConfirm( &mibReq );
-
-  mibReq.Type = MIB_PUBLIC_NETWORK;
-  mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK_ENABLED;
-  LoRaMacMibSetRequestConfirm( &mibReq );
-
-  mibReq.Type = MIB_DEVICE_CLASS;
-  mibReq.Param.Class = LORAWAN_CLASS;
-  LoRaMacMibSetRequestConfirm( &mibReq );
-
-#if defined( REGION_EU868 )
-  LoRaMacTestSetDutyCycleOn(true);
-
-#if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
-  LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
-  LoRaMacChannelAdd( 4, ( ChannelParams_t )LC5 );
-  LoRaMacChannelAdd( 5, ( ChannelParams_t )LC6 );
-  LoRaMacChannelAdd( 6, ( ChannelParams_t )LC7 );
-  LoRaMacChannelAdd( 7, ( ChannelParams_t )LC8 );
-  LoRaMacChannelAdd( 8, ( ChannelParams_t )LC9 );
-  LoRaMacChannelAdd( 9, ( ChannelParams_t )LC10 );
-
-  mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
-  mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-  LoRaMacMibSetRequestConfirm( &mibReq );
-
-  mibReq.Type = MIB_RX2_CHANNEL;
-  mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-  LoRaMacMibSetRequestConfirm( &mibReq );
-#endif
-
-#endif
-  run_fsm();
-}
-
-/**
  * @brief Inits the LoRaWAN stack using over the air activation
  * @param lorawan_session_config
  */
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
   if(inited)
     return;
+  if(first_init)
+      set_initial_keys();
   inited = true;
-  activationMethod=OTAA;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
   datarate = lorawan_session_config->data_rate;
   adr_enabled = lorawan_session_config->adr_enabled;
-
-  memcpy(devEui,&lorawan_session_config->devEUI ,8);
-  memcpy( appEui,&lorawan_session_config->appEUI,8);
-  memcpy( appKey,&lorawan_session_config->appKey,16);
   
   HW_Init(); // TODO refactor
 
@@ -632,11 +426,11 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   
   DPRINT("Init using OTAA");
   DPRINT("DevEui:");
-  DPRINT_DATA(lorawan_session_config->devEUI, 8);
+  DPRINT_DATA(devEui, 8);
   DPRINT("AppEui:");
-  DPRINT_DATA(lorawan_session_config->appEUI, 8);
+  DPRINT_DATA(appEui, 8);
   DPRINT("AppKey:");
-  DPRINT_DATA(lorawan_session_config->appKey, 16);
+  DPRINT_DATA(appKey, 16);
   DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
 
   sched_register_task(&run_fsm);

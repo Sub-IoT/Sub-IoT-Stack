@@ -47,8 +47,6 @@ static bool is_fs_init_completed = false;  //set in _d7a_verify_magic()
 
 #define IS_SYSTEM_FILE(file_id)         (file_id <= 0x3F)
 
-static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL }; // TODO limit to lower number so save RAM?
-
 static uint32_t volatile_data_offset = 0;
 static uint32_t permanent_data_offset = 0;
 
@@ -308,9 +306,6 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
     DPRINT("fs write_file (file_id %d, offset %d, addr %lu, length %d)\n",
            file_id, offset, files[file_id].addr, length);
 
-    if(file_modified_callbacks[file_id])
-         file_modified_callbacks[file_id](file_id);
-
     return 0;
 }
 
@@ -325,24 +320,4 @@ fs_file_stat_t *fs_file_stat(uint8_t file_id)
         return (fs_file_stat_t*)&files[file_id];
     else
         return NULL;
-}
-
-bool fs_unregister_file_modified_callback(uint8_t file_id) {
-    if(file_modified_callbacks[file_id]) {
-        file_modified_callbacks[file_id] = NULL;
-        return true;
-    } else
-        return false;
-}
-
-bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
-{
-    if(!_is_file_defined(file_id))
-        return false;
-
-    if(file_modified_callbacks[file_id])
-        return false; // already registered
-
-    file_modified_callbacks[file_id] = callback;
-    return true;
 }

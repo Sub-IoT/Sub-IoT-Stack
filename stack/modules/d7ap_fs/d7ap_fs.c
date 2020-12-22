@@ -22,6 +22,7 @@
 
 #include "modules_defs.h"
 #include "MODULE_D7AP_FS_defs.h"
+#include "framework_defs.h"
 #include "string.h"
 #include "debug.h"
 #include "fs.h"
@@ -64,6 +65,8 @@
 #define FILE_SIZE_MAX (MODULE_D7AP_FS_FILE_SIZE_MAX + sizeof(d7ap_fs_file_header_t))
 static uint8_t file_buffer[FILE_SIZE_MAX]; // statically allocated buffer used during file operations, to prevent stack overflow at runtime
 
+static d7ap_fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL }; // TODO limit to lower number so save RAM?
+static d7ap_fs_modifying_file_callback_t file_modifying_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
 
 static inline bool is_file_defined(uint8_t file_id)
 {
@@ -111,17 +114,20 @@ void d7ap_fs_init()
     // initializing UID
     uint64_t id = hw_get_unique_id();
     uint64_t id_be = __builtin_bswap64(id);
-    fs_write_file(D7A_FILE_UID_FILE_ID, sizeof(d7ap_fs_file_header_t), (const uint8_t*)&id_be, D7A_FILE_UID_SIZE);
+    d7ap_fs_write_file(D7A_FILE_UID_FILE_ID, 0, (const uint8_t*)&id_be, D7A_FILE_UID_SIZE);
   }
 
   // always update firmware version file upon boot
-  uint8_t firmware_version[D7A_FILE_FIRMWARE_VERSION_SIZE] = {
-    D7A_PROTOCOL_VERSION_MAJOR, D7A_PROTOCOL_VERSION_MINOR,
-  };
+  uint8_t firmware_version[D7A_FILE_FIRMWARE_VERSION_SIZE];
 
-  memcpy(firmware_version + 2, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
-  memcpy(firmware_version + 2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
-  fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, sizeof(d7ap_fs_file_header_t), firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
+  d7ap_fs_read_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
+
+  firmware_version[0] = D7A_PROTOCOL_VERSION_MAJOR;
+  firmware_version[1] = D7A_PROTOCOL_VERSION_MINOR;
+
+  memcpy(firmware_version + 4, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
+  memcpy(firmware_version + 4 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
+  d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
 }
 
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data)
@@ -221,6 +227,11 @@ int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_heade
 
 int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)
 {
+    return d7ap_fs_write_file_with_callback(file_id, offset, buffer, length, true);
+}
+
+int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, bool trigger_modified_cb)
+{
   int rtc;
   d7ap_fs_file_header_t header;
 
@@ -234,6 +245,10 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
 
   if(header.allocated_length < offset + length)
     return -EINVAL;
+
+  if (file_modifying_callbacks[file_id])
+      if (!file_modifying_callbacks[file_id](file_id, offset, buffer, length))
+          return -EILSEQ;
 
   rtc = fs_write_file(file_id, sizeof(d7ap_fs_file_header_t) + offset, buffer, length);
   if (rtc != 0)
@@ -249,6 +264,9 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
       return rtc;
   }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
+
+  if (file_modified_callbacks[file_id] && trigger_modified_cb)
+      file_modified_callbacks[file_id](file_id);
 
   return 0;
 }
@@ -389,4 +407,44 @@ uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 
   d7ap_fs_read_file_header(file_id, &header);
   return header.length;
+}
+
+bool d7ap_fs_unregister_file_modified_callback(uint8_t file_id) {
+    if(file_modified_callbacks[file_id]) {
+        file_modified_callbacks[file_id] = NULL;
+        return true;
+    } else
+        return false;
+}
+
+bool d7ap_fs_register_file_modified_callback(uint8_t file_id, d7ap_fs_modified_file_callback_t callback)
+{
+    if(!fs_file_stat(file_id))
+        return false;
+
+    if(file_modified_callbacks[file_id])
+        return false; // already registered
+
+    file_modified_callbacks[file_id] = callback;
+    return true;
+}
+
+bool d7ap_fs_unregister_file_modifying_callback(uint8_t file_id) {
+    if(file_modifying_callbacks[file_id]) {
+        file_modifying_callbacks[file_id] = NULL;
+        return true;
+    } else
+        return false;
+}
+
+bool d7ap_fs_register_file_modifying_callback(uint8_t file_id, d7ap_fs_modifying_file_callback_t callback)
+{
+    if(!fs_file_stat(file_id))
+        return false;
+
+    if(file_modifying_callbacks[file_id])
+        return false; // already registered
+
+    file_modifying_callbacks[file_id] = callback;
+    return true;
 }

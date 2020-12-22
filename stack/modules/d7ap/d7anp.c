@@ -237,7 +237,7 @@ void d7anp_init()
     // vid is not valid when set to FF
     if (memcmp(address_id, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
     {
-        fs_register_file_modified_callback(D7A_FILE_UID_FILE_ID, &d7anp_set_address_id);
+        d7ap_fs_register_file_modified_callback(D7A_FILE_UID_FILE_ID, &d7anp_set_address_id);
         d7ap_fs_read_uid(address_id);
         address_id_type = ID_TYPE_UID;
     } else
@@ -249,7 +249,7 @@ void d7anp_init()
      * Read the 128 bits key from the "NWL Security Key" file
      */
 
-    fs_register_file_modified_callback(D7A_FILE_NWL_SECURITY_KEY, &set_key);
+    d7ap_fs_register_file_modified_callback(D7A_FILE_NWL_SECURITY_KEY, &set_key);
     set_key(D7A_FILE_NWL_SECURITY_KEY);
 
     /* Read the NWL security parameters */

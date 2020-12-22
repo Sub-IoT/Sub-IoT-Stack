@@ -83,7 +83,6 @@ static uint8_t alp_data2[ALP_QUERY_COMPARE_BODY_MAX_SIZE]; // temp buffer static
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 
 static itf_ctrl_t current_itf_ctrl;
-static bool ignore_itf_ctrl_write_callback = false;
 
 static void process_async(void* arg);
 
@@ -206,20 +205,32 @@ static alp_status_codes_t alp_translate_error(int rc)
         return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
     case -EEXIST:
         return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
+    case -EILSEQ:
+        return ALP_STATUS_WRONG_OPERAND_FORMAT;
     default:
         return ALP_STATUS_UNKNOWN_ERROR;
     }
 }
+static void itf_clear_commands(uint8_t itf_id)
+{
+    DPRINT("Clear commands for itf %d", itf_id);
+    for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++)
+        {
+            if(commands[i].is_active && (commands[i].forward_itf_id == itf_id))
+            {
+                DPRINT("clear command with tag: %i", commands[i].tag_id);
+                error_t err = ALP_STATUS_ITF_STOPPED;
+                alp_interface_status_t empty_itf_status = { .itf_id = commands[i].forward_itf_id, .len = 0 };
+                alp_layer_forwarded_command_completed(commands[i].trans_id, &err, &empty_itf_status, true);
+            }
+        }
+}
 
 static void itf_ctrl_file_callback(uint8_t file_id)
 {
-    if (ignore_itf_ctrl_write_callback) {
-        ignore_itf_ctrl_write_callback = false;
-        return;
-    }
     error_t err;
     err = d7ap_fs_read_file(
-        INTERFACE_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, INTERFACE_CTRL_FILE_SIZE);
+        USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE);
     if (err != SUCCESS) {
         log_print_error_string("alp_layer: stack ctrl file callback: read file returned error %i", err);
         current_itf_ctrl.raw_itf_ctrl = 0;
@@ -229,6 +240,10 @@ static void itf_ctrl_file_callback(uint8_t file_id)
             return;
         current_itf_deinit();
         current_itf_deinit = NULL;
+
+        // clean up all alp commands associated with the interface
+        itf_clear_commands(current_itf_ctrl.interface);
+        
     } else {
         if (current_itf_ctrl.interface
             == ALP_ITF_ID_D7ASP) { // For now, we only init D7 at the start as it doesn't need any settings
@@ -272,12 +287,12 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 #ifdef MODULE_LORAWAN
   lorawan_interface_register();
 #endif
-  
+
   sched_register_task(&process_async);
 
-  if(fs_file_stat(INTERFACE_CTRL_FILE_ID)) {
-    fs_register_file_modified_callback(INTERFACE_CTRL_FILE_ID, &itf_ctrl_file_callback);
-    itf_ctrl_file_callback(INTERFACE_CTRL_FILE_ID);
+  if(fs_file_stat(USER_FILE_ALP_CTRL_FILE_ID)) {
+    d7ap_fs_register_file_modified_callback(USER_FILE_ALP_CTRL_FILE_ID, &itf_ctrl_file_callback);
+    itf_ctrl_file_callback(USER_FILE_ALP_CTRL_FILE_ID);
   } else
     current_itf_ctrl.raw_itf_ctrl = 0;
 }
@@ -441,8 +456,8 @@ static alp_status_codes_t process_op_indirect_forward(
         interface_file_changed = false;
         if (previous_interface_file_id != action->indirect_interface_operand.interface_file_id) {
             if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
-                fs_unregister_file_modified_callback(previous_interface_file_id);
-                fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
+                d7ap_fs_unregister_file_modified_callback(previous_interface_file_id);
+                d7ap_fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
                 d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1);
                 previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
             } else
@@ -552,7 +567,7 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
 
 static alp_status_codes_t write_itf_command(itf_ctrl_action_t action)
 {
-    int rc = d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, &action, 1); // gets handled in write file callback
+    int rc = d7ap_fs_write_file(USER_FILE_ALP_CTRL_FILE_ID, 0, &action, 1); // gets handled in write file callback
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
@@ -586,13 +601,12 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                     // TODO refactor? always init the interface?
                     if (current_itf_deinit != NULL)
                         current_itf_deinit();
-
+                    itf_clear_commands(current_itf_ctrl.interface);
                     interfaces[i]->init(itf_config);
                     current_itf_deinit = interfaces[i]->deinit;
 
                     current_itf_ctrl.interface = interfaces[i]->itf_id;
-                    ignore_itf_ctrl_write_callback = true;
-                    d7ap_fs_write_file(INTERFACE_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, INTERFACE_CTRL_FILE_SIZE);
+                    d7ap_fs_write_file_with_callback(USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, false);
                 }
             }
             uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);

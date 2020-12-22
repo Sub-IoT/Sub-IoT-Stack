@@ -156,27 +156,12 @@ bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* i
             = d7ap_addressee_id_length(((d7ap_session_config_t*)itf_config->itf_config)->addressee.ctrl.id_type);
         rc += fifo_put_byte(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->addressee.access_class);
         rc += fifo_put(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->addressee.id, id_length);
-    } else if (itf_config->itf_id == ALP_ITF_ID_LORAWAN_ABP) {
-        uint8_t control_byte = ((lorawan_session_config_abp_t*)itf_config->itf_config)->request_ack << 1;
-        control_byte += ((lorawan_session_config_abp_t*)itf_config->itf_config)->adr_enabled << 2;
-        rc += fifo_put_byte(cmd_fifo, control_byte);
-        rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_abp_t*)itf_config->itf_config)->application_port);
-        rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_abp_t*)itf_config->itf_config)->data_rate);
-        rc += fifo_put(cmd_fifo, ((lorawan_session_config_abp_t*)itf_config->itf_config)->nwkSKey, 16);
-        rc += fifo_put(cmd_fifo, ((lorawan_session_config_abp_t*)itf_config->itf_config)->appSKey, 16);
-        uint32_t dev_addr = __builtin_bswap32(((lorawan_session_config_abp_t*)itf_config->itf_config)->devAddr);
-        rc += fifo_put(cmd_fifo, (uint8_t*)&dev_addr, 4);
-        uint32_t network_id = __builtin_bswap32(((lorawan_session_config_abp_t*)itf_config->itf_config)->network_id);
-        rc += fifo_put(cmd_fifo, (uint8_t*)&network_id, 4);
     } else if (itf_config->itf_id == ALP_ITF_ID_LORAWAN_OTAA) {
         uint8_t control_byte = ((lorawan_session_config_otaa_t*)itf_config->itf_config)->request_ack << 1;
         control_byte += ((lorawan_session_config_otaa_t*)itf_config->itf_config)->adr_enabled << 2;
         rc += fifo_put_byte(cmd_fifo, control_byte);
         rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->application_port);
         rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->data_rate);
-        rc += fifo_put(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->devEUI, 8);
-        rc += fifo_put(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->appEUI, 8);
-        rc += fifo_put(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->appKey, 16);
     } else {
         rc += fifo_put(cmd_fifo, itf_config->itf_config, config_len);
     }
