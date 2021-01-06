@@ -125,6 +125,7 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
     }
 
     DPRINT("Could not alloc command, all %i reserved slots active", MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT);
+    assert(false); // TODO: Develop a better method to handle this
     return NULL;
 }
 
