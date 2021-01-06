@@ -96,10 +96,9 @@ static void free_command(alp_command_t* command) {
   memset(command, 0, sizeof (alp_command_t));
   command->is_active = false;
   fifo_init(&command->alp_command_fifo, command->alp_command, ALP_PAYLOAD_MAX_SIZE);
-  // other fields are initialized on usage
 }
 
-static void init_commands()
+void alp_layer_free_commands()
 {
   for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     free_command(&commands[i]);
@@ -125,7 +124,7 @@ alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respon
     }
 
     DPRINT("Could not alloc command, all %i reserved slots active", MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT);
-    assert(false); // TODO: Develop a better method to handle this
+    
     return NULL;
 }
 
@@ -272,7 +271,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
   init_args = alp_init_args;
   use_serial_itf = use_serial_interface;
   fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT*sizeof(alp_command_t*));
-  init_commands();
+  alp_layer_free_commands();
 
   d7ap_fs_init();
 

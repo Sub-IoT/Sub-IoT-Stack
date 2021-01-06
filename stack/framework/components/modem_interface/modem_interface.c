@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "hwuart.h"
-
+#include "alp_layer.h"
 #include "framework_defs.h"
 #include "platform_defs.h"
 #include "fifo.h"
@@ -378,6 +378,8 @@ static void process_rx_fifo(void *arg)
         logging_handler(&payload_fifo);
       else if (header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_PING_REQUEST)
       {
+        // free all alp commands
+        alp_layer_free_commands();
         uint8_t ping_reply[1]={0x02};
         fifo_skip(&payload_fifo,1);
         modem_interface_transfer_bytes((uint8_t*) &ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);

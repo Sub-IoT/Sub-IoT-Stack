@@ -118,6 +118,13 @@ bool alp_layer_command_free(alp_command_t* command);
  * \return 
  */
 void alp_layer_free_itf_commands(uint8_t forward_itf_id);
+
+/*!
+ * \brief Frees all commands in the ALP layer
+ * \return 
+ */
+void alp_layer_free_commands();
+
 /*!
  * \brief Processes the ALP command in an asynchronous way
  * \param Command Pointer to a command which should be allocated by calling `alp_layer_command_alloc()`. The command will be free-ed by ALP layer.
