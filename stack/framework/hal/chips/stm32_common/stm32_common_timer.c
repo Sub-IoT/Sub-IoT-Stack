@@ -55,17 +55,9 @@ static bool timer_inited = false;
   static LPTIM_HandleTypeDef timer;
   static volatile bool cmp_reg_write_pending = false;
   static volatile bool ready_for_trigger = false;
-
-  // Note: the STM32 LPTIM seems to trigger whenever time >= target.
-  // This means that scheduling a value past the overflow will not work
-  // correctly. As a workaround for this edge case, the target is stored
-  // here temporarily, then programmed into the hw timer on overflow.
-  static volatile hwtimer_tick_t target_after_overflow;
 #elif defined(STM32L1)
   static TIM_HandleTypeDef timer;
 #endif
-
-static error_t do_schedule(hwtimer_tick_t tick);
 
 // Sets up a timer to count at 1024 Hz, driven by the 32.768 kHz LSE
 // The timer is running continuously. On STM32L0 the LPTIM1 is used,
@@ -188,26 +180,6 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return ESIZE;
  	if(!timer_inited)
  		return EOFF;
-
-    #if defined(STM32L0)
-    // NOTE: a tick < current_tick cannot be scheduled directly, as the
-    // LPTIM peripheral would fire immediately (LPTIM_CMP > LPTIM_CNT).
-    // As a workaround, the scheduling is done right after
-    // the next overflow (IRQ calls do_schedule()).
-    hwtimer_tick_t current_tick = hw_timer_getvalue(timer_id);
-    if(tick < current_tick) {
-        hw_timer_cancel(timer_id);
-        target_after_overflow = (tick > 0) ? tick : 1;
-        return SUCCESS;
-    } else
-        target_after_overflow = 0;
-    #endif
-
-    return do_schedule(tick);
-}
-
-static error_t do_schedule(hwtimer_tick_t tick)
-{
   //don't enable the interrupt while waiting to write a new compare value
   ready_for_trigger = false;
   while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
@@ -242,7 +214,6 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
     __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
     ready_for_trigger = false;
-    target_after_overflow = 0;
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_CLEAR_FLAG(&timer, TIM_IT_CC1);
@@ -331,15 +302,6 @@ void TIMER_ISR(void)
     if(__HAL_LPTIM_GET_IT_SOURCE(&timer, LPTIM_FLAG_ARRM) !=RESET)
     {
       __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_ARRM);
-
-      #if defined(STM32L0)
-      // workaround to schedule past the 0xFFFF overflow value
-      if(target_after_overflow) {
-        do_schedule(target_after_overflow);
-        target_after_overflow = 0;
-      }
-      #endif
-
       if(overflow_f != 0x0)
         overflow_f();
     }

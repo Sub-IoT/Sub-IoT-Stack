@@ -316,7 +316,7 @@ static void configure_next_event()
       timer_tick_t fire_delay = (next_fire_time - current_time);
 		//if the timer should fire in less ticks than supported by the HW timer --> schedule it
 		//(otherwise it is scheduled from timer_overflow when needed)
-		if(fire_delay < COUNTER_OVERFLOW_INCREASE)
+		if((fire_delay + hw_timer_getvalue(HW_TIMER_ID)) < COUNTER_OVERFLOW_INCREASE)
 		{
 			NG(hw_event_scheduled) = true;
             end_atomic(); //stop atomic when scheduling a new timer because this needs to wait for a interrupt before writing
@@ -352,7 +352,7 @@ static void timer_overflow()
 		timer_tick_t fire_time = (NG(timers)[NG(next_event)].next_event - NG(timer_offset));
 
 		//fire time already passed
-		if(fire_time <= hw_timer_getvalue(HW_TIMER_ID))
+		if(fire_time <= (hw_timer_getvalue(HW_TIMER_ID) + timer_info->min_delay_ticks))
 			timer_fired();
 		else
 		{
