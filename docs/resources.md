@@ -6,7 +6,7 @@ layout: page
 
 The following resources give an introduction to DASH7 and OSS-7:
 
-+ The DASH 7 Alliance Protocol specification is available for download [here](http://www.dash7-alliance.org/specification/)
++ The DASH 7 Alliance Protocol specification is available for download [here](https://dash7-alliance.org/download-specification/)
 + Subscribe to our [RSS feed]({{ site.baseurl }}//feed.xml)
 + [Mailing list](http://groups.google.com/group/dash7-ap-oss)
 + [FOSDEM2018 presentation (youtube)](https://www.youtube.com/watch?v=T122BjX2Q3E)
