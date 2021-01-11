@@ -266,6 +266,28 @@ static void itf_ctrl_file_callback(uint8_t file_id)
     }
 }
 
+static void init_auth_key_files()
+{
+    d7ap_fs_file_header_t file_header = {
+        .file_permissions = 0, // TODO not implemented for now
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .length = ALP_AUTH_KEY_FILE_LENGTH,
+        .allocated_length = ALP_AUTH_KEY_FILE_LENGTH
+    };
+
+    int rc = d7ap_fs_init_file(ALP_FILE_ID_ROOT_AUTH_KEY, &file_header, NULL);
+    if(rc != -EEXIST && rc != SUCCESS) {
+        log_print_error_string("Error initing ALP root auth key file: %d", rc);
+    }
+
+    rc = d7ap_fs_init_file(ALP_FILE_ID_USER_AUTH_KEY, &file_header, NULL);
+    if(rc != -EEXIST && rc != SUCCESS) {
+        log_print_error_string("Error initing ALP user auth key file: %d", rc);
+    }
+
+    // TODO how to handle situation where these files are not inited correctly?
+}
+
 void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 {
   init_args = alp_init_args;
@@ -274,7 +296,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
   alp_layer_free_commands();
 
   d7ap_fs_init();
-
+  init_auth_key_files();
 #ifdef MODULE_ALP_SERIAL_INTERFACE_ENABLED
   if (use_serial_itf)
     serial_interface_register();

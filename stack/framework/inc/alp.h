@@ -51,6 +51,8 @@
 
 #define ALP_OP_CUSTOM 53
 
+#define ALP_AUTH_KEY_FILE_LENGTH 40
+
 typedef enum
 {
     ALP_ITF_ID_HOST = 0x00,
@@ -58,6 +60,11 @@ typedef enum
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
+
+typedef enum {
+    ALP_FILE_ID_ROOT_AUTH_KEY = 0x18,
+    ALP_FILE_ID_USER_AUTH_KEY = 0x19,
+} alp_file_id_t;
 
 
 typedef enum {
