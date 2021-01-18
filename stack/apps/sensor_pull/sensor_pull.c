@@ -98,10 +98,10 @@ void init_user_files()
 void bootstrap()
 {
     log_print_string("Device booted\n");
-    d7ap_fs_init();
-    d7ap_init();
-
+    
     alp_layer_init(NULL, false);
+    d7ap_init();
+    
     d7ap_fs_write_dll_conf_active_access_class(0x11); // use scanning AC
     init_user_files();
 
