@@ -41,7 +41,10 @@ typedef enum {
   LORAWAN_STACK_JOIN_FAILED,
   LORAWAN_STACK_DUTY_CYCLE_DELAY,
   LORAWAN_STACK_RETRY_TRANSMISSION,
-  LORAWAN_STACK_JOINED
+  LORAWAN_STACK_JOINED,
+  LORAWAN_STACK_ALREADY_JOINING,
+  LORAWAN_STACK_ALREADY_TRANSMITTING,
+  LORAWAN_STACK_ERROR_NOT_INITED
 } lorawan_stack_status_t;
 
 typedef struct __attribute__((__packed__)) {
@@ -77,7 +80,7 @@ typedef void (*lorawan_duty_cycle_delay_callback_t)(uint32_t delay, uint8_t atte
 typedef void (*lorawan_join_attempt_callback_t)(uint8_t join_attempt_number);
 typedef void (*lorawan_status_callback_t)(lorawan_stack_status_t status, uint8_t attempt);
 
-bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config);
+lorawan_stack_status_t lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config);
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config);
 
 void lorawan_stack_deinit(void);

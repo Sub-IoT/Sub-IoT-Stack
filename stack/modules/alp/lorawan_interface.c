@@ -39,10 +39,8 @@
 
 static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t status);
 
-static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
 static alp_interface_t interface_lorawan_otaa;
 static uint16_t lorawan_trans_id;
-static bool otaa_just_inited = false;
 
 void lorawan_rx(lorawan_AppData_t *AppData)
 {
@@ -52,7 +50,7 @@ void lorawan_rx(lorawan_AppData_t *AppData)
         assert(false); // TODO error handling
     }
 
-    command->origin_itf_id = current_lorawan_interface_type;
+    command->origin_itf_id = ALP_ITF_ID_LORAWAN_OTAA;
     command->respond_when_completed = false;
 
     fifo_put(&command->alp_command_fifo, AppData->Buff, AppData->BuffSize);
@@ -71,7 +69,7 @@ void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts)
 {
     error_t status_buffer = (error_t)status;
     alp_interface_status_t result = (alp_interface_status_t) {
-        .itf_id = current_lorawan_interface_type,
+        .itf_id = ALP_ITF_ID_LORAWAN_OTAA,
         .len = 4,
         };
     add_interface_status_lorawan(result.itf_status, attempts, status);
@@ -83,7 +81,7 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
 {
 
     alp_interface_status_t result = (alp_interface_status_t) {
-        .itf_id = current_lorawan_interface_type,
+        .itf_id = ALP_ITF_ID_LORAWAN_OTAA,
         .len = 4
     };
     add_interface_status_lorawan(result.itf_status, attempts, status);
@@ -96,18 +94,18 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
     (void)expected_response_length; // suppress unused warning
     alp_interface_config_lorawan_otaa_t* lorawan_itf_cfg = (alp_interface_config_lorawan_otaa_t*)itf_cfg;
     (*trans_id) = ++lorawan_trans_id;
-    if(!otaa_just_inited && (lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa))) {
+    lorawan_stack_status_t status = lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa);
+    if(status == LORAWAN_STACK_ERROR_OK) {
         DPRINT("sending otaa payload");
-        current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
-        lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_otaa.application_port, lorawan_itf_cfg->lorawan_session_config_otaa.request_ack);
-        lorawan_error_handler(trans_id, status);
-    } else { //OTAA not joined yet or still initing
+        status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_otaa.application_port, lorawan_itf_cfg->lorawan_session_config_otaa.request_ack);
+        if(status != LORAWAN_STACK_ERROR_OK)
+            lorawan_trans_id--; // we don't need to keep track of this new transid as it is completed immediately
+    } else { 
         DPRINT("OTAA not joined yet");
-        otaa_just_inited = false;
-        // alp_command_t* command = alp_layer_get_command_by_transid(*trans_id, ALP_ITF_ID_LORAWAN_OTAA);
-        // TODO why? fifo_put(&command->alp_response_fifo, payload, payload_length);
-        lorawan_error_handler(trans_id, LORAWAN_STACK_ERROR_NOT_JOINED);
+        if(status == LORAWAN_STACK_ALREADY_JOINING)
+            lorawan_trans_id--; // we don't need to keep track of this new transid as it is completed immediately
     }
+    lorawan_error_handler(trans_id, status);
     return SUCCESS;
 }
 
@@ -116,19 +114,16 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
         log_print_string("!!!LORAWAN ERROR: %d\n", status);
         error_t status_buffer = (error_t)status;
         alp_interface_status_t result = (alp_interface_status_t) {
-            .itf_id = current_lorawan_interface_type,
+            .itf_id = ALP_ITF_ID_LORAWAN_OTAA,
             .len = 4
         };
         add_interface_status_lorawan(result.itf_status, 1, status);
-        alp_layer_forwarded_command_completed(*trans_id, &status_buffer, &result, false);
-    } else {
-        lorawan_trans_id = *trans_id;
+        alp_layer_forwarded_command_completed(*trans_id, &status_buffer, &result, !((status == LORAWAN_STACK_RETRY_TRANSMISSION) || (status == LORAWAN_STACK_DUTY_CYCLE_DELAY) || (status == LORAWAN_STACK_ERROR_NOT_JOINED)));
     }
 }
 
 static void lorawan_init_otaa(alp_interface_config_t* itf_cfg) {
     lorawan_stack_init_otaa(&((alp_interface_config_lorawan_otaa_t*)itf_cfg)->lorawan_session_config_otaa);
-    otaa_just_inited = true;
 }
 
 void lorawan_interface_register() {

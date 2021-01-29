@@ -106,9 +106,9 @@ typedef enum
   STATE_JOINED,
   STATE_JOIN_FAILED,
   STATE_JOINING
-} state_t;
+} join_state_t;
 
-static state_t state = STATE_NOT_JOINED;
+static join_state_t join_state = STATE_NOT_JOINED;
 static LoRaMacPrimitives_t loraMacPrimitives;
 static LoRaMacCallback_t loraMacCallbacks;
 static LoRaMacStatus_t loraMacStatus;
@@ -118,7 +118,7 @@ static uint8_t appKey[16] = { 0 };    //used for OTAA
 
 static uint8_t app_port;
 static bool request_ack;
-bool adr_enabled = true;
+bool adr_enabled = false;
 uint8_t datarate = 0; 
 
 static bool next_tx = true;
@@ -133,13 +133,14 @@ static lorawan_status_callback_t stack_status_callback = NULL;
 
 static bool inited = false;
 static bool first_init = true;
+static bool lorawan_transmitting = false;
 
 /**
  * @brief LoRaWAN state machine. Sets parameters in the LoRaWAN stack and handles callbacks
  */
 static void run_fsm()
 {
-  switch(state)
+  switch(join_state)
   {
     case STATE_JOINING:
     {
@@ -172,6 +173,13 @@ static void run_fsm()
       DPRINT("JOIN FAILED");
       //if(stack_status_callback)
       //  stack_status_callback(LORAWAN_STACK_JOIN_FAILED, 0);
+      break;
+    }
+     case STATE_NOT_JOINED:
+    {
+      join_state = STATE_JOINING;
+      DPRINT("Keys changed");
+      sched_post_task(&run_fsm);
       break;
     }
     default:
@@ -233,6 +241,7 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
   else
     status = LORAWAN_STACK_ERROR_UNKNOWN;
   tx_callback(status, McpsConfirm->NbRetries);
+  lorawan_transmitting = false;
 }
 
 /**
@@ -271,14 +280,14 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
       if(mlmeConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK)
       {
         DPRINT("join succeeded");
-        state = STATE_JOINED;
+        join_state = STATE_JOINED;
         if(stack_status_callback)
             stack_status_callback(LORAWAN_STACK_JOINED, mlmeConfirm->NbRetries);
       }
       else
       {
         DPRINT("Error while trying to join: %i", mlmeConfirm->Status);
-        state = STATE_JOIN_FAILED;
+        join_state = STATE_JOIN_FAILED;
         if(stack_status_callback)
           stack_status_callback(LORAWAN_STACK_JOIN_FAILED, mlmeConfirm->NbRetries);
       }
@@ -301,7 +310,7 @@ static bool is_joined()
   MibRequestConfirm_t mibReq;
   mibReq.Type = MIB_NETWORK_JOINED;
   LoRaMacMibGetRequestConfirm(&mibReq);
-  return (mibReq.Param.IsNetworkJoined == true);
+  return mibReq.Param.IsNetworkJoined;
 }
 
 /**
@@ -310,15 +319,26 @@ static bool is_joined()
  */
 static void lorawan_otaa_register_keys(uint8_t file_id)
 {
+    bool keys_changed = false;
+    bool was_joining = (join_state == STATE_JOINING);
     uint8_t keys[USER_FILE_LORAWAN_KEYS_SIZE];
     d7ap_fs_read_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, keys, USER_FILE_LORAWAN_KEYS_SIZE);
     if (memcmp(appEui, keys, 8) != 0) {
-        state = STATE_NOT_JOINED;
+        join_state = STATE_NOT_JOINED;
         memcpy(appEui, keys, 8);
+        keys_changed = true;
     }
     if (memcmp(appKey, &keys[8], 16) != 0) {
-        state = STATE_NOT_JOINED;
+        join_state = STATE_NOT_JOINED;
         memcpy(appKey, &keys[8], 16);
+        keys_changed = true;
+    }
+    if(keys_changed && was_joining)
+    {
+      lorawan_stack_deinit();
+      lorawan_stack_init_otaa(NULL);
+      if(stack_status_callback)
+        stack_status_callback(LORAWAN_STACK_JOIN_FAILED, 1);
     }
 }
 
@@ -356,15 +376,19 @@ void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_compl
  * @param lorawan_session_config
  * @return bool represents if the LoRaWAN network is still joined
  */
-bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config)
+lorawan_stack_status_t lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config)
 {
+  if(inited == false)
+  {
+    log_print_error_string("TX not possible, not inited"); //Should not happen when using alp layer
+    return LORAWAN_STACK_ERROR_NOT_INITED;
+  }
   DPRINT("Checking for change in config");
-  bool joined=true;
-  if(state!=STATE_JOINED)
-    joined=false;
-  if (state==STATE_JOINING)
-    return false;
 
+  if (join_state==STATE_JOINING)
+    return LORAWAN_STACK_ALREADY_JOINING;
+
+  bool joined = (join_state == STATE_JOINED);
   sched_cancel_task(&run_fsm);
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
@@ -399,10 +423,10 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
     DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
 
    
-    state = STATE_JOINING;
+    join_state = STATE_JOINING;
     sched_post_task(&run_fsm);
   }
-    return joined;
+    return joined ? LORAWAN_STACK_ERROR_OK : LORAWAN_STACK_ERROR_NOT_JOINED;
 }
 
 /**
@@ -414,36 +438,19 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
     return;
   if(first_init)
       set_initial_keys();
-  inited = true;
-  app_port=lorawan_session_config->application_port;
-  request_ack=lorawan_session_config->request_ack;
-  datarate = lorawan_session_config->data_rate;
-  adr_enabled = lorawan_session_config->adr_enabled;
-  
+
   HW_Init(); // TODO refactor
-
-  state = STATE_JOINING;
-  
-  DPRINT("Init using OTAA");
-  DPRINT("DevEui:");
-  DPRINT_DATA(devEui, 8);
-  DPRINT("AppEui:");
-  DPRINT_DATA(appEui, 8);
-  DPRINT("AppKey:");
-  DPRINT_DATA(appKey, 16);
-  DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
-
+  join_state = STATE_NOT_JOINED;
+  lorawan_transmitting = false;
   sched_register_task(&run_fsm);
-  sched_post_task(&run_fsm);
 
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
   loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
   loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
-
-  // Initialization for the region EU868
-  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, region);
+  
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, region); // Init the region 
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
@@ -451,9 +458,6 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   }
 
   MibRequestConfirm_t mibReq;
-  mibReq.Type = MIB_ADR;
-  mibReq.Param.AdrEnable = lorawan_session_config->adr_enabled;
-  LoRaMacMibSetRequestConfirm( &mibReq );
 
   mibReq.Type = MIB_PUBLIC_NETWORK;
   mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK_ENABLED;
@@ -485,7 +489,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
 #endif
 
 #endif
-
+  inited = true;
 }
 
 /**
@@ -499,7 +503,8 @@ void lorawan_stack_deinit(){
     DPRINT("Deiniting LoRaWAN stack");
     sched_cancel_task(&run_fsm);
     LoRaMacDeInit();
-    state = STATE_NOT_JOINED;
+    join_state = STATE_NOT_JOINED;
+    lorawan_transmitting = false;
     HW_DeInit();
 }
 
@@ -513,9 +518,21 @@ void lorawan_stack_deinit(){
  */
 lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
 
-  if(!is_joined()) {
-    DPRINT("TX not possible, not joined");
+  if(inited == false)
+  {
+    log_print_error_string("TX not possible, not inited"); //Should not happen when using alp layer
+    return LORAWAN_STACK_ERROR_NOT_INITED;
+  }
+  if(!is_joined()) 
+  {
+    log_print_error_string("TX not possible, not joined"); //Should not happen when using alp layer
     return LORAWAN_STACK_ERROR_NOT_JOINED;
+  }
+
+  if(lorawan_transmitting)
+  {
+    DPRINT("TX not possible, already transmitting");
+    return LORAWAN_STACK_ALREADY_TRANSMITTING;
   }
 
   if(length > LORAWAN_APP_DATA_BUFF_SIZE)
@@ -537,7 +554,6 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
     mcpsReq.Req.Unconfirmed.fBufferSize = 0;
     mcpsReq.Req.Unconfirmed.Datarate = datarate;
     LoRaMacMcpsRequest(&mcpsReq);
-    //state = STATE_SLEEP;
     return LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE;
   }
 
@@ -565,6 +581,6 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
     DPRINT("failed sending data (status %i)", status);
     return LORAWAN_STACK_ERROR_UNKNOWN;
   }
-
+  lorawan_transmitting = true;
   return LORAWAN_STACK_ERROR_OK;
 }
