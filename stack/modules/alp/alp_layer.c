@@ -621,9 +621,10 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                     return true;
                 }else if (interfaces[i]->deinit != current_itf_deinit) {
                     // TODO refactor? always init the interface?
-                    if (current_itf_deinit != NULL)
+                    if (current_itf_deinit != NULL) {
                         current_itf_deinit();
-                    itf_clear_commands(current_itf_ctrl.interface);
+                        itf_clear_commands(current_itf_ctrl.interface);
+                    }
                     interfaces[i]->init(itf_config);
                     current_itf_deinit = interfaces[i]->deinit;
 
