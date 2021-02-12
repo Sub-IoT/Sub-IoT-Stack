@@ -61,6 +61,7 @@ struct d7asp_master_session {
     d7ap_session_config_t config;
     d7asp_master_session_state_t state;
     uint8_t token;
+    bool fragmentation;
     uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t success_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t next_request_id;
@@ -74,6 +75,18 @@ struct d7asp_master_session {
     uint16_t tx_duration[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT];
     dae_access_profile_t active_addressee_access_profile;
 };
+
+typedef struct {
+    d7ap_session_config_t config;
+    //d7asp_master_session_state_t state;
+    uint8_t token;
+    uint8_t received_fragment_nb;
+    uint8_t total_fragments_nb;
+    uint8_t fragment_buffer_tail_idx;
+    uint8_t fragment_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every fragment ID the index in fragments_buffer the index where the fragment payload begins */
+    uint8_t fragment_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every fragment ID the index in fragments_buffer the length of the payload in that fragment */
+    uint8_t fragments_buffer[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE];
+} d7asp_fragmentation_session_t;
 
 static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define current_master_session NG(_current_master_session)
@@ -89,6 +102,10 @@ static uint8_t NGDEF(_single_request_retry_limit);
 
 static packet_t* NGDEF(_current_response_packet);
 #define current_response_packet NG(_current_response_packet)
+
+static d7asp_fragmentation_session_t NGDEF(_fragmentation_session);
+#define fragmentation_session NG(_fragmentation_session)
+
 
 static timer_event current_session_timer;
 static timer_event dormant_session_timer;
@@ -133,6 +150,7 @@ static void init_master_session(d7asp_master_session_t* session) {
     do {
         session->token = get_rnd() % 0xFF;
     } while(session->token == 0);
+    session->fragmentation = false;
     memset(session->progress_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     memset(session->success_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     session->next_request_id = 0;
@@ -148,6 +166,17 @@ static void init_master_session(d7asp_master_session_t* session) {
     // for now one ALP command execution mostly results one new session, which
     // would break the preferred addressee mechanism. For now this is cached regardless
     // over the session, until we decide on session lifetime etc
+}
+
+static void init_fragmentation_session(d7asp_fragmentation_session_t* session) {
+
+    //memset(session, 0x00, sizeof(d7asp_fragmentation_session_t));
+    session->received_fragment_nb = 0;
+    session->total_fragments_nb = 0;
+    session->fragment_buffer_tail_idx = 0;
+    memset(session->fragment_indices, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->fragment_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->fragments_buffer, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE);
 }
 
 static void flush_completed() {
@@ -286,8 +315,28 @@ static void flush_fifos()
     }
 
     uint8_t listen_timeout = 0; // TODO calculate timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    ret = d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
-                       current_request_packet, &current_master_session.config.qos, listen_timeout, current_master_session.response_lengths[current_request_id]);
+
+    if (current_master_session.fragmentation)
+    {
+        uint16_t Te = 500; //FIXME adjust the value
+        uint16_t Tl = 0;
+        for (uint8_t request_id = 0; request_id < current_master_session.next_request_id; request_id++)
+        {
+            if (!bitmap_get(current_master_session.success_bitmap, request_id))
+            {
+                Tl += (current_master_session.tx_duration[request_id] + Te) * (single_request_retry_limit - current_master_session.retry_count[current_request_id]);
+            }
+    	}
+
+        listen_timeout = compress_data(Tl, true);
+        DPRINT("TL is set to %d compressed to %d", Tl, listen_timeout);
+    }
+
+    ret = d7atp_send_request(current_master_session.token, current_request_id,
+                             (current_request_id == current_master_session.next_request_id - 1),
+                             current_request_packet, &current_master_session.config.qos,
+                             listen_timeout, current_master_session.response_lengths[current_request_id],
+                             current_master_session.fragmentation, current_master_session.next_request_id);
     if (ret == EPERM)
     {
         // this is probably because no further encryption is possible (frame counter reaches the maximum value)
@@ -408,11 +457,17 @@ void d7asp_stop()
     timer_cancel_event(&dormant_session_timer);
 }
 
-uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config) {
+uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config, bool fragmentation) {
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
 
     if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)
     {
+        if (fragmentation)
+        {
+            DPRINT("current master session state %d prevents to create a fragmentation session", current_master_session.state);
+            return 0;
+        }
+
         // Requests can be pushed in the FIFO by upper layer anytime
         if ((current_master_session.config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
                 (current_master_session.config.addressee.ctrl.nls_method == d7asp_master_session_config->addressee.ctrl.nls_method) &&
@@ -428,8 +483,9 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
     DPRINT("current master session state %d", current_master_session.state);
 
     init_master_session(&current_master_session);
+    current_master_session.fragmentation = fragmentation;
 
-    DPRINT("Create master session %d", current_master_session.token);
+    DPRINT("Create %s session %d", fragmentation ? "fragmentation" : "master", current_master_session.token);
 
     current_master_session.config.qos = d7asp_master_session_config->qos;
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
@@ -553,6 +609,37 @@ uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* payload_buffer, uint
 void d7asp_process_received_response(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
+
+    assert(d7asp_state == D7ASP_STATE_MASTER);
+    assert(packet->d7atp_dialog_id == current_master_session.token);
+    assert(packet->d7atp_transaction_id == current_request_id);
+
+    if (current_master_session.fragmentation)
+    {
+        // handle the ACK_BITMAP
+        if (packet->d7atp_ctrl.ctrl_ack_not_void)
+        {
+            /* in case of broadcast, the success bitmap is an AND between the current bitmap and the bitmap provided by the node
+            for (int8_t i = 0; i < ACK_BITMAP_BYTE_COUNT; i++)
+                current_master_session.success_bitmap[i] &= packet->d7atp_ack_template.bitmap[i];*/
+            /*
+             * For now, the fragmentation is allowed in unicast only
+             */
+            memcpy(current_master_session.progress_bitmap, packet->d7atp_ack_template.bitmap, ACK_BITMAP_BYTE_COUNT);
+            memcpy(current_master_session.success_bitmap, packet->d7atp_ack_template.bitmap, ACK_BITMAP_BYTE_COUNT);
+        }
+        else
+            memset(current_master_session.success_bitmap, 0xFF, ACK_BITMAP_BYTE_COUNT);
+
+        packet_queue_free_packet(packet);
+        current_request_id = NO_ACTIVE_REQUEST_ID;
+        schedule_current_session(); // continue flushing until all request handled ...
+
+        // stop the current transaction
+        d7atp_stop_transaction();
+        return;
+    }
+
     d7ap_session_result_t result = {
         .channel = {
             .channel_header = packet->phy_config.rx.channel_id.channel_header_raw,
@@ -572,10 +659,6 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         .addressee = *packet->d7anp_addressee
         // .fifo_token and .seqnr filled below
     };
-
-    assert(d7asp_state == D7ASP_STATE_MASTER);
-    assert(packet->d7atp_dialog_id == current_master_session.token);
-    assert(packet->d7atp_transaction_id == current_request_id);
 
     // received ack
     DPRINT("Received ACK for request ID %d", current_request_id);
@@ -658,13 +741,70 @@ bool d7asp_process_received_packet(packet_t* packet)
            d7asp_state == D7ASP_STATE_PENDING_MASTER ||
            d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER);
 
+    if ((packet->d7atp_ctrl.ctrl_fragment) &&
+        (d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_PENDING_MASTER))
+    {
+        DPRINT("Fragmentation session is starting");
+        init_fragmentation_session(&fragmentation_session);
+        fragmentation_session.total_fragments_nb = packet->d7atp_fragments_number;
+    }
+
     // received a request, start slave session, process and respond
     if (d7asp_state == D7ASP_STATE_IDLE)
         switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
     else if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
-    if (packet->payload_length > 0)
+    // check if a fragmentation session is ongoing
+    if (packet->d7atp_ctrl.ctrl_fragment)
+    {
+        assert(fragmentation_session.received_fragment_nb < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+
+        // add fragment to buffer
+        fragmentation_session.fragment_indices[packet->d7atp_transaction_id] = fragmentation_session.fragment_buffer_tail_idx;
+        fragmentation_session.fragment_lengths[packet->d7atp_transaction_id] = packet->payload_length;
+        memcpy(fragmentation_session.fragments_buffer + fragmentation_session.fragment_buffer_tail_idx, packet->payload, packet->payload_length);
+        fragmentation_session.fragment_buffer_tail_idx += packet->payload_length + 1;
+        fragmentation_session.received_fragment_nb++;
+
+        // check if fragmentation session is completed
+        if (fragmentation_session.received_fragment_nb == fragmentation_session.total_fragments_nb)
+        {
+            //re-assembly of the fragments
+            uint8_t payload[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE];
+            uint16_t payload_length = 0;
+            for(uint8_t i = 0; i < fragmentation_session.total_fragments_nb; i++)
+            {
+                memcpy(payload + payload_length,
+                       fragmentation_session.fragments_buffer + fragmentation_session.fragment_indices[i],
+                       fragmentation_session.fragment_lengths[i]);
+                payload_length += fragmentation_session.fragment_lengths[i];
+            }
+            d7ap_session_result_t result = {
+                .channel = {
+                .channel_header = packet->phy_config.rx.channel_id.channel_header_raw,
+                .center_freq_index = packet->phy_config.rx.channel_id.center_freq_index,
+                },
+                .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
+                .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,
+                .target_rx_level = 80, // TODO not implemented yet, use default for now
+                .status = {
+                    .ucast = 0, // TODO
+                    .nls = (packet->d7anp_ctrl.nls_method ? true : false),
+                    .retry = false, // TODO
+                    .missed = false, // TODO
+                },
+                .response_to = packet->d7atp_tc,
+                .response_expected = packet->d7atp_ctrl.ctrl_is_ack_requested,
+                .addressee = *packet->d7anp_addressee,
+                .fifo_token =  packet->d7atp_dialog_id,
+                .seqnr = packet->d7atp_transaction_id // the request ID is identified by the last fragment Id
+                };
+
+                expect_upper_layer_resp_payload = d7ap_stack_process_unsolicited_request(payload, payload_length, result);
+        }
+    }
+    else if (packet->payload_length > 0)
     {
         d7ap_session_result_t result = {
             .channel = {
@@ -788,10 +928,10 @@ static void on_request_completed()
         // request completed, no retries needed so we can free the packet
         packet_queue_free_packet(current_request_packet);
 
-        // terminate the dialog if all request handled
+        // terminate the dialog if all request handled and if we are not in a fragmentation session
         // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
         // in this case, we may assert since the state remains MASTER
-        if (current_request_id == current_master_session.next_request_id - 1)
+        if ((current_request_id == current_master_session.next_request_id - 1) && (!current_master_session.fragmentation))
         {
             flush_completed();
             return;
@@ -813,6 +953,11 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
         {
             mark_current_request_done();
             mark_current_request_successful();
+        }
+        else if (current_master_session.fragmentation)
+        {
+            // success bitmap is set when receiving the ACK_template from the node if ACK_REQ is set
+            mark_current_request_done();
         }
     }
     else if (d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)

@@ -42,9 +42,9 @@ void d7ap_stack_init(void);
 void d7ap_stack_stop();
 
 error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* payload,
-                        uint8_t len, uint8_t expected_response_length, uint16_t *trans_id);
+                        uint16_t len, uint8_t expected_response_length, uint16_t *trans_id);
 
-bool d7ap_stack_process_unsolicited_request(uint8_t* payload, uint8_t length, d7ap_session_result_t result);
+bool d7ap_stack_process_unsolicited_request(uint8_t* payload, uint16_t length, d7ap_session_result_t result);
 
 void d7ap_stack_process_received_response(uint8_t* payload, uint8_t length, d7ap_session_result_t result);
 

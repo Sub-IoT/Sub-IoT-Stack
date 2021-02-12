@@ -31,7 +31,7 @@
 #endif
 
 static void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result);
-static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result);
+static bool command_from_d7ap(uint8_t* payload, uint16_t len, d7ap_session_result_t result);
 static void d7ap_command_completed(uint16_t trans_id, error_t error);
 
 static alp_interface_t d7_alp_interface;
@@ -108,7 +108,7 @@ static void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len,
     alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
 
-static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
+static bool command_from_d7ap(uint8_t* payload, uint16_t len, d7ap_session_result_t result) {
     DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
     alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
     alp_command_t* command = alp_layer_command_alloc(false, false);
@@ -124,7 +124,7 @@ static bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result
     return alp_layer_process(command);
 }
 
-static error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
+static error_t d7ap_alp_send(uint8_t* payload, uint16_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
     DPRINT("sending D7 packet");
 
     if(itf_cfg != NULL) {

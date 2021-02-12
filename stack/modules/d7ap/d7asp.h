@@ -56,7 +56,7 @@ typedef struct d7asp_master_session d7asp_master_session_t;
 
 void d7asp_init();
 void d7asp_stop();
-uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config);
+uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config, bool fragmentation);
 
 uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* payload_buffer, uint8_t payload_length, uint8_t expected_response_length);
 

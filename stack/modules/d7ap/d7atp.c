@@ -23,6 +23,7 @@
 #include <assert.h>
 
 #include "debug.h"
+#include "bitmap.h"
 #include "hwdebug.h"
 #include "d7ap.h"
 #include "d7atp.h"
@@ -70,10 +71,14 @@ static dae_access_profile_t NGDEF(_active_addressee_access_profile);
 static bool NGDEF(_stop_dialog_after_tx);
 #define stop_dialog_after_tx NG(_stop_dialog_after_tx)
 
+static bool NGDEF(_terminate_transaction);
+#define terminate_transaction NG(_terminate_transaction)
+
 static timer_event d7atp_response_period_expired_timer;
 static timer_event d7atp_execution_delay_expired_timer;
 
 static bool ctrl_xoff;
+static d7atp_ack_template_t recorded_ack_bitmap;
 
 typedef enum {
     D7ATP_STATE_STOPPED,
@@ -137,6 +142,14 @@ static void execution_delay_timeout_handler()
     // After the Execution Delay period, the Requester engages in a DLL foreground scan for a duration of TC
     DPRINT("Execution Delay period is expired @%i",  timer_get_counter_value());
 
+    if (terminate_transaction)
+    {
+        current_transaction_id = NO_ACTIVE_REQUEST_ID;
+        d7asp_signal_transaction_terminated();
+        terminate_transaction = false;
+        return;
+    }
+
     d7anp_start_foreground_scan();
 }
 
@@ -149,6 +162,8 @@ static void terminate_dialog()
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
     current_Tl_received = 0;
     stop_dialog_after_tx = false;
+    terminate_transaction = false;
+    memset(&recorded_ack_bitmap, 0, sizeof(d7atp_ack_template_t));
 
     // Discard eventually the Tc timer
     timer_cancel_event(&d7atp_response_period_expired_timer);
@@ -284,11 +299,14 @@ void d7atp_init()
     current_dialog_id = 0;
     current_Tl_received = 0;
     stop_dialog_after_tx = false;
+    terminate_transaction = false;
     timer_init_event(&d7atp_response_period_expired_timer, &response_period_timeout_handler);
     timer_init_event(&d7atp_execution_delay_expired_timer, &execution_delay_timeout_handler);
 
     d7ap_fs_register_file_modified_callback(D7A_FILE_SEL_CONF_FILE_ID, &sel_config_modified_callback);
     sel_config_modified_callback(D7A_FILE_SEL_CONF_FILE_ID);
+
+    memset(&recorded_ack_bitmap, 0, sizeof(d7atp_ack_template_t));
 }
 
 void d7atp_notify_access_profile_file_changed(uint8_t file_id)
@@ -305,12 +323,10 @@ void d7atp_stop()
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
-                        packet_t* packet, d7ap_session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
+                           packet_t* packet, d7ap_session_qos_t* qos_settings,
+                           uint8_t listen_timeout, uint8_t expected_response_length,
+                           bool fragmentation, uint8_t total_fragments)
 {
-    // unused parameters
-    (void)is_last_transaction;
-    (void)listen_timeout;
-
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)
     {
@@ -320,7 +336,8 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
 
-    if ( packet->type == RETRY_REQUEST )
+    // In case of fragmentation, request may be retried but after the end of the pool of requests
+    if ((packet->type == RETRY_REQUEST) && (!packet->d7atp_ctrl.ctrl_fragment))
     {
         DPRINT("Retry the transmission with the same packet content");
         current_transaction_id = transaction_id;
@@ -346,6 +363,10 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         && expected_response_length == 0)
       ack_requested = false;
 
+    // ACK only requested for the last fragment
+    if ((ack_requested) && (fragmentation) && (!is_last_transaction))
+        ack_requested = false;
+
     // TODO based on what do we calculate Tc? payload length alone is not enough, depends on for example use of FEC, encryption ..
     // keep the same as transmission timeout for now
 
@@ -355,11 +376,17 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         .ctrl_is_start = (packet->type == INITIAL_REQUEST) ? true : false,
         .ctrl_is_ack_requested = ack_requested,
         .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
-        .ctrl_te = false,
+        .ctrl_te = fragmentation, //Te is required in case of fragmentation
         .ctrl_agc = false,
-        .ctrl_ack_record = false,
-        .ctrl_tl = listen_timeout ? true : false
+        .ctrl_tl = listen_timeout ? true : false,
+        .ctrl_fragment = fragmentation
     };
+
+    if (fragmentation)
+    {
+        packet->d7atp_fragments_number = total_fragments;
+        packet->d7atp_te = 100; //FIXME how to adjust this value? should come from upper layer
+    }
 
     if (listen_timeout)
     	packet->d7atp_tl = listen_timeout;
@@ -399,8 +426,23 @@ error_t d7atp_send_response(packet_t* packet)
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
 
     // leave ctrl_is_ack_requested as is, keep the requester value
-    d7atp->ctrl_ack_not_void = false; // TODO
-    d7atp->ctrl_ack_record = false; // TODO validate
+    d7atp->ctrl_ack_not_void = false;
+    d7atp->ctrl_tl = false;
+    d7atp->ctrl_te = false;
+
+    if (d7atp->ctrl_fragment) // TODO valid also if ACK_RECORD bit is set
+    {
+        int8_t first_missing_fragment = bitmap_search(recorded_ack_bitmap.bitmap, false, packet->d7atp_fragments_number);
+        if (first_missing_fragment != -1)
+        {
+            d7atp->ctrl_ack_not_void = true;
+            packet->d7atp_ack_template.ack_transaction_id_start = first_missing_fragment;
+            packet->d7atp_ack_template.ack_transaction_id_stop = current_transaction_id;
+        }
+
+        // fragment flag is not set in the response
+        d7atp->ctrl_fragment = false;
+    }
 
     bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
@@ -441,6 +483,13 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     (*data_ptr) = packet->d7atp_ctrl.ctrl_raw; data_ptr++;
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
+
+    // add the fragment total number only if it is a request
+    if ((packet->d7atp_ctrl.ctrl_fragment) && (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)) {
+        (*data_ptr) = packet->d7atp_fragments_number;
+        data_ptr++;
+    }
+
     if (packet->d7atp_ctrl.ctrl_agc) {
         (*data_ptr) = packet->d7atp_target_rx_level_i;
         data_ptr++;
@@ -467,9 +516,13 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add Responder ACK template
-        (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
-        (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID stop
-        // TODO ACK bitmap, support for multiple segments to ack not implemented yet
+        (*data_ptr) = packet->d7atp_ack_template.ack_transaction_id_start; data_ptr++; // transaction ID start
+        (*data_ptr) = packet->d7atp_ack_template.ack_transaction_id_stop; data_ptr++; // transaction ID stop
+
+        //FIXME  send compressed ACK_BITMAP
+        // for now, we send the entire BITMAP since the ACK_WIN is limited
+        memcpy(data_ptr, recorded_ack_bitmap.bitmap, ACK_BITMAP_BYTE_COUNT);
+        data_ptr += ACK_BITMAP_BYTE_COUNT;
     }
 
     return data_ptr - d7atp_header_start;
@@ -480,6 +533,12 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+    if (packet->d7atp_ctrl.ctrl_fragment) {
+        packet->d7atp_fragments_number = packet->hw_radio_packet.data[(*data_idx)];
+        (*data_idx)++;
+    }
+
     if (packet->d7atp_ctrl.ctrl_agc) {
         packet->d7atp_target_rx_level_i = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
@@ -508,7 +567,14 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     {
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-        // TODO ACK bitmap, support for multiple segments to ack not implemented yet
+
+        //FIXME  receive compressed ACK_BITMAP
+        // for now, we send the entire BITMAP since the ACK_WIN is limited
+        //uint8_t bitmap_indexes = (packet->d7atp_ack_template.ack_transaction_id_stop -packet->d7atp_ack_template.ack_transaction_id_start);
+        //uint8_t bitmap_len = bitmap_indexes/8 + (bitmap_indexes%8 ? 1 : 0);
+
+        memcpy(packet->d7atp_ack_template.bitmap, packet->hw_radio_packet.data + (*data_idx), ACK_BITMAP_BYTE_COUNT);
+        (*data_idx) += ACK_BITMAP_BYTE_COUNT;
     }
 
     return true;
@@ -550,6 +616,19 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         }
         else
         {
+            // Wait the execution delay before terminating the transaction and flushing the next fragment
+            if ((packet->d7atp_ctrl.ctrl_fragment) && (packet->d7atp_ctrl.ctrl_te))
+            {
+                timer_tick_t Te = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_te), packet->hw_radio_packet.tx_meta.timestamp);
+                if (Te)
+                {
+                    d7atp_execution_delay_expired_timer.next_event = Te;
+                    timer_add_event(&d7atp_execution_delay_expired_timer);
+                    terminate_transaction = true;
+                    return;
+                }
+            }
+
             current_transaction_id = NO_ACTIVE_REQUEST_ID;
             d7asp_signal_transaction_terminated();
         }
@@ -593,6 +672,7 @@ void d7atp_process_received_packet(packet_t* packet)
     timer_tick_t Tc = 0;
 
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
 
@@ -662,10 +742,20 @@ void d7atp_process_received_packet(packet_t* packet)
         // When not participating in a Dialog
         if ((!current_dialog_id) && (!packet->d7atp_ctrl.ctrl_is_start))
         {
-            //Responders discard segments marked with START flag set to 0 until they receive a segment with START flag set to 1
-            DPRINT("Filtered frame with START cleared");
-            packet_queue_free_packet(packet);
-            return;
+            // check if Frame is part of a fragmented transmission but not the first part.
+            if (packet->d7atp_ctrl.ctrl_fragment)
+            {
+                DPRINT("Start dialog with fragments but we may have probably already lost some fragments. Expect %d fragments", packet->d7atp_fragments_number);
+                // set the Transaction ID of the first non-received segment of the Dialog
+                recorded_ack_bitmap.ack_transaction_id_start = 0; // assuming that the dialog starts with transaction_id equal zero
+            }
+            else
+            {
+                //Responders discard segments marked with START flag set to 0 until they receive a segment with START flag set to 1
+                DPRINT("Filtered frame with START cleared");
+                packet_queue_free_packet(packet);
+                return;
+            }
         }
 
          // The FG scan is only started when the response period expires.
@@ -712,10 +802,19 @@ void d7atp_process_received_packet(packet_t* packet)
             }
         }
 
-        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+        if (d7atp_state == D7ATP_STATE_IDLE || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD)
+            switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+
+        if ((packet->d7atp_ctrl.ctrl_fragment) && (packet->d7atp_ctrl.ctrl_is_start))
+        {
+            DPRINT("Start dialog containing fragments. Expect %d fragments", packet->d7atp_fragments_number);
+        }
 
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
+
+        // received segment is marked with 1 in the ack_bitmap
+        bitmap_set(recorded_ack_bitmap.bitmap, current_transaction_id);
 
         // store the received timestamp for later usage (eg CCA). the rx_meta.timestamp can be
         // overwritten since it is stored in a union with tx_meta and can thus be changed when

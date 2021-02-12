@@ -30,6 +30,7 @@
 #include "stdint.h"
 #include "d7atp.h"
 #include "dll.h"
+#include "d7ap.h"
 #include "d7anp.h"
 #include "phy.h"
 #include "hwradio.h"
@@ -59,6 +60,7 @@ struct packet
     d7atp_ack_template_t d7atp_ack_template;
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;
+    uint8_t d7atp_fragments_number;
     uint8_t d7atp_tc;
     uint8_t d7atp_tl;
     uint8_t d7atp_te;
@@ -66,9 +68,8 @@ struct packet
     packet_type type;
     uint16_t ETA;
     uint16_t tx_duration;
-    // TODO d7atp ack template
     uint8_t payload_length;
-    uint8_t payload[239]; // TODO make max size configurable using cmake
+    uint8_t payload[D7A_PAYLOAD_MAX_SIZE]; // TODO make max size configurable using cmake
                             // TODO store payload here or only pointer to file where we need to fetch it? can we assume data will not be changed in between
     phy_config_t phy_config;
     hw_radio_packet_t hw_radio_packet; // TODO we might not need all metadata included in hw_radio_packet_t. If not copy needed data fields

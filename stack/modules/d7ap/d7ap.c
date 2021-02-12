@@ -175,7 +175,7 @@ uint8_t d7ap_get_payload_max_size(nls_method_t nls_method)
  * @return an error (errno.h) in case of failure
  */
 error_t d7ap_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* payload,
-                  uint8_t len, uint8_t expected_response_len, uint16_t *trans_id)
+                  uint16_t len, uint8_t expected_response_len, uint16_t *trans_id)
 {
     error_t error;
 

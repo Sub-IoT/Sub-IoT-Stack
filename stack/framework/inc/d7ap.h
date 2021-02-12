@@ -44,7 +44,7 @@
 
 #define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
-#define D7A_PAYLOAD_MAX_SIZE 255 // TODO confirm this value when FEC and security are disabled
+#define D7A_PAYLOAD_MAX_SIZE 233 // TODO confirm this value when FEC and security are disabled
 
 
 typedef enum {
@@ -158,7 +158,7 @@ typedef void (*d7ap_receive_callback)(uint16_t trans_id, uint8_t* payload, uint8
  * @returns true when the unsolicited request will result in a response payload from the upper layer. If no response is expected
  * the upper layer should return false, so the stack can respond with an ack immediately (if requested by origin).
  */
-typedef bool (*d7ap_receive_unsolicited_callback)(uint8_t* payload, uint8_t len, d7ap_session_result_t result);
+typedef bool (*d7ap_receive_unsolicited_callback)(uint8_t* payload, uint16_t len, d7ap_session_result_t result);
 typedef void (*d7ap_transmitted_callback)(uint16_t trans_id, error_t error);
 
 typedef struct{
@@ -233,7 +233,7 @@ uint8_t d7ap_get_payload_max_size(nls_method_t nls_method);
  * @return an error (errno.h) in case of failure
  */
 error_t d7ap_send(uint8_t clientId, d7ap_session_config_t* config, uint8_t* payload,
-                   uint8_t len, uint8_t expected_response_len, uint16_t* trans_id);
+                  uint16_t len, uint8_t expected_response_len, uint16_t* trans_id);
 
 
 /**
