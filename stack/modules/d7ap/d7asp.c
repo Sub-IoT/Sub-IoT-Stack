@@ -707,7 +707,11 @@ bool d7asp_process_received_packet(packet_t* packet)
         packet->d7atp_tl = compress_data(estimated_tl, true);
     }
     else
-        packet->d7atp_ctrl.ctrl_is_start = 0;
+    {
+        packet->d7atp_ctrl.ctrl_is_start = false;
+        packet->d7atp_ctrl.ctrl_tl = false;
+        packet->d7atp_ctrl.ctrl_te = false;
+    }
 
     // execute slave transaction
     if (packet->d7atp_ctrl.ctrl_is_ack_requested)
