@@ -58,7 +58,7 @@ void d7asp_init();
 void d7asp_stop();
 uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config);
 
-uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length);
+uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* payload_buffer, uint8_t payload_length, uint8_t expected_response_length);
 
 error_t d7asp_send_response(uint8_t* payload, uint8_t length);
 
@@ -76,7 +76,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension);
 bool d7asp_process_received_packet(packet_t* packet);
 
 /**
- * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
+ * @brief Called by DLL to signal the CSMA/CA process completed successfully and packet can be ack-ed for QoS = None
  */
 void d7asp_signal_packet_transmitted(packet_t* packet);
 

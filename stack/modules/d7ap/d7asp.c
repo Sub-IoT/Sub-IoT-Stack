@@ -488,7 +488,7 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
     return(d7atp_send_response(current_response_packet));
 }
 
-uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length)
+uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* payload_buffer, uint8_t payload_length, uint8_t expected_alp_response_length)
 {
     DPRINT("Queuing request in the session queue");
     d7asp_master_session_t *session = get_master_session_from_token(session_token);
@@ -505,10 +505,11 @@ uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* alp_payload_buffer, 
     // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
     uint8_t request_id = session->next_request_id;
     session->requests_indices[request_id] = session->request_buffer_tail_idx;
-    session->requests_lengths[request_id] = alp_payload_length;
+    session->requests_lengths[request_id] = payload_length;
     session->response_lengths[request_id] = expected_alp_response_length;
-    memcpy(session->request_buffer + session->request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
-    session->request_buffer_tail_idx += alp_payload_length + 1;
+    memcpy(session->request_buffer + session->request_buffer_tail_idx, payload_buffer, payload_length);
+    session->request_buffer_tail_idx += payload_length + 1;
+
     session->next_request_id++;
 
     if(current_master_session.state == D7ASP_MASTER_SESSION_IDLE) {
