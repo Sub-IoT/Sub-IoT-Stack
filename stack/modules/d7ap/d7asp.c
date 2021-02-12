@@ -71,6 +71,8 @@ struct d7asp_master_session {
     uint8_t request_buffer[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE];
     uint8_t retry_count[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT];
     d7ap_addressee_t preferred_addressee;
+    uint16_t tx_duration[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT];
+    dae_access_profile_t active_addressee_access_profile;
 };
 
 static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
@@ -140,6 +142,7 @@ static void init_master_session(d7asp_master_session_t* session) {
     memset(session->response_lengths, 255, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE);
     memset(session->retry_count, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->tx_duration, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * sizeof(uint16_t));
 
     // TODO we don't reset preferred_addressee field for now
     // for now one ALP command execution mostly results one new session, which
@@ -433,6 +436,8 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
     current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
     current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
 
+    d7ap_fs_read_access_class(current_master_session.config.addressee.access_specifier, &current_master_session.active_addressee_access_profile);
+
     if(current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_PREFERRED) {
       memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
     } else {
@@ -520,6 +525,9 @@ uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* payload_buffer, uint
     session->response_lengths[request_id] = expected_alp_response_length;
     memcpy(session->request_buffer + session->request_buffer_tail_idx, payload_buffer, payload_length);
     session->request_buffer_tail_idx += payload_length + 1;
+    session->tx_duration[request_id] = phy_calculate_tx_duration(session->active_addressee_access_profile.channel_header.ch_class,
+                                                                 session->active_addressee_access_profile.channel_header.ch_coding,
+                                                                 payload_length + expected_alp_response_length, false);
 
     session->next_request_id++;
 
