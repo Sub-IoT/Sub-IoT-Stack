@@ -68,7 +68,7 @@ struct d7asp_master_session {
     uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the index where the request begins */
     uint8_t requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the length of the ALP payload in that request */
     uint8_t response_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the expected length of the ALP response for the specific request */
-    uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
+    uint8_t request_buffer[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE];
     d7ap_addressee_t preferred_addressee;
 };
 
@@ -140,7 +140,7 @@ static void init_master_session(d7asp_master_session_t* session) {
     memset(session->requests_indices, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->requests_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->response_lengths, 255, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
-    memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
+    memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE);
 
     // TODO we don't reset preferred_addressee field for now
     // for now one ALP command execution mostly results one new session, which
@@ -156,7 +156,7 @@ static void flush_completed() {
 
     // single flush of the FIFO without retry
     d7ap_stack_session_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                   current_master_session.success_bitmap, current_master_session.next_request_id - 1);
+                                 current_master_session.success_bitmap, current_master_session.next_request_id - 1);
     init_master_session(&current_master_session);
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
     d7atp_signal_dialog_termination();
@@ -413,7 +413,6 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
 
     DPRINT("current master session state %d", current_master_session.state);
 
-
     init_master_session(&current_master_session);
 
     DPRINT("Create master session %d", current_master_session.token);
@@ -496,7 +495,7 @@ uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* alp_payload_buffer, 
 
     // TODO can be called in all session states?
     assert(session != NULL);
-    assert(session->request_buffer_tail_idx + alp_payload_length < MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
+    assert(session->request_buffer_tail_idx + payload_length < (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE));
     assert(session->next_request_id < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT); // TODO do not assert but let upper layer handle this
     assert(!(expected_alp_response_length > 0 &&
              (session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO || session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT))); // TODO return error
