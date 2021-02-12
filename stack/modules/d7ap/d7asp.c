@@ -69,6 +69,7 @@ struct d7asp_master_session {
     uint8_t requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the length of the ALP payload in that request */
     uint8_t response_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the expected length of the ALP response for the specific request */
     uint8_t request_buffer[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE];
+    uint8_t retry_count[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT];
     d7ap_addressee_t preferred_addressee;
 };
 
@@ -77,9 +78,6 @@ static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only us
 
 static uint8_t NGDEF(_current_request_id); // TODO move ?
 #define current_request_id NG(_current_request_id)
-
-static uint8_t NGDEF(_current_request_retry_count);
-#define current_request_retry_count NG(_current_request_retry_count)
 
 static packet_t* NGDEF(_current_request_packet);
 #define current_request_packet NG(_current_request_packet)
@@ -141,6 +139,7 @@ static void init_master_session(d7asp_master_session_t* session) {
     memset(session->requests_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->response_lengths, 255, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT * D7A_PAYLOAD_MAX_SIZE);
+    memset(session->retry_count, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
     // TODO we don't reset preferred_addressee field for now
     // for now one ALP command execution mostly results one new session, which
@@ -216,7 +215,17 @@ static void flush_fifos()
 
         current_request_id = found_next_req_index;
         DPRINT("Found request Id %x", current_request_id);
-        current_request_retry_count = 0;
+
+        DPRINT("Current request retry count: %i", current_master_session.retry_count[current_request_id]);
+        if (current_master_session.retry_count[current_request_id] == single_request_retry_limit)
+        {
+            // mark request as failed and pop
+            mark_current_request_done();
+            DPRINT("Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
+            current_request_id = NO_ACTIVE_REQUEST_ID;
+            schedule_current_session();
+            return;
+        }
 
         current_request_packet = packet_queue_alloc_packet();
         assert(current_request_packet);
@@ -242,7 +251,9 @@ static void flush_fifos()
         }
         else
         {
-            if (current_request_id == 0)
+            if (current_master_session.retry_count[current_request_id] > 0)
+                current_request_packet->type = RETRY_REQUEST;
+            else if (current_request_id == 0)
                 current_request_packet->type = INITIAL_REQUEST;
             else
                 current_request_packet->type =  SUBSEQUENT_REQUEST;
@@ -254,8 +265,8 @@ static void flush_fifos()
     else
     {
         // retrying request ...
-        DPRINT("Current request retry count: %i", current_request_retry_count);
-        if (current_request_retry_count == single_request_retry_limit)
+        DPRINT("Current request retry count: %i", current_master_session.retry_count[current_request_id]);
+        if (current_master_session.retry_count[current_request_id] == single_request_retry_limit)
         {
             // mark request as failed and pop
             mark_current_request_done();
@@ -749,6 +760,9 @@ static void on_request_completed()
       DPRINT_DATA(current_master_session.preferred_addressee.id, 8);
     }
 
+    // increment the retry counter
+    current_master_session.retry_count[current_request_id] += 1;
+
     if (!bitmap_get(current_master_session.progress_bitmap, current_request_id))
     {
         if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
@@ -758,7 +772,7 @@ static void on_request_completed()
             current_responder_lowest_lb.lb = LB_MAX;
             memcpy(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
         }
-        current_request_retry_count++;
+
         // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
     }
     else
