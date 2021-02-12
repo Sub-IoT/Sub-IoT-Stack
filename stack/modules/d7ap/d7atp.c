@@ -351,13 +351,17 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     // FG scan timeout is set (and scan started) in d7atp_signal_packet_transmitted() for now, to be verified
 
     packet->d7atp_ctrl = (d7atp_ctrl_t){
-        .ctrl_is_start = true,
+        .ctrl_is_start = (packet->type == INITIAL_REQUEST) ? true : false,
         .ctrl_is_ack_requested = ack_requested,
         .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
         .ctrl_te = false,
         .ctrl_agc = false,
-        .ctrl_ack_record = false
+        .ctrl_ack_record = false,
+        .ctrl_tl = listen_timeout ? true : false
     };
+
+    if (listen_timeout)
+    	packet->d7atp_tl = listen_timeout;
 
     if (ack_requested)
     {
@@ -594,11 +598,12 @@ void d7atp_process_received_packet(packet_t* packet)
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_id_type;
     current_addressee.access_class = packet->origin_access_class;
-    DPRINT("ORI AC=0x%02x", packet->origin_access_class);
+    DPRINT("ORIGINE AC=0x%02x", packet->origin_access_class);
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
+    DPRINT("Transaction start flag <%d> ACK_req <%d>", packet->d7atp_ctrl.ctrl_is_start, packet->d7atp_ctrl.ctrl_is_ack_requested);
 
     if (packet->d7atp_tl)
         current_Tl_received = CT_DECOMPRESS(packet->d7atp_tl);
