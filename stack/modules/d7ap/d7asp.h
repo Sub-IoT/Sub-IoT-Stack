@@ -47,7 +47,7 @@
 // index [8 .. 15] --> byte 2
 // index [16.. 23] --> byte 3
 // so the byte count can be calculated as the integer quotient of the division + 1 byte
-#define REQUESTS_BITMAP_BYTE_COUNT (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT/8) + 1
+#define REQUESTS_BITMAP_BYTE_COUNT (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT/8) + (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT%8 ? 1 : 0)
 
 /**
  * /brief The state of a session FIFO
