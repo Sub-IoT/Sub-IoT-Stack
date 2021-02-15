@@ -119,7 +119,7 @@ system_files = [
   (NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),          sys_file_prop_perm),  # TODO 0 recorded devices
   (NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),      sys_file_prop_perm),
   (NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),       sys_file_prop_perm),  # TODO 0 TRL records
-  (SELConfigFile(segment_filter_options=SegmentFilterOptions(xoff=True)),                                             sys_file_prop_perm),
+  (SELConfigFile(),                                             sys_file_prop_perm),
   (NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),      sys_file_prop_perm),
   (NotImplementedFile(SystemFileIds.RFU_14.value, 20),          sys_file_prop_perm),
   (NotImplementedFile(SystemFileIds.RFU_15.value, 20),          sys_file_prop_perm),
@@ -828,7 +828,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       0x0, 
       // SEL_CONFIG - 18 (length 6)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x6, 0x0, 0x0, 0x0, 0x6, 
-      0x0, 0x0, 0x0, 0x0, 0x0, 0x10, 
+      0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // FOF_STATUS - 19 (length 10)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0xa, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
@@ -922,7 +922,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // User File - 65 (length 24)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x18, 0x0, 0x0, 0x0, 0x18, 
       0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 
-      //[[[end]]] (checksum: 5a317706770ef5f8177007a1f9dc3e0b)
+      //[[[end]]] (checksum: 4283b7c8fed2fbcb43bc7cf0a52a7e97)
   };
 
 #endif
