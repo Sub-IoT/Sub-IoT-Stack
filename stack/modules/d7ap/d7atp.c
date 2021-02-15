@@ -73,6 +73,8 @@ static bool NGDEF(_stop_dialog_after_tx);
 static timer_event d7atp_response_period_expired_timer;
 static timer_event d7atp_execution_delay_expired_timer;
 
+static bool ctrl_xoff;
+
 typedef enum {
     D7ATP_STATE_STOPPED,
     D7ATP_STATE_IDLE,
@@ -194,6 +196,13 @@ static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_
     return timeout_ticks;
 }
 
+static void sel_config_modified_callback(uint8_t file_id)
+{
+    d7a_segment_filter_options_t segment_filter_options;
+    d7ap_fs_read_file(D7A_FILE_SEL_CONF_FILE_ID, 5, &segment_filter_options.raw, 1);
+    ctrl_xoff = segment_filter_options.xoff;
+}
+
 static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
 {
 //    DEBUG_PIN_SET(2);
@@ -276,6 +285,9 @@ void d7atp_init()
     stop_dialog_after_tx = false;
     timer_init_event(&d7atp_response_period_expired_timer, &response_period_timeout_handler);
     timer_init_event(&d7atp_execution_delay_expired_timer, &execution_delay_timeout_handler);
+
+    d7ap_fs_register_file_modified_callback(D7A_FILE_SEL_CONF_FILE_ID, &sel_config_modified_callback);
+    sel_config_modified_callback(D7A_FILE_SEL_CONF_FILE_ID);
 }
 
 void d7atp_notify_access_profile_file_changed(uint8_t file_id)
@@ -402,6 +414,11 @@ error_t d7atp_send_response(packet_t* packet)
          */
         should_include_origin_template = true;
     }
+
+    /* 
+     * a setting in the SEL_config file should be able to tell the requester this node should not be put as preferred. This XOFF bit indicates that
+     */
+    packet->d7atp_ctrl.ctrl_xoff = ctrl_xoff;
 
     // we are the slave here, so we don't need to lock the other party on the channel, unless we want to signal a pending dormant session with this addressee
     if (packet->d7atp_ctrl.ctrl_is_start) {

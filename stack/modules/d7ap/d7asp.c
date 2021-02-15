@@ -566,6 +566,17 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
         // upon successfull CSMA insertion. We don't care about response in these cases.
 
+        if((current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) 
+            && (current_master_session.config.addressee.ctrl.id_type == ID_TYPE_UID) 
+            && (packet->d7atp_ctrl.ctrl_xoff)) {
+            DPRINT("preferred gateway answered that it should not be preferred, this should not count as an ACK");
+            memcpy(current_master_session.preferred_addressee.id,
+                (uint8_t[8]) { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
+            memcpy(current_responder_lowest_lb.id, (uint8_t[8]) { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
+            packet_queue_free_packet(packet);
+            return;
+        }
+
         result.fifo_token = current_master_session.token;
         result.seqnr = current_request_id;
         mark_current_request_successful();
@@ -573,7 +584,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
            && ID_TYPE_IS_BROADCAST(current_master_session.config.addressee.ctrl.id_type))
         {
-            if(result.link_budget < current_responder_lowest_lb.lb)
+            if(result.link_budget < current_responder_lowest_lb.lb && (!packet->d7atp_ctrl.ctrl_xoff))
             {
                 memcpy(current_responder_lowest_lb.id, result.addressee.id, 8); // TODO assume UID for now
                 current_responder_lowest_lb.lb = result.link_budget;

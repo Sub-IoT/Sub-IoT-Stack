@@ -55,11 +55,25 @@ typedef struct {
           bool ctrl_is_ack_requested : 1;
           bool ctrl_te : 1;
           bool ctrl_tl : 1;
-          uint8_t _rfu : 1;
+          bool ctrl_xoff : 1;
           bool ctrl_is_start : 1;
       };
     };
 } d7atp_ctrl_t;
+
+typedef struct {
+    union {
+        uint8_t raw;
+        struct {
+            bool filter_segments_retry : 1;
+            bool not_cnt_csma_ca_err : 1;
+            bool not_cnt_duty_err : 1;
+            bool _rfu : 1;
+            bool xoff : 1;
+            uint8_t _rfu2 : 3;
+        };
+    };
+} d7a_segment_filter_options_t;
 
 typedef struct {
     uint8_t ack_transaction_id_start;
