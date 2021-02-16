@@ -377,7 +377,7 @@ static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_
         // overload bit set. To determine the overload length currently we need to read the itf_id from the file
         // since it is not coded in the ALP. // TODO discuss in protocol action group
         uint8_t itf_id;
-        if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1) != SUCCESS)
+        if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1, ROOT_AUTH) != SUCCESS)
             return false;
         for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
             if (itf_id == interfaces[i]->itf_id) {

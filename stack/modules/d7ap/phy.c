@@ -530,7 +530,7 @@ void continuous_tx_expiration()
 void fact_settings_file_change_callback(uint8_t file_id)
 {
     uint8_t fact_settings[D7A_FILE_FACTORY_SETTINGS_SIZE];
-    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE, ROOT_AUTH);
 
     gain_offset = (int8_t)fact_settings[0];
     rx_bw_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+1)));
@@ -638,7 +638,7 @@ void status_write() {
         uint16_t bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
         uint16_t scan_timeout_ratio = 1024 * (total_fg - total_succeeded_fg) / total_fg;
         uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
-        d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
+        d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4, ROOT_AUTH);
         DPRINT("wrote to file 0x%02X the bg trigger ratio %d and scan timeout ratio %d", D7A_FILE_DLL_STATUS_FILE_ID, bg_trigger_ratio, scan_timeout_ratio);
     }
 }

@@ -68,7 +68,7 @@ void execute_sensor_measurement()
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
-  d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE, ROOT_AUTH);
 
   log_print_string("temp %i dC", temperature);
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
@@ -90,12 +90,12 @@ void init_user_files()
     SENSOR_FILE_SIZE // requested data length
   };
 
-  d7ap_fs_file_header_t action_file_header = (d7ap_fs_file_header_t){
-    .file_properties.action_protocol_enabled = 0,
-    .file_properties.storage_class = FS_STORAGE_PERMANENT,
-    .file_permissions = 0, // TODO
-    .length = sizeof(alp_command),
-    .allocated_length = ACTION_FILE_SIZE,
+  d7ap_fs_file_header_t action_file_header = (d7ap_fs_file_header_t) {
+      .file_properties.action_protocol_enabled = 0,
+      .file_properties.storage_class = FS_STORAGE_PERMANENT,
+      .file_permissions = (file_permission_t) { .guest_read = true, .user_read = true },
+      .length = sizeof(alp_command),
+      .allocated_length = ACTION_FILE_SIZE,
   };
 
   d7ap_fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);

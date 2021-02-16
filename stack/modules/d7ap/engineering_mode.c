@@ -182,7 +182,7 @@ static void em_reset() {
 static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
-    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE);
+    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE, ROOT_AUTH);
 
     d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*)data;
     em_command->channel_id.center_freq_index = __builtin_bswap16(em_command->channel_id.center_freq_index);
@@ -257,7 +257,7 @@ error_t engineering_mode_init()
 {
   // always init EM file to 0 to avoid bricking the device
   uint8_t init_data[D7A_FILE_ENGINEERING_MODE_SIZE] = {0};
-  d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, init_data, D7A_FILE_ENGINEERING_MODE_SIZE);
+  d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, init_data, D7A_FILE_ENGINEERING_MODE_SIZE, ROOT_AUTH);
 
   d7ap_fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
 

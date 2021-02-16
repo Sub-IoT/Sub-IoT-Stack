@@ -770,8 +770,8 @@ static void save_noise_floor(uint8_t position) {
     } else
         channels[position].noise_floor = - E_CCA;
 
-    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, sizeof(uint8_t));
-    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t));
+    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, sizeof(uint8_t), ROOT_AUTH);
+    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t), ROOT_AUTH);
 }
 
 void dll_execute_scan_automation()
@@ -951,7 +951,7 @@ void dll_init()
         assert(d7ap_fs_init_file(D7A_FILE_PHY_STATUS_FILE_ID, &volatile_file_header, NULL) == SUCCESS); // TODO error handling
     phy_status_file_inited = true;
 
-    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1, ROOT_AUTH) != 0)
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
 
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
@@ -972,9 +972,9 @@ void dll_init()
     engineering_mode_init();
 #endif
 
-    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1);
+    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1, ROOT_AUTH);
     if(phy_status_channel_counter && (phy_status_channel_counter < PHY_STATUS_MAX_CHANNELS))
-        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter*3);
+        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter*3, ROOT_AUTH);
 
     // Start immediately the scan automation
     guarded_channel = false;

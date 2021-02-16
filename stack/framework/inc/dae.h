@@ -55,6 +55,7 @@ typedef enum
     FS_STORAGE_PERMANENT = 3  // The content is kept in a permanent memory of the device. It is accessible for read and write
 } fs_storage_class_t;
 
+typedef enum { ROOT_AUTH = 0, USER_AUTH = 1, GUEST_AUTH = 2 } authentication_t;
 
 typedef struct __attribute__((__packed__))
 {
@@ -64,9 +65,21 @@ typedef struct __attribute__((__packed__))
     bool action_protocol_enabled : 1;
 } d7ap_fs_file_properties_t;
 
+typedef struct __attribute__((__packed__)) 
+{
+    bool guest_run   : 1;
+    bool guest_write : 1;
+    bool guest_read  : 1;
+    bool user_run    : 1;
+    bool user_write  : 1;
+    bool user_read   : 1;
+    bool executable  : 1;
+    bool encrypted   : 1;
+} file_permission_t;
+
 typedef struct __attribute__((__packed__))
 {
-    uint8_t file_permissions; // TODO not used for now
+    file_permission_t file_permissions;
     d7ap_fs_file_properties_t file_properties;
     uint8_t action_file_id;
     uint8_t interface_file_id;

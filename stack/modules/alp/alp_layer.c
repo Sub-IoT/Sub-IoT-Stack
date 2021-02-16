@@ -207,6 +207,8 @@ static alp_status_codes_t alp_translate_error(int rc)
         return ALP_STATUS_FILE_ID_ALREADY_EXISTS;
     case -EILSEQ:
         return ALP_STATUS_WRONG_OPERAND_FORMAT;
+    case -EACCES:
+        return ALP_STATUS_INSUFFICIENT_PERMISSIONS;
     default:
         return ALP_STATUS_UNKNOWN_ERROR;
     }
@@ -230,7 +232,7 @@ static void itf_ctrl_file_callback(uint8_t file_id)
 {
     error_t err;
     err = d7ap_fs_read_file(
-        USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE);
+        USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, ROOT_AUTH);
     if (err != SUCCESS) {
         log_print_error_string("alp_layer: stack ctrl file callback: read file returned error %i", err);
         current_itf_ctrl.raw_itf_ctrl = 0;
@@ -269,7 +271,7 @@ static void itf_ctrl_file_callback(uint8_t file_id)
 static void init_auth_key_files()
 {
     d7ap_fs_file_header_t file_header = {
-        .file_permissions = 0, // TODO not implemented for now
+        .file_permissions = (file_permission_t) { .guest_read = false, .guest_write = false, .user_read = false, .user_write = false},
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
         .length = ALP_AUTH_KEY_FILE_LENGTH,
         .allocated_length = ALP_AUTH_KEY_FILE_LENGTH
@@ -323,7 +325,7 @@ void alp_layer_register_interface(alp_interface_t* interface) {
   alp_register_interface(interface);
 }
 
-static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command, alp_command_t* command)
+static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_command_t* resp_command, alp_command_t* command, authentication_t origin_auth)
 {
     alp_operand_file_data_request_t operand = action->file_data_request_operand;
     DPRINT("READ FILE %i LEN %i OFFSET %i", operand.file_offset.file_id, operand.requested_data_length, operand.file_offset.offset);
@@ -331,7 +333,7 @@ static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_co
     if (operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_EXCEEDS_MAX_ALP_SIZE;
 
-    int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length);
+    int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length, origin_auth);
     
     if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL) // give the application layer the chance to fullfill this request ...
         rc = init_args->alp_unhandled_read_action_cb(&command->origin_itf_status, operand, alp_data);
@@ -371,21 +373,21 @@ static alp_status_codes_t process_op_read_file_properties(alp_action_t* action, 
     return err == SUCCESS ? ALP_STATUS_OK : ALP_STATUS_FIFO_OUT_OF_BOUNDS;
 }
 
-static alp_status_codes_t process_op_write_file_properties(alp_action_t* action)
+static alp_status_codes_t process_op_write_file_properties(alp_action_t* action, authentication_t origin_auth)
 {
     DPRINT("WRITE FILE PROPERTIES %i", action->file_header_operand.file_id);
         
-    int rc = d7ap_fs_write_file_header(action->file_header_operand.file_id, &action->file_header_operand.file_header);
+    int rc = d7ap_fs_write_file_header(action->file_header_operand.file_id, &action->file_header_operand.file_header, origin_auth);
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
-static alp_status_codes_t process_op_write_file_data(alp_action_t* action) {
+static alp_status_codes_t process_op_write_file_data(alp_action_t* action, authentication_t origin_auth) {
     DPRINT("WRITE FILE %i LEN %i OFFSET %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length, action->file_data_operand.file_offset.offset);
     if (action->file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_EXCEEDS_MAX_ALP_SIZE;
     
     int rc = d7ap_fs_write_file(action->file_data_operand.file_offset.file_id, action->file_data_operand.file_offset.offset,
-        action->file_data_operand.data, action->file_data_operand.provided_data_length);
+        action->file_data_operand.data, action->file_data_operand.provided_data_length, origin_auth);
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
@@ -420,7 +422,7 @@ bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, al
   return false; //not implemented type should always fail
 }
 
-static alp_status_codes_t process_op_break_query(alp_action_t* action)
+static alp_status_codes_t process_op_break_query(alp_action_t* action, authentication_t origin_auth)
 {
     
     DPRINT("BREAK QUERY");
@@ -448,7 +450,7 @@ static alp_status_codes_t process_op_break_query(alp_action_t* action)
     if(!alp_parse_file_offset_operand(&temp_fifo, &offset_a))
         return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
     
-    int rc = d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, action->query_operand.compare_operand_length);
+    int rc = d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, action->query_operand.compare_operand_length, origin_auth);
     if(rc != SUCCESS)
         return alp_translate_error(rc);
     
@@ -480,7 +482,7 @@ static alp_status_codes_t process_op_indirect_forward(
             if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
                 d7ap_fs_unregister_file_modified_callback(previous_interface_file_id);
                 d7ap_fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
-                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1);
+                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1, ROOT_AUTH);
                 previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
             } else
                 return ALP_STATUS_WRONG_OPERAND_FORMAT;
@@ -497,7 +499,7 @@ static alp_status_codes_t process_op_indirect_forward(
             if (re_read) {
                 session_config_saved.itf_id = *itf_id;
                 d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 1,
-                    session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
+                    session_config_saved.itf_config, interfaces[i]->itf_cfg_len, ROOT_AUTH);
             }
             if (!ctrl.b7)
                 memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
@@ -587,22 +589,22 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
-static alp_status_codes_t write_itf_command(itf_ctrl_action_t action)
+static alp_status_codes_t write_itf_command(itf_ctrl_action_t action, authentication_t origin_auth)
 {
-    int rc = d7ap_fs_write_file(USER_FILE_ALP_CTRL_FILE_ID, 0, &action, 1); // gets handled in write file callback
+    int rc = d7ap_fs_write_file(USER_FILE_ALP_CTRL_FILE_ID, 0, &action, 1, origin_auth); // gets handled in write file callback
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 
-static alp_status_codes_t process_op_start_itf(alp_action_t* action)
+static alp_status_codes_t process_op_start_itf(alp_action_t* action, authentication_t origin_auth)
 {
     DPRINT("START INTERFACE");
-    return write_itf_command(ITF_START);
+    return write_itf_command(ITF_START, origin_auth);
 }
 
-static alp_status_codes_t process_op_stop_itf(alp_action_t* action)
+static alp_status_codes_t process_op_stop_itf(alp_action_t* action, authentication_t origin_auth)
 {
     DPRINT("STOP INTERFACE");
-    return write_itf_command(ITF_STOP);
+    return write_itf_command(ITF_STOP, origin_auth);
 }
 
 static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_config)
@@ -629,7 +631,7 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                     current_itf_deinit = interfaces[i]->deinit;
 
                     current_itf_ctrl.interface = interfaces[i]->itf_id;
-                    d7ap_fs_write_file_with_callback(USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, false);
+                    d7ap_fs_write_file_with_callback(USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, ROOT_AUTH, false);
                 }
             }
             uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
@@ -727,6 +729,24 @@ static void process_async(void* arg)
     static alp_action_t action;
     static bool error = false;
 
+    authentication_t origin_auth;
+    switch(command->origin_itf_id) {
+    case ALP_ITF_ID_HOST:
+        origin_auth = ROOT_AUTH;
+        break;
+    case ALP_ITF_ID_SERIAL:
+    case ALP_ITF_ID_NFC:
+        origin_auth = USER_AUTH;
+        break;
+    case ALP_ITF_ID_D7ASP:
+    case ALP_ITF_ID_LORAWAN_OTAA:
+        origin_auth = GUEST_AUTH;
+        break;
+    default: //this shouldn't happen but we don't want to give higher permission in any case
+        origin_auth = GUEST_AUTH;
+        break;
+    }
+
     while (fifo_get_size(&command->alp_command_fifo) > 0) {
         if (!alp_parse_action(command, &action)) {
             log_print_error_string("parsing failed in process async, the action we tried could be %i",
@@ -740,19 +760,19 @@ static void process_async(void* arg)
         alp_status_codes_t alp_status;
         switch (action.ctrl.operation) {
         case ALP_OP_READ_FILE_DATA:
-            alp_status = process_op_read_file_data(&action, resp_command, command);
+            alp_status = process_op_read_file_data(&action, resp_command, command, origin_auth);
             break;
         case ALP_OP_READ_FILE_PROPERTIES:
             alp_status = process_op_read_file_properties(&action, resp_command);
             break;
         case ALP_OP_WRITE_FILE_DATA:
-            alp_status = process_op_write_file_data(&action);
+            alp_status = process_op_write_file_data(&action, origin_auth);
             break;
         case ALP_OP_WRITE_FILE_PROPERTIES:
-            alp_status = process_op_write_file_properties(&action);
+            alp_status = process_op_write_file_properties(&action, origin_auth);
             break;
         case ALP_OP_BREAK_QUERY:
-            alp_status = process_op_break_query(&action);
+            alp_status = process_op_break_query(&action, origin_auth);
             break;
         case ALP_OP_STATUS:
             alp_status = process_op_status(&action, command);
@@ -787,10 +807,10 @@ static void process_async(void* arg)
             alp_status = process_op_create_file(&action);
             break;
         case ALP_OP_START_ITF:
-            alp_status = process_op_start_itf(&action);
+            alp_status = process_op_start_itf(&action, origin_auth);
             break;
         case ALP_OP_STOP_ITF:
-            alp_status = process_op_stop_itf(&action);
+            alp_status = process_op_stop_itf(&action, origin_auth);
             break;
         default:
             alp_status = ALP_STATUS_UNKNOWN_OPERATION;

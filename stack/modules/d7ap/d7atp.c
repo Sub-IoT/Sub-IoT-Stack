@@ -199,7 +199,7 @@ static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_
 static void sel_config_modified_callback(uint8_t file_id)
 {
     d7a_segment_filter_options_t segment_filter_options;
-    d7ap_fs_read_file(D7A_FILE_SEL_CONF_FILE_ID, 5, &segment_filter_options.raw, 1);
+    d7ap_fs_read_file(D7A_FILE_SEL_CONF_FILE_ID, 5, &segment_filter_options.raw, 1, ROOT_AUTH);
     ctrl_xoff = segment_filter_options.xoff;
 }
 

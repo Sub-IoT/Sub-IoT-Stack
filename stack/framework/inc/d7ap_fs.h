@@ -84,8 +84,9 @@
 #define USER_FILE_ALP_CTRL_FILE_ID 0x40
 #define USER_FILE_ALP_CTRL_SIZE    2
 
-#define USER_FILE_LORAWAN_KEYS_FILE_ID 0x41
-#define USER_FILE_LORAWAN_KEYS_SIZE    24
+#define USER_FILE_LORAWAN_KEYS_FILE_ID           0x41
+#define USER_FILE_LORAWAN_KEYS_SIZE              24
+#define USER_FILE_LORAWAN_KEYS_ALLOCATED_SIZE    40
 
 typedef enum {
   EM_OFF = 0,
@@ -121,16 +122,15 @@ void d7ap_fs_init();
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 int d7ap_fs_init_file_on_blockdevice(uint8_t file_id, uint8_t blockdevice_index, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 
-int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
-int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
-int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, bool trigger_cb);
+int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length, authentication_t auth);
+int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, authentication_t auth);
+int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, authentication_t auth, bool trigger_cb);
 
 int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 
 int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
-int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
-int d7ap_fs_write_file_header_with_callback(uint8_t file_id, d7ap_fs_file_header_t* file_header, bool trigger_modified_cb);
+int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header, authentication_t auth);
 
 int d7ap_fs_read_uid(uint8_t* buffer);
 int d7ap_fs_read_vid(uint8_t* buffer);

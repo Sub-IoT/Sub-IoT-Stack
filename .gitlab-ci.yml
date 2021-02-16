@@ -16,7 +16,7 @@ job 1:
   - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
-  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y
+  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y
   - make
   artifacts:
    name: "$CI_COMMIT_REF_NAME"

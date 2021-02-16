@@ -212,7 +212,7 @@ void d7anp_set_address_id(uint8_t file_id)
 static void set_key(uint8_t file_id)
 {
     uint8_t key[AES_BLOCK_SIZE];
-    assert(d7ap_fs_read_nwl_security_key(key) == SUCCESS); // TODO permission
+    assert(d7ap_fs_read_nwl_security_key(key) == SUCCESS);
     DPRINT("KEY");
     DPRINT_DATA(key, AES_BLOCK_SIZE);
     AES128_init(key);

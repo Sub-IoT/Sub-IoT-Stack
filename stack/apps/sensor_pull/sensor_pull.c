@@ -76,7 +76,7 @@ void execute_sensor_measurement()
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
-  int rc = d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  int rc = d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE, ROOT_AUTH);
   assert(rc == 0);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
@@ -85,7 +85,8 @@ void execute_sensor_measurement()
 void init_user_files()
 {
   // file 0x40: contains our sensor data
-  d7ap_fs_file_header_t sensor_file_header = (d7ap_fs_file_header_t){
+  d7ap_fs_file_header_t sensor_file_header = (d7ap_fs_file_header_t) {
+      .file_permissions = (file_permission_t) { .user_read = true, .guest_read = true },
       .file_properties.action_protocol_enabled = 0,
       .file_properties.storage_class = FS_STORAGE_PERMANENT,
       .length = SENSOR_FILE_SIZE,
