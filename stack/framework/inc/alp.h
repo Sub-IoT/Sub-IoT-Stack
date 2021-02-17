@@ -41,7 +41,7 @@
 
 #include "modules_defs.h"
 
-#define MODULE_ALP_INTERFACE_SIZE 10
+#define MODULE_ALP_INTERFACE_CNT 5
 
 #define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
 #define ALP_QUERY_COMPARE_BODY_MAX_SIZE 100
@@ -295,13 +295,14 @@ typedef struct {
 } alp_action_t;
 
 typedef void (*interface_deinit)();
+typedef error_t (*interface_init)();
 
 typedef struct {
     alp_itf_id_t itf_id;
     uint8_t itf_cfg_len;
     uint8_t itf_status_len;
     error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg);
-    void (*init)(alp_interface_config_t* itf_cfg);
+    interface_init init;
     interface_deinit deinit;
     bool unique; // TODO
 } alp_interface_t;

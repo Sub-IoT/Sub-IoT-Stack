@@ -68,7 +68,7 @@ static slave_session_t slave_session = {
     .token = 0
 };
 
-extern d7ap_resource_desc_t registered_client[D7AP_MAX_CLIENT_COUNT];
+extern d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 extern uint8_t registered_client_nb;
 
 typedef enum {

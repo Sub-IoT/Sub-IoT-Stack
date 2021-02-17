@@ -74,6 +74,7 @@
 #include "scheduler.h"
 #include "MODULE_LORAWAN_defs.h"
 #include "d7ap_fs.h"
+#include "errors.h"
 
 #define LORAWAN_LOG_ENABLED 1
 
@@ -89,7 +90,7 @@
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            48 // (>=48 according to spec)
-#define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
+#define LORAWAN_APP_DATA_BUFF_SIZE                  222 // TODO = max?
 
 #define EU868 5
 #define US915 8
@@ -336,7 +337,7 @@ static void lorawan_otaa_register_keys(uint8_t file_id)
     if(keys_changed && was_joining)
     {
       lorawan_stack_deinit();
-      lorawan_stack_init_otaa(NULL);
+      lorawan_stack_init_otaa();
       if(stack_status_callback)
         stack_status_callback(LORAWAN_STACK_JOIN_FAILED, 1);
     }
@@ -431,11 +432,10 @@ lorawan_stack_status_t lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lor
 
 /**
  * @brief Inits the LoRaWAN stack using over the air activation
- * @param lorawan_session_config
  */
-void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
+error_t lorawan_stack_init_otaa() {
   if(inited)
-    return;
+    return EALREADY;
   if(first_init)
       set_initial_keys();
 
@@ -455,6 +455,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
     DPRINT("init OK");
   } else {
     DPRINT("init failed %d", loraMacStatus);
+    return -FAIL;
   }
 
   MibRequestConfirm_t mibReq;
@@ -490,6 +491,8 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
 
 #endif
   inited = true;
+
+  return SUCCESS;
 }
 
 /**
@@ -536,8 +539,7 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
   }
 
   if(length > LORAWAN_APP_DATA_BUFF_SIZE)
-      length = LORAWAN_APP_DATA_BUFF_SIZE;
-  
+      return LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE;
 
   memcpy1(app_data.Buff, payload, length);
   app_data.BuffSize = length;

@@ -80,7 +80,7 @@ static alp_interface_config_t session_config_saved;
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data2[ALP_QUERY_COMPARE_BODY_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 
-extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
+extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_CNT];
 
 static itf_ctrl_t current_itf_ctrl;
 
@@ -235,7 +235,10 @@ static void itf_ctrl_file_callback(uint8_t file_id)
         USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, ROOT_AUTH);
     if (err != SUCCESS) {
         log_print_error_string("alp_layer: stack ctrl file callback: read file returned error %i", err);
-        current_itf_ctrl.raw_itf_ctrl = 0;
+        current_itf_ctrl = (itf_ctrl_t) {
+            .action = ITF_STOP,
+            .interface = 0
+        };
     }
     if (current_itf_ctrl.action == ITF_STOP) {
         if (!current_itf_deinit)
@@ -245,26 +248,30 @@ static void itf_ctrl_file_callback(uint8_t file_id)
 
         // clean up all alp commands associated with the interface
         itf_clear_commands(current_itf_ctrl.interface);
-        
     } else {
-        if (current_itf_ctrl.interface
-            == ALP_ITF_ID_D7ASP) { // For now, we only init D7 at the start as it doesn't need any settings
-            for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-                if (interfaces[i] && (interfaces[i]->itf_id == current_itf_ctrl.interface) && interfaces[i]->init) {
+        for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
+            if(interfaces[i] && (interfaces[i]->itf_id == current_itf_ctrl.interface)) {
+                if (interfaces[i]->unique && interfaces[i]->init) {
                     if (current_itf_deinit) {
                         if (interfaces[i]->deinit == current_itf_deinit) // interface is already inited
                             return;
                         else
                             current_itf_deinit();
                     }
-                    interfaces[i]->init(NULL);
+                    error_t err = interfaces[i]->init();
                     current_itf_deinit = interfaces[i]->deinit;
-                    return;
+                    if(err < 0) {
+                        current_itf_deinit();
+                        current_itf_deinit = NULL;
+                        current_itf_ctrl.action = ITF_STOP;
+                        log_print_error_string("failed to init interface %i with error %i. Stopping", current_itf_ctrl.interface, err);
+                    }
                 }
+                return;
             }
-            log_print_error_string(
-                "tried to start an interface (%i) that is not registered", current_itf_ctrl.interface);
         }
+        log_print_error_string(
+            "tried to start an interface (%i) that is not registered", current_itf_ctrl.interface);
     }
 }
 
@@ -493,7 +500,7 @@ static alp_status_codes_t process_op_indirect_forward(
         *itf_id = session_config_saved.itf_id;
     }
 
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if (*itf_id == interfaces[i]->itf_id) {
             session_config->itf_id = *itf_id;
             if (re_read) {
@@ -611,7 +618,7 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
 {
     alp_interface_status_t empty_itf_status = { .itf_id = 0, .len = 0 };
 
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if (command->forward_itf_id == interfaces[i]->itf_id) {
             if(interfaces[i] && interfaces[i]->unique) {
                 if(current_itf_ctrl.action == ITF_STOP) {
@@ -621,13 +628,12 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                     alp_layer_forwarded_command_completed(command->trans_id, &err, &empty_itf_status, true);
                     log_print_error_string("tried to forward something over a unique itf while stack stop is active");
                     return true;
-                }else if (interfaces[i]->deinit != current_itf_deinit) {
-                    // TODO refactor? always init the interface?
-                    if (current_itf_deinit != NULL) {
+                } else if(interfaces[i]->deinit != current_itf_deinit) {
+                    if(current_itf_deinit) {
                         current_itf_deinit();
                         itf_clear_commands(current_itf_ctrl.interface);
                     }
-                    interfaces[i]->init(itf_config);
+                    interfaces[i]->init();
                     current_itf_deinit = interfaces[i]->deinit;
 
                     current_itf_ctrl.interface = interfaces[i]->itf_id;
@@ -666,7 +672,7 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
 
 static alp_interface_t* find_interface(uint8_t itf_id)
 {
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if ((interfaces[i] != NULL) && (interfaces[i]->itf_id == itf_id)) {
             return interfaces[i];
         }

@@ -42,11 +42,11 @@
   #define DPRINT_DATA(...)
 #endif
 
-alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
+alp_interface_t* interfaces[MODULE_ALP_INTERFACE_CNT];
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf)
 {
-  for(uint8_t i=0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+  for(uint8_t i=0; i < MODULE_ALP_INTERFACE_CNT; i++) {
     if(interfaces[i] == NULL) {                 //interface empty, add new one
       interfaces[i] = itf;
       return ALP_STATUS_OK;
@@ -249,7 +249,7 @@ static bool parse_op_forward(alp_command_t* command, alp_action_t* action)
         return (fifo_pop(cmd_fifo, action->interface_config.itf_config + min_size, id_len) == SUCCESS);
     }
 
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if (action->interface_config.itf_id == interfaces[i]->itf_id) {
             if(fifo_pop(cmd_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
                 return false;
@@ -338,7 +338,7 @@ static bool parse_operand_interface_config(alp_command_t* command, alp_action_t*
     fifo_t* cmd_fifo = &command->alp_command_fifo;
     if(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1) != SUCCESS)
         return false;
-    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if (action->interface_config.itf_id == interfaces[i]->itf_id) {
             // session_config->itf_id = *itf_id;
             if (action->interface_config.itf_id == ALP_ITF_ID_D7ASP) {
@@ -379,7 +379,7 @@ static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_
         uint8_t itf_id;
         if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1, ROOT_AUTH) != SUCCESS)
             return false;
-        for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+        for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
             if (itf_id == interfaces[i]->itf_id) {
 #ifdef MODULE_D7AP
                 if(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data, 2) != SUCCESS)

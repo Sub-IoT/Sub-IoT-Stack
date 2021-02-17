@@ -122,8 +122,8 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
     }
 }
 
-static void lorawan_init_otaa(alp_interface_config_t* itf_cfg) {
-    lorawan_stack_init_otaa(&((alp_interface_config_lorawan_otaa_t*)itf_cfg)->lorawan_session_config_otaa);
+static error_t lorawan_init_otaa() {
+    return lorawan_stack_init_otaa();
 }
 
 void lorawan_interface_register() {

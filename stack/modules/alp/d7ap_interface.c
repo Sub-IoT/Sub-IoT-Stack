@@ -38,10 +38,10 @@ static alp_interface_t d7_alp_interface;
 static uint8_t alp_client_id;
 static bool inited = false;
 
-static void d7ap_interface_init()
+static error_t d7ap_interface_init()
 {
     if(inited)
-        return;
+        return EALREADY;
     d7ap_init();
 
     d7ap_resource_desc_t alp_desc = {
@@ -53,6 +53,7 @@ static void d7ap_interface_init()
     inited = true;
 
     DPRINT("alp_client_id is %i",alp_client_id);
+    return SUCCESS;
 }
 
 static void d7ap_interface_stop()
@@ -151,7 +152,7 @@ void d7ap_interface_register()
         .itf_cfg_len = sizeof(d7ap_session_config_t),
         .itf_status_len = sizeof(d7ap_session_result_t),
         .send_command = d7ap_alp_send,
-        .init = (void (*)(alp_interface_config_t *))d7ap_interface_init, //we do not use the session config in d7ap init
+        .init = d7ap_interface_init,
         .deinit = d7ap_interface_stop,
         .unique = true
     };

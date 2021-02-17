@@ -140,7 +140,7 @@ static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
 static uint16_t current_syncword = 0;
 static phy_rx_config_t pending_rx_cfg;
 
-static channel_id_t default_channel_id = {
+const channel_id_t default_channel_id = {
   .channel_header.ch_coding = PHY_CODING_PN9,
   .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
   .channel_header.ch_freq_band = PHY_BAND_868,

@@ -81,7 +81,7 @@ typedef void (*lorawan_join_attempt_callback_t)(uint8_t join_attempt_number);
 typedef void (*lorawan_status_callback_t)(lorawan_stack_status_t status, uint8_t attempt);
 
 lorawan_stack_status_t lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config);
-void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config);
+error_t lorawan_stack_init_otaa();
 
 void lorawan_stack_deinit(void);
 bool lorawan_stack_join(void);
