@@ -85,7 +85,7 @@ error_t timer_init_event(timer_event* event, task_t callback)
     return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
 }
 
-static void configure_next_event();
+static bool configure_next_event();
 __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority, timer_tick_t period, void *arg)
 {
     error_t status = ENOMEM;
@@ -100,6 +100,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
         return (sched_post_task_prio(task, priority, arg));
     }
 
+    bool conf_atomic_ended = false;
     start_atomic();
     uint32_t empty_index = FRAMEWORK_TIMER_STACK_SIZE;
     for (uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
@@ -160,14 +161,19 @@ config:
             do_config = (next_fire_delay < old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
         }
 
-        if (do_config)
-            configure_next_event();
+        if (do_config) {
+            conf_atomic_ended = configure_next_event();
+        }
+            
 
         status = SUCCESS;
     }
 
 end:
-    end_atomic(); //this end_atomic does not do anything when configure_next_event got called
+    if(!conf_atomic_ended) { //if configure_next_event gets run, then atomic is ended in there. Otherwise we should end it here.
+        end_atomic();
+    }
+    
     return status;
 }
 
@@ -175,6 +181,8 @@ __LINK_C error_t timer_cancel_task(task_t task)
 {
     error_t status = EALREADY;
     
+    bool conf_atomic_ended = false;
+
     start_atomic();
 
     for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
@@ -183,14 +191,19 @@ __LINK_C error_t timer_cancel_task(task_t task)
       {
         NG(timers)[i].f = 0x0;
         //if we were the first event to fire --> trigger a reconfiguration
-        if(NG(next_event) == i)
-          configure_next_event();
+        if(NG(next_event) == i) {
+            conf_atomic_ended = configure_next_event();
+        }
+          
 
         status = SUCCESS;
         break;
       }
     }
-    end_atomic();
+    if(!conf_atomic_ended) { //if configure_next_event gets run, then atomic is ended in there. Otherwise we should end it here.
+        end_atomic(); 
+    }
+    
 
     return status;
 }
@@ -264,7 +277,7 @@ static uint32_t get_next_event()
     return next_fire_event;
 }
 
-static void configure_next_event()
+static bool configure_next_event()
 {
     //this function should only be called from an atomic context
 	timer_tick_t next_fire_time;
@@ -297,10 +310,11 @@ static void configure_next_event()
 
     // if recursive event was scheduled immediately, don't set hw timer delay until last time in configure next event
     if(!fired_by_interrupt)
-        return;
+        return false;
 
     //at this point NG(next_event) is eiter equal to NO_EVENT (no tasks left)
     //or we have the next event we can schedule
+    bool called_atomic = false;
     if(NG(next_event) == NO_EVENT)
     {
 		//cancel the timer in case it is still running (can happen if we're called from timer_cancel_event)
@@ -320,6 +334,7 @@ static void configure_next_event()
 		{
 			NG(hw_event_scheduled) = true;
             end_atomic(); //stop atomic when scheduling a new timer because this needs to wait for a interrupt before writing
+            called_atomic = true;
 			hw_timer_schedule_delay(HW_TIMER_ID, (hwtimer_tick_t)fire_delay);
 #ifndef NDEBUG	    
 			//check that we didn't try to schedule a timer in the past
@@ -338,7 +353,9 @@ static void configure_next_event()
 		}
     }
     timer_busy_programming = false;
+    return called_atomic;
 }
+
 static void timer_overflow()
 {
     NG(timer_offset) += COUNTER_OVERFLOW_INCREASE;
