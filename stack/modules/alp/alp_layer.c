@@ -733,7 +733,7 @@ static void process_async(void* arg)
         return;
     }
     static alp_action_t action;
-    static bool error = false;
+    bool error = false;
 
     authentication_t origin_auth;
     switch(command->origin_itf_id) {
@@ -857,7 +857,7 @@ static void process_async(void* arg)
     }
 #endif
     
-    DPRINT("command is_reponse %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
+    DPRINT("command is_response %i , tag_id %i, completed %i, error %i, ori itf id %i, resp when completed %i\n",
             command->is_response, command->tag_id, command->is_response_completed, command->is_response_error, command->origin_itf_id, command->respond_when_completed);
     if (command->is_response) {
         // when the command is an async response to a preceding request we first find the original request and send the response to the origin itf

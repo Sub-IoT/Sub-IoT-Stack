@@ -1752,7 +1752,19 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
 
     if(I2C_WaitOnFlagUntilTimeout(hi2c, I2C_FLAG_BUSY, SET, I2C_TIMEOUT_BUSY, tickstart) != HAL_OK)
     {
-      return HAL_TIMEOUT;
+      //when this fails, reinit I2C and try again      
+
+      __HAL_I2C_DISABLE(hi2c);
+      __HAL_I2C_ENABLE(hi2c);
+
+      /* Process Locked */
+      __HAL_LOCK(hi2c);
+
+      /* Init tickstart for timeout management*/
+      tickstart = HAL_GetTick();
+      
+      if(I2C_WaitOnFlagUntilTimeout(hi2c, I2C_FLAG_BUSY, SET, I2C_TIMEOUT_BUSY, tickstart) != HAL_OK)
+        return HAL_TIMEOUT;
     }
 
     hi2c->State     = HAL_I2C_STATE_BUSY_TX;
