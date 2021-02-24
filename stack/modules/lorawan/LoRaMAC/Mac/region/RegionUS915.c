@@ -753,7 +753,7 @@ int8_t RegionUS915AlternateDr( AlternateDrParams_t* alternateDr )
     }
     else
     {
-        datarate = DR_0;
+        datarate = MODULE_LORAWAN_US_MINIMUM_DATARATE;
     }
     return datarate;
 }
