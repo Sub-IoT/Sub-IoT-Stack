@@ -147,6 +147,7 @@ static void terminate_dialog()
     switch_state(D7ATP_STATE_IDLE);
     current_dialog_id = 0;
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
+    current_Tl_received = 0;
     stop_dialog_after_tx = false;
 
     // Discard eventually the Tc timer
