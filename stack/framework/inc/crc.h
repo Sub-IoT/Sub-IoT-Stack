@@ -33,7 +33,7 @@
 
 #include <stdint.h>
 
-uint16_t crc_calculate(uint8_t* data, uint8_t length);
+uint16_t crc_calculate(uint8_t* data, uint16_t length);
 
 #endif /* CRC_H_ */
 
