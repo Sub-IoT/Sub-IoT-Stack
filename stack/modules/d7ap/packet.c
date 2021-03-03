@@ -75,14 +75,16 @@ void packet_assemble(packet_t* packet)
         data_ptr += d7anp_secure_payload(packet, nwl_payload, data_ptr - nwl_payload);
 #endif
 
-    packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data + 2; // exclude the CRC bytes
+    packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data + 2; // include the CRC bytes
     packet->hw_radio_packet.data[0] = packet->hw_radio_packet.length - 1; // exclude the length byte
+
+    if (has_hardware_crc)
+        packet->hw_radio_packet.length -= 2; // exclude the CRC bytes
 
     // TODO network protocol footer
 
     // add CRC - SW CRC when using FEC
-    if (!has_hardware_crc ||
-              packet->phy_config.tx.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (!has_hardware_crc)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
         memcpy(data_ptr, &crc, 2);

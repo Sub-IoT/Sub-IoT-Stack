@@ -35,7 +35,10 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "MODULE_D7AP_defs.h"
 #include "d7ap.h"
+
+#define ACK_BITMAP_BYTE_COUNT (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT/8) + (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT%8 ? 1 : 0)
 
 typedef struct packet packet_t;
 
@@ -50,7 +53,7 @@ typedef struct {
       uint8_t ctrl_raw;
       struct {
           uint8_t ctrl_agc : 1;
-          bool ctrl_ack_record : 1;
+          bool ctrl_fragment : 1;
           bool ctrl_ack_not_void : 1;
           bool ctrl_is_ack_requested : 1;
           bool ctrl_te : 1;
@@ -76,15 +79,17 @@ typedef struct {
 } d7a_segment_filter_options_t;
 
 typedef struct {
-    uint8_t ack_transaction_id_start;
-    uint8_t ack_transaction_id_stop;
-    // TODO ACK bitmap
+    uint8_t ack_transaction_id_start; // Transaction ID of the first non-received segment of the Dialog
+    uint8_t ack_transaction_id_stop;  // Transaction ID of the last received segment of the Dialog
+    uint8_t bitmap[ACK_BITMAP_BYTE_COUNT];
 } d7atp_ack_template_t;
 
 void d7atp_init();
 void d7atp_stop();
 error_t  d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
-                        packet_t* packet, d7ap_session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length);
+                            packet_t* packet, d7ap_session_qos_t* qos_settings,
+                            uint8_t listen_timeout, uint8_t expected_response_length,
+                            bool fragmentation, uint8_t total_fragments);
 error_t d7atp_send_response(packet_t* packet);
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7atp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);

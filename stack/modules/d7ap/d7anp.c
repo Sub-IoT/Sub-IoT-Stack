@@ -279,7 +279,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     d7anp_prev_state = d7anp_state;
 
     // No need to initialize the packet field in case of retry, except the security frame counter
-    if (packet->type == RETRY_REQUEST)
+    if ((packet->type == RETRY_REQUEST) && (!packet->d7atp_ctrl.ctrl_fragment))
         goto security;
 
     if (!should_include_origin_template)

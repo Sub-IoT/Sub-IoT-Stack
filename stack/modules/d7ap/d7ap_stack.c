@@ -52,6 +52,7 @@ typedef struct {
     uint8_t client_id;
     uint8_t request_nb;
     uint16_t trans_id[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT];
+    bool fragmentation;
 } session_t;
 
 static session_t sessions[MODULE_D7AP_MAX_SESSION_COUNT];
@@ -157,6 +158,7 @@ static void free_session(session_t* session) {
     session->request_nb = 0;
     session->client_id = INVALID_CLIENT_ID;
     session->token = 0;
+    session->fragmentation = false;
 };
 
 static session_t* alloc_session(uint8_t client_id) {
@@ -232,8 +234,10 @@ static session_t* get_session_by_session_token(uint8_t session_token)
 }*/
 
 error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* payload,
-                        uint8_t len, uint8_t expected_response_length, uint16_t *trans_id)
+                        uint16_t len, uint8_t expected_response_length, uint16_t *trans_id)
 {
+    uint8_t request_id;
+    bool fragmentation = (len > D7A_PAYLOAD_MAX_SIZE) ? true : false;
 
     // When an application response is expected, forward the payload directly to the current D7A session
     // TODO how to filter by client Id since we don't know to which client the request is addressed?
@@ -245,7 +249,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     }
 
     // Create or return the master session if the current one is compatible with the given session configuration.
-    uint8_t session_token = d7asp_master_session_create(config);
+    uint8_t session_token = d7asp_master_session_create(config, fragmentation);
 
     if(session_token == 0)
         return ERETRY;
@@ -267,26 +271,42 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
 
     //TODO handle here the fragmentation if needed?
 
-    uint8_t request_id = d7asp_queue_request(session->token,
-                                             payload, len,
-                                             expected_response_length);
+    if ((len / D7A_PAYLOAD_MAX_SIZE) > MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT)
+        return -ESIZE;
 
-    session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id & 0x00FF);
+    if (len > D7A_PAYLOAD_MAX_SIZE)
+        session->fragmentation = true;
 
-    if (trans_id != NULL) {
-        *trans_id = session->trans_id[session->request_nb];
-        DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
-    } else {
-        DPRINT("[D7AP] request posted with request_nb %d", session->request_nb);
+    while(len)
+    {
+        request_id = d7asp_queue_request(session->token,
+                                         payload + session->request_nb * D7A_PAYLOAD_MAX_SIZE,
+                                         len > D7A_PAYLOAD_MAX_SIZE ?  D7A_PAYLOAD_MAX_SIZE : len,
+                                         expected_response_length);
+
+        session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id & 0x00FF);
+
+        if (trans_id != NULL) {
+            *trans_id = session->trans_id[session->request_nb];
+            DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
+        } else {
+            DPRINT("[D7AP] request posted with request_nb %d", session->request_nb);
+        }
+
+        DPRINT_DATA(payload + session->request_nb * D7A_PAYLOAD_MAX_SIZE,
+                    len > D7A_PAYLOAD_MAX_SIZE ?  D7A_PAYLOAD_MAX_SIZE : len);
+
+        session->request_nb++;
+        if (len > D7A_PAYLOAD_MAX_SIZE)
+            len -= D7A_PAYLOAD_MAX_SIZE;
+        else
+            len = 0;
     }
-    
-    DPRINT_DATA(payload, len);
 
-    session->request_nb++;
     return SUCCESS;
 }
 
-bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
+bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint16_t length, d7ap_session_result_t result)
 {
     bool expect_upper_layer_resp_payload = false;
 
@@ -340,7 +360,7 @@ void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap
         registered_client[session->client_id].receive_cb(trans_id, payload, length, result);
 }
 
-void d7ap_stack_session_completed(uint8_t session_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
+void d7ap_stack_session_completed(uint8_t session_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_size)
 {
     DPRINT("[D7AP] session is completed");
     error_t error;
@@ -352,6 +372,14 @@ void d7ap_stack_session_completed(uint8_t session_token, uint8_t* progress_bitma
     if (registered_client[session->client_id].transmitted_cb == NULL)
         goto free_session;
 
+    if (session->fragmentation)
+    {
+        // find if at least one fragment is not set as success
+        error = bitmap_search(success_bitmap, false, bitmap_size) == -1 ? SUCCESS : FAIL;
+        registered_client[session->client_id].transmitted_cb(session->trans_id[session->request_nb -1], error);
+        goto free_session;
+    }
+
     for(uint8_t i = 0; i < session->request_nb; i++)
     {
         request_id = (uint8_t)(session->trans_id[i] & 0xFF);
@@ -360,9 +388,8 @@ void d7ap_stack_session_completed(uint8_t session_token, uint8_t* progress_bitma
         registered_client[session->client_id].transmitted_cb(session->trans_id[i], error);
     }
 
-    switch_state(D7AP_STACK_STATE_IDLE);
-
 free_session:
+    switch_state(D7AP_STACK_STATE_IDLE);
     free_session(session);
 }
 

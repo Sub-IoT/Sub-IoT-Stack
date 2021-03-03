@@ -325,6 +325,14 @@ void start_background_scan()
         .rssi_thr = E_CCA,
     };
     error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
+
+    if (err == FAIL)
+    {   DPRINT("RSSI < minimum --> phy_start_background_scan failed");
+
+        //TODO
+        // handle the case where the RSSI is not reached
+    }
+
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         uint8_t position = get_position_channel();
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca

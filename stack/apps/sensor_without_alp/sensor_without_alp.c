@@ -71,7 +71,7 @@ static d7ap_session_config_t d7ap_session_config = (d7ap_session_config_t){
 
 void on_receive(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result);
 void on_transmitted(uint16_t trans_id, error_t error);
-bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result);
+bool on_unsolicited_response(uint8_t* payload, uint16_t len, d7ap_session_result_t result);
 
 d7ap_resource_desc_t callbacks = {
     .receive_cb = &on_receive,
@@ -83,17 +83,17 @@ uint8_t d7_client_id;
 
 void execute_sensor_measurement()
 {
-  // first get the sensor reading ...
-  int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
+  int8_t metadata[1024];
 
-#if defined USE_HTS221
-  HTS221_Get_Temperature(hts221_handle, &temperature);
-#endif
-
-  temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
+  for (int i = 0, j = 0x30; i < 1024; i++)
+  {
+    metadata[i] = j++;
+    if (j == 0x3A)
+      j = 0x30;
+  }
 
   uint16_t trans_id;
-  d7ap_send(d7_client_id, &d7ap_session_config, (uint8_t*)&temperature, sizeof(temperature), 0, &trans_id);
+  d7ap_send(d7_client_id, &d7ap_session_config, metadata, sizeof(metadata), 0, &trans_id);
 }
 
 void on_receive(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result)
@@ -107,7 +107,7 @@ void on_transmitted(uint16_t trans_id, error_t error)
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
-bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result)
+bool on_unsolicited_response(uint8_t* payload, uint16_t len, d7ap_session_result_t result)
 {
     log_print_string("Unsolicited response received\n");
     return false;
@@ -117,6 +117,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
+    d7ap_fs_init();
     d7ap_init();
     d7_client_id = d7ap_register(&callbacks);
 

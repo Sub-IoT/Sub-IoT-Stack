@@ -38,7 +38,7 @@ static void update_crc(uint8_t x)
      crc = crc_new;
 }
 
-uint16_t crc_calculate(uint8_t* data, uint8_t length)
+uint16_t crc_calculate(uint8_t* data, uint16_t length)
 {
     crc = 0xffff;
     uint8_t i = 0;

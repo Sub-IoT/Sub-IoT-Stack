@@ -21,7 +21,7 @@ typedef void (*target_rebooted_callback_t)(system_reboot_reason_t reboot_reason)
 
 /*
 ---------------HEADER(bytes)---------------------
-|sync|sync|counter|message type|length|crc1|crc2|
+|sync|sync|counter|message type|length_msb|length_lsb|crc1|crc2|
 -------------------------------------------------
 */
 
@@ -41,7 +41,7 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
  *  @param type type of message (SERIAL_MESSAGE_TYPE_ALP, SERIAL_MESSAGE_TYPE_PING_REQUEST, SERIAL_MESSAGE_TYPE_LOGGING, ...)
  *  @return Void.
  */
-void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
+void modem_interface_transfer_bytes(uint8_t* bytes, uint16_t length, serial_message_type_t type);
 /** @brief Transmits a string by adding a header and putting it in the UART fifo
  *  @param string Bytes that need to be transmitted
  *  @return Void.

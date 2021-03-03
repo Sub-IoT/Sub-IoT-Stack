@@ -55,11 +55,11 @@ void d7ap_init()
 {
     if(inited)
         return;
-    inited = true;
 
     // Initialize the D7AP stack
     d7ap_stack_init();
     registered_client_nb = 0;
+    inited = true;
 }
 
 void d7ap_stop()
@@ -76,12 +76,16 @@ void d7ap_stop()
  *
  * @return  the client Id
  */
-uint8_t d7ap_register(d7ap_resource_desc_t* desc)
+int8_t d7ap_register(d7ap_resource_desc_t* desc)
 {
-    assert(inited);
     assert(registered_client_nb < MODULE_D7AP_MAX_CLIENT_COUNT);
+
+    if (inited == false)
+        return -1;
+
     registered_client[registered_client_nb] = *desc;
     registered_client_nb++;
+    DPRINT("\r\nD7A = %d", registered_client_nb-1);
     return (registered_client_nb-1);
 }
 
@@ -171,7 +175,7 @@ uint8_t d7ap_get_payload_max_size(nls_method_t nls_method)
  * @return an error (errno.h) in case of failure
  */
 error_t d7ap_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* payload,
-                  uint8_t len, uint8_t expected_response_len, uint16_t *trans_id)
+                  uint16_t len, uint8_t expected_response_len, uint16_t *trans_id)
 {
     error_t error;
 

@@ -629,6 +629,8 @@ error_t phy_init(void) {
 error_t phy_stop() {
     d7ap_fs_unregister_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID);
     timer_cancel_event(&continuous_tx_expiration_timer);
+
+    return SUCCESS;
 }
 
 void status_write() {
@@ -765,6 +767,7 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_
 
     DPRINT("start sending @ %i\n", timer_get_counter_value());
 
+    hw_radio_set_payload_length(fg_frame.encoded_length + 2);
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
 
     return SUCCESS; // TODO other return codes

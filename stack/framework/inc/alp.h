@@ -301,7 +301,7 @@ typedef struct {
     alp_itf_id_t itf_id;
     uint8_t itf_cfg_len;
     uint8_t itf_status_len;
-    error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg);
+    error_t (*send_command)(uint8_t* payload, uint16_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg);
     interface_init init;
     interface_deinit deinit;
     bool unique; // TODO
