@@ -23,9 +23,9 @@
 #include "log.h"
 
 
-#define RX_BUFFER_SIZE 256
+#define RX_BUFFER_SIZE 512
 
-#define TX_FIFO_FLUSH_CHUNK_SIZE 10 // at a baudrate of 115200 this ensures completion within 1 ms
+#define TX_FIFO_FLUSH_CHUNK_SIZE 20 // at a baudrate of 115200 this ensures completion within 1 ms
                                     // TODO baudrate dependent
 
 static uart_handle_t* uart;
@@ -44,20 +44,21 @@ static fifo_t rx_fifo;
 
 #define SERIAL_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_FRAME_VERSION   0x00
-#define SERIAL_FRAME_HEADER_SIZE 7
-#define SERIAL_FRAME_SIZE 4
+#define SERIAL_FRAME_HEADER_SIZE 8
+#define SERIAL_FRAME_SIZE_MSB 4
+#define SERIAL_FRAME_SIZE_LSB 5
 #define SERIAL_FRAME_COUNTER 2
 #define SERIAL_FRAME_TYPE 3
-#define SERIAL_FRAME_CRC1   5
-#define SERIAL_FRAME_CRC2   6
+#define SERIAL_FRAME_CRC1   6
+#define SERIAL_FRAME_CRC2   7
 
-#define MODEM_INTERFACE_TX_FIFO_SIZE 255
+#define MODEM_INTERFACE_TX_FIFO_SIZE 512
 static uint8_t modem_interface_tx_buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
 static fifo_t modem_interface_tx_fifo;
 static bool request_pending = false;
 
 uint8_t header[SERIAL_FRAME_HEADER_SIZE];
-static uint8_t payload_len = 0;
+static uint16_t payload_len = 0;
 static uint8_t packet_up_counter = 0;
 static uint8_t packet_down_counter = 0;
 static pin_id_t uart_state_pin;
@@ -269,8 +270,9 @@ static void execute_state_machine()
  */
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
+  uint16_t payload_length = ((header[SERIAL_FRAME_SIZE_MSB] << 8) | header[SERIAL_FRAME_SIZE_LSB]);
   static uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE]; // statically allocated so this does not end up on stack
-  fifo_peek(bytes, (uint8_t*) &payload, 0, header[SERIAL_FRAME_SIZE]);
+  fifo_peek(bytes, (uint8_t*) &payload, 0, payload_length);
 
   //check for missing packages
   packet_down_counter++;
@@ -286,7 +288,7 @@ static bool verify_payload(fifo_t* bytes, uint8_t* header)
   DPRINT("RX PAYLOAD: ");
   DPRINT_DATA(payload, header[SERIAL_FRAME_SIZE]);
 
-  uint16_t calculated_crc = crc_calculate(payload, header[SERIAL_FRAME_SIZE]);
+  uint16_t calculated_crc = crc_calculate(payload, payload_length);
  
   if(header[SERIAL_FRAME_CRC1]!=((calculated_crc >> 8) & 0x00FF) || header[SERIAL_FRAME_CRC2]!=(calculated_crc & 0x00FF))
   {
@@ -352,7 +354,7 @@ static void process_rx_fifo(void *arg)
         }
         parsed_header = true;
         fifo_skip(&rx_fifo, SERIAL_FRAME_HEADER_SIZE);
-        payload_len = header[SERIAL_FRAME_SIZE];
+        payload_len = ((header[SERIAL_FRAME_SIZE_MSB] << 8) | header[SERIAL_FRAME_SIZE_LSB]);
         DPRINT("UART RX, payload size = %i", payload_len);
         sched_post_task(&process_rx_fifo);
     }
@@ -485,7 +487,7 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
   modem_interface_transfer_bytes(&reboot_reason, 1, SERIAL_MESSAGE_TYPE_REBOOTED);
 }
 
-void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
+void modem_interface_transfer_bytes(uint8_t* bytes, uint16_t length, serial_message_type_t type)
 {
   uint8_t header[SERIAL_FRAME_HEADER_SIZE];
   uint16_t crc=crc_calculate(bytes,length);
@@ -496,7 +498,8 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
 
   header[SERIAL_FRAME_COUNTER] = packet_up_counter;
   header[SERIAL_FRAME_TYPE] = type;
-  header[SERIAL_FRAME_SIZE] = length;
+  header[SERIAL_FRAME_SIZE_MSB] = ((length & 0xFF00) >> 8);
+  header[SERIAL_FRAME_SIZE_LSB] = (length & 0x00FF);
   header[SERIAL_FRAME_CRC1] = (crc >> 8) & 0x00FF;
   header[SERIAL_FRAME_CRC2] = crc & 0x00FF;
 
