@@ -290,6 +290,19 @@ int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uin
   return 0;
 }
 
+int d7ap_fs_update_permissions(uint8_t file_id, bool guest_read, bool guest_write, bool user_read, bool user_write)
+{
+    d7ap_fs_file_header_t file_header;
+    error_t err = d7ap_fs_read_file_header(file_id, &file_header);
+    if(err)
+        return err;
+    file_header.file_permissions.guest_read = guest_read;
+    file_header.file_permissions.guest_write = guest_write;
+    file_header.file_permissions.user_read  = user_read;
+    file_header.file_permissions.user_write  = user_write;
+    return d7ap_fs_write_file_header(file_id, &file_header, ROOT_AUTH);
+}
+
 int d7ap_fs_read_uid(uint8_t *buffer)
 {
   return (d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, D7A_FILE_UID_SIZE, ROOT_AUTH));

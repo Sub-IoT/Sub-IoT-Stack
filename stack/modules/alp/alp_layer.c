@@ -277,12 +277,21 @@ static void itf_ctrl_file_callback(uint8_t file_id)
 
 static void init_auth_key_files()
 {
+#ifdef MODULE_ALP_LOCK_KEY_FILES
     d7ap_fs_file_header_t file_header = {
         .file_permissions = (file_permission_t) { .guest_read = false, .guest_write = false, .user_read = false, .user_write = false},
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
         .length = ALP_AUTH_KEY_FILE_LENGTH,
         .allocated_length = ALP_AUTH_KEY_FILE_LENGTH
     };
+#else
+    d7ap_fs_file_header_t file_header = {
+        .file_permissions = (file_permission_t) { .guest_read = true, .guest_write = true, .user_read = true, .user_write = true},
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .length = ALP_AUTH_KEY_FILE_LENGTH,
+        .allocated_length = ALP_AUTH_KEY_FILE_LENGTH
+    };
+#endif
 
     int rc = d7ap_fs_init_file(ALP_FILE_ID_ROOT_AUTH_KEY, &file_header, NULL);
     if(rc != -EEXIST && rc != SUCCESS) {

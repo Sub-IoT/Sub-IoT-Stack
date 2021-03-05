@@ -139,6 +139,8 @@ int d7ap_fs_write_vid(uint8_t* buffer);
 uint8_t d7ap_fs_read_dll_conf_active_access_class(void);
 int d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class);
 
+int d7ap_fs_update_permissions(uint8_t file_id, bool guest_read, bool guest_write, bool user_read, bool user_write);
+
 int d7ap_fs_read_nwl_security_key(uint8_t* key);
 int d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security);
 int d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security);
