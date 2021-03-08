@@ -95,11 +95,13 @@
 #define EU868 5
 #define US915 8
 
-#if MODULE_LORAWAN_REGION == EU868
-  const LoRaMacRegion_t region = LORAMAC_REGION_EU868;
-#elif MODULE_LORAWAN_REGION == US915
-  const LoRaMacRegion_t region = LORAMAC_REGION_US915;
-#endif
+// #if MODULE_LORAWAN_REGION == EU868
+//   const LoRaMacRegion_t region = LORAMAC_REGION_EU868;
+// #elif MODULE_LORAWAN_REGION == US915
+//   const LoRaMacRegion_t region = LORAMAC_REGION_US915;
+// #endif
+
+LoRaMacRegion_t region = LORAMAC_REGION_AS923;
 
 typedef enum
 {

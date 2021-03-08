@@ -73,13 +73,13 @@
 /*!
  * Default datarate used by the node
  */
-#define AS923_DEFAULT_DATARATE                      DR_2
+#define AS923_DEFAULT_DATARATE                      DR_3
 
 /*!
  * The minimum datarate which is used when the
  * dwell time is limited.
  */
-#define AS923_DWELL_LIMIT_DATARATE                  DR_2
+#define AS923_DWELL_LIMIT_DATARATE                  DR_3
 
 /*!
  * Minimal Rx1 receive datarate offset
