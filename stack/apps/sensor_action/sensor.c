@@ -64,13 +64,15 @@ void execute_sensor_measurement()
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
 
 #if defined USE_HTS221
+  i2c_acquire(hts221_handle);
   HTS221_Get_Temperature(hts221_handle, &temperature);
+  i2c_release(hts221_handle);
 #endif
-
+  
+  log_print_string("temp %i dC", temperature);
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
   d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE, ROOT_AUTH);
 
-  log_print_string("temp %i dC", temperature);
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
@@ -148,19 +150,21 @@ void init_user_files()
 void bootstrap()
 {
     log_print_string("Device booted\n");
-
-    d7ap_init();
-
+    
     alp_layer_init(NULL, false);
+    
+    d7ap_init();
 
     init_user_files();
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000, true);
+    i2c_acquire(hts221_handle);
     HTS221_DeActivate(hts221_handle);
     HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
     HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);
     HTS221_Activate(hts221_handle);
+    i2c_release(hts221_handle);
 #endif
 
     sched_register_task(&execute_sensor_measurement);

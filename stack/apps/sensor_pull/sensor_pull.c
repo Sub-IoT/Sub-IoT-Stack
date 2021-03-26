@@ -72,7 +72,9 @@ void execute_sensor_measurement()
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
 
 #if defined USE_HTS221
+  i2c_acquire(hts221_handle);
   HTS221_Get_Temperature(hts221_handle, &temperature);
+  i2c_release(hts221_handle);
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
@@ -108,10 +110,12 @@ void bootstrap()
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000, true);
+    i2c_acquire(hts221_handle);
     HTS221_DeActivate(hts221_handle);
     HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
     HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);
     HTS221_Activate(hts221_handle);
+    i2c_release(hts221_handle);
 #endif
 
     sched_register_task(&execute_sensor_measurement);
