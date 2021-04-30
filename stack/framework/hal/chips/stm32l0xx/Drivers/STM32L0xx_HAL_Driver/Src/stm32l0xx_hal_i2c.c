@@ -242,6 +242,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
+#include "log.h"
 
 /** @addtogroup STM32L0xx_HAL_Driver
   * @{
@@ -1752,6 +1753,7 @@ HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
 
     if(I2C_WaitOnFlagUntilTimeout(hi2c, I2C_FLAG_BUSY, SET, I2C_TIMEOUT_BUSY, tickstart) != HAL_OK)
     {
+      log_print_error_string("I2C reset");
       //when this fails, reinit I2C and try again      
 
       __HAL_I2C_DISABLE(hi2c);

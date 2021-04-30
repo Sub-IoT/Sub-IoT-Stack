@@ -118,16 +118,16 @@ void d7ap_fs_init()
   }
 
   // always update firmware version file upon boot
-  uint8_t firmware_version[D7A_FILE_FIRMWARE_VERSION_SIZE];
-
-  d7ap_fs_read_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE, ROOT_AUTH);
+  uint8_t firmware_version[D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE];
 
   firmware_version[0] = D7A_PROTOCOL_VERSION_MAJOR;
   firmware_version[1] = D7A_PROTOCOL_VERSION_MINOR;
 
-  memcpy(firmware_version + 4, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
-  memcpy(firmware_version + 4 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
-  d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE, ROOT_AUTH);
+  d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, 2, ROOT_AUTH);
+
+  memcpy(firmware_version, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
+  memcpy(firmware_version + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
+  d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 4, firmware_version, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE, ROOT_AUTH);
 }
 
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data)
@@ -257,7 +257,7 @@ int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uin
   if (rtc != 0)
     return rtc;
 
-  if(header.allocated_length < offset + length)
+  if(header.length < offset + length)
     return -EINVAL;
   
 #ifndef MODULE_D7AP_FS_DISABLE_PERMISSIONS
