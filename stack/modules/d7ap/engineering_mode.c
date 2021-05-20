@@ -54,9 +54,6 @@ static phy_tx_config_t tx_cfg;
 static phy_rx_config_t rx_cfg;
 static bool stop = false;
 
-static void packet_transmitted(hw_radio_packet_t* packet);
-static void packet_received(hw_radio_packet_t* packet);
-
 static uint16_t per_missed_packets_counter = 0;
 static uint16_t per_received_packets_counter = 0;
 static uint16_t per_packet_counter = 0; 
@@ -64,8 +61,13 @@ static uint16_t per_start_index = 65535; //Impossible value to show this is not 
 static uint16_t per_packet_limit = 0;
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
-static uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
-static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
+typedef struct {
+  union {
+    uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255];
+    hw_radio_packet_t hw_radio_packet;
+  };
+} per_packet_t;
+static per_packet_t per_packet;
 
 static void start_per_rx();
 static void transmit_per_packet();
@@ -129,9 +131,9 @@ static void packet_received_em(packet_t* packet) {
           per = 100.0 - ((double)per_received_packets_counter / (double)(msg_counter - per_start_index)) * 100.0;
       
       if(msg_counter % 5 == 0) {
-        uint8_t to_uart_uint[40];
+        char to_uart_uint[40];
         sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi);
-        modem_interface_transfer_bytes(to_uart_uint, 40, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
+        modem_interface_transfer_bytes((uint8_t*)to_uart_uint, 40, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
         DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi, packet->hw_radio_packet.length + 1, packet->hw_radio_packet.rx_meta.timestamp);
       }
   }
@@ -165,10 +167,10 @@ static void transmit_per_packet() {
     memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
     uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
     memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
-    memcpy(&per_packet->data, per_data, sizeof(per_data));
-    per_packet->length = per_data[0] + 1;
+    memcpy(&per_packet.hw_radio_packet.data, per_data, sizeof(per_data));
+    per_packet.hw_radio_packet.length = per_data[0] + 1;
 
-    error_t e = phy_send_packet(per_packet, &tx_cfg, &packet_transmitted_callback);
+    error_t e = phy_send_packet(&per_packet.hw_radio_packet, &tx_cfg, &packet_transmitted_callback);
 }
 
 static void start_tx() {
@@ -181,8 +183,8 @@ static void em_reset() {
 
 static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
-
-    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE, ROOT_AUTH);
+    uint32_t length = D7A_FILE_ENGINEERING_MODE_SIZE;
+    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, &length, ROOT_AUTH);
 
     d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*)data;
     em_command->channel_id.center_freq_index = __builtin_bswap16(em_command->channel_id.center_freq_index);
@@ -265,9 +267,13 @@ error_t engineering_mode_init()
   sched_register_task(&transmit_per_packet);
   sched_register_task(&start_per_rx);
   sched_register_task(&em_reset);
+  
+  return SUCCESS;
 }
 
 error_t engineering_mode_stop()
 {
   d7ap_fs_unregister_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID);
+
+  return SUCCESS;
 }

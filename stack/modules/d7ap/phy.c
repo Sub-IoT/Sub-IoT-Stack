@@ -530,19 +530,30 @@ void continuous_tx_expiration()
 void fact_settings_file_change_callback(uint8_t file_id)
 {
     uint8_t fact_settings[D7A_FILE_FACTORY_SETTINGS_SIZE];
-    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE, ROOT_AUTH);
+    uint32_t length = D7A_FILE_FACTORY_SETTINGS_SIZE;
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, &length, ROOT_AUTH);
 
     gain_offset = (int8_t)fact_settings[0];
-    rx_bw_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+1)));
-    rx_bw_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+5)));
-    rx_bw_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+9)));
+    memcpy(&rx_bw_lo_rate, fact_settings + 1, sizeof(uint32_t));
+    rx_bw_lo_rate = __builtin_bswap32(rx_bw_lo_rate);
+    memcpy(&rx_bw_normal_rate, fact_settings + 5, sizeof(uint32_t));
+    rx_bw_normal_rate = __builtin_bswap32(rx_bw_normal_rate);
+    memcpy(&rx_bw_hi_rate, fact_settings + 9, sizeof(uint32_t));
+    rx_bw_hi_rate = __builtin_bswap32(rx_bw_hi_rate);
 
-    bitrate_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+13)));
-    fdev_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+17)));
-    bitrate_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+21)));
-    fdev_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+25)));
-    bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
-    fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
+
+    memcpy(&bitrate_lo_rate, fact_settings + 13, sizeof(uint32_t));
+    bitrate_lo_rate = __builtin_bswap32(bitrate_lo_rate);
+    memcpy(&fdev_lo_rate, fact_settings + 17, sizeof(uint32_t));
+    fdev_lo_rate = __builtin_bswap32(fdev_lo_rate);
+    memcpy(&bitrate_normal_rate, fact_settings + 21, sizeof(uint32_t));
+    bitrate_normal_rate = __builtin_bswap32(bitrate_normal_rate);
+    memcpy(&fdev_normal_rate, fact_settings + 25, sizeof(uint32_t));
+    fdev_normal_rate = __builtin_bswap32(fdev_normal_rate);
+    memcpy(&bitrate_hi_rate, fact_settings + 29, sizeof(uint32_t));
+    bitrate_hi_rate = __builtin_bswap32(bitrate_hi_rate);
+    memcpy(&fdev_hi_rate, fact_settings + 33, sizeof(uint32_t));
+    fdev_hi_rate = __builtin_bswap32(fdev_hi_rate);
 
     preamble_size_lo_rate = fact_settings[37];
     preamble_size_normal_rate = fact_settings[38];
@@ -560,7 +571,8 @@ void fact_settings_file_change_callback(uint8_t file_id)
 
     hw_radio_set_rssi_config(rssi_smoothing, rssi_offset);
 
-    lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+48)));
+    memcpy(&lora_bw, fact_settings + 48, sizeof(uint32_t));
+    lora_bw = __builtin_bswap32(lora_bw);
     lora_SF = (uint8_t)fact_settings[52];
 
     DPRINT("low rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate, preamble_size_lo_rate, preamble_detector_size_lo_rate, preamble_tol_lo_rate);

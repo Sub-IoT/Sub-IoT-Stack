@@ -54,16 +54,22 @@
 #define D7A_FILE_PHY_STATUS_FILE_ID 0x09
 #define D7A_FILE_PHY_STATUS_MINIMUM_SIZE 15
 #define D7A_FILE_PHY_STATUS_SIZE 45 // maximum size for now is 45 which supports 10 channels
+#define D7A_FILE_PHY_STATUS_CHANNEL_COUNT_SIZE 1
 #define D7A_FILE_PHY_STATUS_CHANNEL_COUNT 10 
+#define D7A_FILE_PHY_STATUS_CHANNEL_SIZE 3
 
 #define D7A_FILE_DLL_CONF_FILE_ID	0x0A
 #define D7A_FILE_DLL_CONF_SIZE		7
+#define D7A_FILE_DLL_CONF_NF_CTRL_OFFSET 4
+#define D7A_FILE_DLL_CONF_NF_CTRL_SIZE 1
 
 #define D7A_FILE_DLL_STATUS_FILE_ID 0x0B
 #define D7A_FILE_DLL_STATUS_SIZE    12
 
 #define D7A_FILE_SEL_CONF_FILE_ID 0x12
 #define D7A_FILE_SEL_CONF_SIZE    6
+#define D7A_FILE_SEL_CONF_SEGMENT_FILTER_OFFSET 5
+#define D7A_FILE_SEL_CONF_SEGMENT_FILTER_SIZE 1
 
 #define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
 #define D7A_FILE_ACCESS_PROFILE_SIZE 65
@@ -122,7 +128,7 @@ void d7ap_fs_init();
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 int d7ap_fs_init_file_on_blockdevice(uint8_t file_id, uint8_t blockdevice_index, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
 
-int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length, authentication_t auth);
+int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t* length, authentication_t auth);
 int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, authentication_t auth);
 int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length, authentication_t auth, bool trigger_cb);
 

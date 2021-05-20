@@ -942,7 +942,8 @@ void dll_init()
     phy_init();
 
 
-    d7ap_fs_file_header_t volatile_file_header = { .file_permissions = 0, // TODO not implemented
+    d7ap_fs_file_header_t volatile_file_header = { 
+        .file_permissions = (file_permission_t){ .guest_read = true, .user_read = true },
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
         .length = D7A_FILE_PHY_STATUS_SIZE,
         .allocated_length = D7A_FILE_PHY_STATUS_SIZE }; // TODO length for multiple channels
@@ -951,7 +952,8 @@ void dll_init()
         assert(d7ap_fs_init_file(D7A_FILE_PHY_STATUS_FILE_ID, &volatile_file_header, NULL) == SUCCESS); // TODO error handling
     phy_status_file_inited = true;
 
-    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1, ROOT_AUTH) != 0)
+    uint32_t length = D7A_FILE_DLL_CONF_NF_CTRL_SIZE;
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, D7A_FILE_DLL_CONF_NF_CTRL_OFFSET, &nf_ctrl, &length, ROOT_AUTH) != 0)
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
 
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
@@ -971,10 +973,13 @@ void dll_init()
 #ifdef MODULE_D7AP_EM_ENABLED
     engineering_mode_init();
 #endif
-
-    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1, ROOT_AUTH);
+    length = D7A_FILE_PHY_STATUS_CHANNEL_COUNT_SIZE;
+    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, &length, ROOT_AUTH);
     if(phy_status_channel_counter && (phy_status_channel_counter < PHY_STATUS_MAX_CHANNELS))
-        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter*3, ROOT_AUTH);
+    {
+        length = phy_status_channel_counter * D7A_FILE_PHY_STATUS_CHANNEL_SIZE;
+        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, &length, ROOT_AUTH);
+    }
 
     // Start immediately the scan automation
     guarded_channel = false;

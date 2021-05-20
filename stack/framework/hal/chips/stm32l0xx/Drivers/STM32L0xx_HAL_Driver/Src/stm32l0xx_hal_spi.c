@@ -157,6 +157,7 @@
   */
 
 #ifdef HAL_SPI_MODULE_ENABLED
+#pragma GCC diagnostic ignored "-Wcast-align"
 
 /** @addtogroup SPI
   * @brief SPI HAL module driver

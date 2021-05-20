@@ -231,8 +231,9 @@ static void itf_clear_commands(uint8_t itf_id)
 static void itf_ctrl_file_callback(uint8_t file_id)
 {
     error_t err;
+    uint32_t file_length = USER_FILE_ALP_CTRL_SIZE;
     err = d7ap_fs_read_file(
-        USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, ROOT_AUTH);
+        USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, &file_length, ROOT_AUTH);
     if (err != SUCCESS) {
         log_print_error_string("alp_layer: stack ctrl file callback: read file returned error %i", err);
         current_itf_ctrl = (itf_ctrl_t) {
@@ -349,7 +350,7 @@ static alp_status_codes_t process_op_read_file_data(alp_action_t* action, alp_co
     if (operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
         return ALP_STATUS_EXCEEDS_MAX_ALP_SIZE;
 
-    int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length, origin_auth);
+    int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, &operand.requested_data_length, origin_auth);
     
     if (rc == -ENOENT && init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL) // give the application layer the chance to fullfill this request ...
         rc = init_args->alp_unhandled_read_action_cb(&command->origin_itf_status, operand, alp_data);
@@ -465,8 +466,11 @@ static alp_status_codes_t process_op_break_query(alp_action_t* action, authentic
     alp_operand_file_offset_t offset_a;
     if(!alp_parse_file_offset_operand(&temp_fifo, &offset_a))
         return ALP_STATUS_FIFO_OUT_OF_BOUNDS;
-    
-    int rc = d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, action->query_operand.compare_operand_length, origin_auth);
+
+    // make sure the uint32_t is word-aligned before passing it as a pointer
+    uint32_t length = action->query_operand.compare_operand_length;
+
+    int rc = d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, &length, origin_auth);
     if(rc != SUCCESS)
         return alp_translate_error(rc);
     
@@ -498,7 +502,8 @@ static alp_status_codes_t process_op_indirect_forward(
             if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
                 d7ap_fs_unregister_file_modified_callback(previous_interface_file_id);
                 d7ap_fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
-                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, 1, ROOT_AUTH);
+                uint32_t length = 1;
+                d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, &length, ROOT_AUTH);
                 previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
             } else
                 return ALP_STATUS_WRONG_OPERAND_FORMAT;
@@ -514,8 +519,9 @@ static alp_status_codes_t process_op_indirect_forward(
             session_config->itf_id = *itf_id;
             if (re_read) {
                 session_config_saved.itf_id = *itf_id;
+                uint32_t itf_cfg_len = interfaces[i]->itf_cfg_len;
                 d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 1,
-                    session_config_saved.itf_config, interfaces[i]->itf_cfg_len, ROOT_AUTH);
+                    session_config_saved.itf_config, &itf_cfg_len, ROOT_AUTH);
             }
             if (!ctrl.b7)
                 memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);

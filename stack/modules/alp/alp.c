@@ -377,7 +377,8 @@ static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_
         // overload bit set. To determine the overload length currently we need to read the itf_id from the file
         // since it is not coded in the ALP. // TODO discuss in protocol action group
         uint8_t itf_id;
-        if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, 1, ROOT_AUTH) != SUCCESS)
+        uint32_t length = 1;
+        if(d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, &itf_id, &length, ROOT_AUTH) != SUCCESS)
             return false;
         for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
             if (itf_id == interfaces[i]->itf_id) {
@@ -628,7 +629,7 @@ bool alp_append_create_new_file_data_action(
     uint8_t op = ALP_OP_CREATE_FILE | (resp << 6) | (group << 7);
     int rc = fifo_put_byte(cmd_fifo, op);
     alp_operand_file_header_t header = { .file_id = file_id,
-        .file_header = { .file_permissions = 0,
+        .file_header = { .file_permissions = {.guest_read = true, .user_read = true, .guest_write = true, .user_write = true},
             .file_properties.action_protocol_enabled = 0,
             .file_properties.storage_class = storage_class,
             .length = __builtin_bswap32(length),

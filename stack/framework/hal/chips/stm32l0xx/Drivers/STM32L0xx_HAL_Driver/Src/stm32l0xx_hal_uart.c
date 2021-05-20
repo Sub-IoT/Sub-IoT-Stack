@@ -112,6 +112,7 @@
   */
 
 #ifdef HAL_UART_MODULE_ENABLED
+#pragma GCC diagnostic ignored "-Wcast-align"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

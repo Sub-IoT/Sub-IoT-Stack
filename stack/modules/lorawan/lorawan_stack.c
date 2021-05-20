@@ -323,7 +323,9 @@ static void lorawan_otaa_register_keys(uint8_t file_id)
     bool keys_changed = false;
     bool was_joining = (join_state == STATE_JOINING);
     uint8_t keys[USER_FILE_LORAWAN_KEYS_SIZE];
-    d7ap_fs_read_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, keys, USER_FILE_LORAWAN_KEYS_SIZE, ROOT_AUTH);
+    uint32_t length = USER_FILE_LORAWAN_KEYS_SIZE;
+
+    d7ap_fs_read_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, keys, &length, ROOT_AUTH);
     if (memcmp(appEui, keys, 8) != 0) {
         join_state = STATE_NOT_JOINED;
         memcpy(appEui, keys, 8);
@@ -349,8 +351,9 @@ static void lorawan_otaa_register_keys(uint8_t file_id)
 static void set_initial_keys()
 {
     first_init = false;
+    uint32_t length = D7A_FILE_UID_SIZE;
 
-    d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, devEui, D7A_FILE_UID_SIZE, ROOT_AUTH);
+    d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, devEui, &length, ROOT_AUTH);
 
     d7ap_fs_register_file_modified_callback(USER_FILE_LORAWAN_KEYS_FILE_ID, &lorawan_otaa_register_keys);
     lorawan_otaa_register_keys(USER_FILE_LORAWAN_KEYS_FILE_ID);

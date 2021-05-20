@@ -961,7 +961,9 @@ void hw_radio_set_dc_free(uint8_t scheme) {
 
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size) {
   //TODO: make sync word dependant on size
-  uint16_t full_sync_word = *((const uint16_t *)sync_word);
+  uint16_t full_sync_word = sync_word[0];
+  if(sync_size > 1)
+    full_sync_word += ((uint16_t)sync_word[1]) << 8;
   write_reg_16(REG_SYNCVALUE1, full_sync_word);
 }
 
