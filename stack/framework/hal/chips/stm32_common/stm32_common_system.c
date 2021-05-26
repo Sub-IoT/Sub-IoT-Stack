@@ -209,7 +209,11 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
 uint64_t hw_get_unique_id()
 {
-  return (*((uint64_t *)(UID_BASE + 0x04U)) << 32) + *((uint64_t *)(UID_BASE + 0x14U));
+    // note we are ignoring WAF_NUM and LOT_NUM[55:32] to reduce the 96 bits UID to 64 bits
+    uint64_t uid = *((uint32_t*)(UID_BASE + 0x04U)); // LOT_NUM[31:0]
+    uid = uid << 32;
+    uid += *((uint32_t*)(UID_BASE + 0x14U)); // unique ID
+    return uid;
 }
 
 void hw_busy_wait(int16_t us)
