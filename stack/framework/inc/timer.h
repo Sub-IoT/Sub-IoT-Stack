@@ -240,6 +240,16 @@ __LINK_C bool timer_is_task_scheduled(task_t task);
  */
 void timer_cancel_event(timer_event* event);
 
+/**
+ * \brief Get the time difference between two timer ticks
+ * 
+ * \param start_time the start of the time difference
+ * \param stop_time the stop of the time difference
+ * 
+ * \return timer_tick_t the difference in ticks between stop and start, taking into account a rollover
+ */
+timer_tick_t timer_calculate_difference(timer_tick_t start_time, timer_tick_t stop_time);
+
 #endif /* TIMER_H_ */
 
 /** @}*/

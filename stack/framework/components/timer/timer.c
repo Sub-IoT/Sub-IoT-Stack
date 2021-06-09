@@ -356,6 +356,15 @@ static bool configure_next_event()
     return called_atomic;
 }
 
+timer_tick_t timer_calculate_difference(timer_tick_t start_time, timer_tick_t stop_time)
+{
+    if(start_time <= stop_time)
+        return stop_time - start_time;
+    // if a rolloved happened, add both parts together
+    else
+        return (UINT32_MAX - start_time) + 1 + stop_time; 
+}
+
 static void timer_overflow()
 {
     NG(timer_offset) += COUNTER_OVERFLOW_INCREASE;
