@@ -398,11 +398,17 @@ static void timer_fired()
         return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
-    sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
+    timer_tick_t current_time = timer_get_counter_value();
+    // if event got fired to early, show error logging
+    if((NG(timers)[NG(next_event)].next_event + timer_info->min_delay_ticks) < current_time)
+        log_print_error_string("timer fired too early with next event %i + min delay ticks %i < current time %i",
+            NG(timers)[NG(next_event)].next_event, timer_info->min_delay_ticks, current_time);
+    sched_post_task_prio(
+        NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
     if(NG(timers)[NG(next_event)].period > 0) {
         task_t recursive_task = NG(timers)[NG(next_event)].f;
         NG(timers)[NG(next_event)].f = 0x0;
-        timer_post_task_prio(recursive_task, timer_get_counter_value() + NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].arg);
+        timer_post_task_prio(recursive_task, current_time + NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].arg);
         fired_by_interrupt = true;
         return;
     }
