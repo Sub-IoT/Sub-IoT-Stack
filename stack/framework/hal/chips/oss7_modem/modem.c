@@ -124,7 +124,7 @@ void modem_init()
 
 void modem_send_ping() {
  uint8_t ping_request[1]={0x01};
- modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
+ modem_interface_transfer_bytes(ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
 }
 
 // bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
@@ -261,8 +261,11 @@ int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t 
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)&d7_addressee,
-        d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
+    if(overload && d7_addressee)
+        alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)d7_addressee,
+            d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
+    else
+        alp_append_indirect_forward_action(command, interface_file_id, overload, NULL, 0);
 
     alp_append_return_file_data_action(command, data_file_id, offset, length, data);
 
@@ -276,8 +279,12 @@ int16_t modem_send_raw_indirect_unsolicited_response(
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    alp_append_indirect_forward_action(
-        command, interface_file_id, overload, (uint8_t*)&d7_addressee, sizeof(d7_addressee));
+    if(overload && d7_addressee)
+        alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)d7_addressee,
+            d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
+    else
+        alp_append_indirect_forward_action(command, interface_file_id, overload, NULL, 0);
+    
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
     alp_layer_process(command);

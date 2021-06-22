@@ -270,7 +270,7 @@ static void execute_state_machine()
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
   static uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE]; // statically allocated so this does not end up on stack
-  fifo_peek(bytes, (uint8_t*) &payload, 0, header[SERIAL_FRAME_SIZE]);
+  fifo_peek(bytes, payload, 0, header[SERIAL_FRAME_SIZE]);
 
   //check for missing packages
   packet_down_counter++;
@@ -368,7 +368,7 @@ static void process_rx_fifo(void *arg)
     fifo_t payload_fifo;
     fifo_init_subview(&payload_fifo, &rx_fifo, 0, payload_len);
   
-    if(verify_payload(&payload_fifo,(uint8_t *)&header))
+    if(verify_payload(&payload_fifo,header))
     {
       if(header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_ALP_DATA && alp_handler != NULL)
         alp_handler(&payload_fifo);
@@ -382,7 +382,7 @@ static void process_rx_fifo(void *arg)
         alp_layer_free_commands();
         uint8_t ping_reply[1]={0x02};
         fifo_skip(&payload_fifo,1);
-        modem_interface_transfer_bytes((uint8_t*) &ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
+        modem_interface_transfer_bytes(ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
       }
       else if(header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_REBOOTED)
       {
@@ -507,7 +507,7 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
    
   start_atomic();
   request_pending = true;
-  fifo_put(&modem_interface_tx_fifo, (uint8_t*) &header, SERIAL_FRAME_HEADER_SIZE);
+  fifo_put(&modem_interface_tx_fifo, header, SERIAL_FRAME_HEADER_SIZE);
   fifo_put(&modem_interface_tx_fifo, bytes, length);
   end_atomic();
 

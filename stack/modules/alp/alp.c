@@ -61,7 +61,7 @@ alp_status_codes_t alp_register_interface(alp_interface_t* itf)
 bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
 {
     uint8_t len = 0;
-    if(fifo_pop(cmd_fifo, (uint8_t*)&len, 1) != SUCCESS)
+    if(fifo_pop(cmd_fifo, &len, 1) != SUCCESS)
         return false;
     uint8_t field_len = len >> 6;
     if(field_len == 0) {
@@ -344,16 +344,16 @@ static bool parse_operand_interface_config(alp_command_t* command, alp_action_t*
             if (action->interface_config.itf_id == ALP_ITF_ID_D7ASP) {
 #ifdef MODULE_D7AP
                 uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
-                if(fifo_pop(cmd_fifo, (uint8_t*)&action->interface_config.itf_config, min_size) != SUCCESS)
+                if(fifo_pop(cmd_fifo, action->interface_config.itf_config, min_size) != SUCCESS)
                     return false;
                 uint8_t id_len
                     = d7ap_addressee_id_length(((d7ap_session_config_t*)action->interface_config.itf_config)
                                                    ->addressee.ctrl.id_type);
-                if(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config + min_size, id_len) != SUCCESS)
+                if(fifo_pop(&command->alp_command_fifo, action->interface_config.itf_config + min_size, id_len) != SUCCESS)
                     return false;
 #endif
             } else {
-                if(fifo_pop(&command->alp_command_fifo, (uint8_t*)&action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
+                if(fifo_pop(&command->alp_command_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
                     return false;
             }
 
@@ -383,12 +383,12 @@ static bool parse_operand_indirect_interface(alp_command_t* command, alp_action_
         for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
             if (itf_id == interfaces[i]->itf_id) {
 #ifdef MODULE_D7AP
-                if(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data, 2) != SUCCESS)
+                if(fifo_pop(cmd_fifo, action->indirect_interface_operand.overload_data, 2) != SUCCESS)
                     return false;
                 uint8_t id_len = d7ap_addressee_id_length(
                     ((alp_interface_config_d7ap_t*)action->indirect_interface_operand.overload_data)
                         ->d7ap_session_config.addressee.ctrl.id_type);
-                if(fifo_pop(cmd_fifo, (uint8_t*)&action->indirect_interface_operand.overload_data + 2, id_len) != SUCCESS)
+                if(fifo_pop(cmd_fifo, action->indirect_interface_operand.overload_data + 2, id_len) != SUCCESS)
                     return false;
 #endif
                 DPRINT("indirect forward %02X", action->indirect_interface_operand.interface_file_id);
