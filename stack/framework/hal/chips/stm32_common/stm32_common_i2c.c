@@ -240,14 +240,16 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate, bool pullup
   }
 
   // then configure the I2C port as usual
-  gpio_init_options.Alternate = i2c_ports[idx].alternate;
+  gpio_init_options.Alternate = i2c_ports[idx].scl_alternate;
   gpio_init_options.Mode = GPIO_MODE_AF_OD;
   if(pullup)
     gpio_init_options.Pull = GPIO_PULLUP;
   else
     gpio_init_options.Pull = GPIO_NOPULL;
   gpio_init_options.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  
   hw_gpio_configure_pin_stm(i2c_ports[idx].scl_pin, &gpio_init_options);
+  gpio_init_options.Alternate = i2c_ports[idx].sda_alternate;
   hw_gpio_configure_pin_stm(i2c_ports[idx].sda_pin, &gpio_init_options);
 
   I2C_InitTypeDef i2c_init_options;

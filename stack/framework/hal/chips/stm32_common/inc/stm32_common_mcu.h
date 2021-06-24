@@ -59,7 +59,8 @@ typedef struct {
   I2C_TypeDef* i2c;
   pin_id_t scl_pin;
   pin_id_t sda_pin;
-  uint32_t alternate;
+  uint32_t scl_alternate;
+  uint32_t sda_alternate;
 } i2c_port_t;
 
 
