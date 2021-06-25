@@ -89,5 +89,9 @@ void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_compl
 lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 uint16_t lorawan_get_duty_cycle_delay();
 
+
+static uint8_t* lorawan_get_deveui( void );
+static uint8_t* lorawan_get_appeui( void );
+
 #endif //LORAWAN_STACK_H
 

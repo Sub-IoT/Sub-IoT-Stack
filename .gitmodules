@@ -1,0 +1,3 @@
+[submodule "stack/modules/lorawan"]
+	path = stack/modules/lorawan
+	url = ../../aloxy/loramac-node.git
