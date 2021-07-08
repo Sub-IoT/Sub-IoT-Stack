@@ -155,6 +155,7 @@ int d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *truste
 int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 
 uint32_t d7ap_fs_get_file_length(uint8_t file_id);
+int d7ap_fs_change_file_length(uint8_t file_id, uint32_t length);
 
 #endif /* D7AP_FS_H_ */
 
