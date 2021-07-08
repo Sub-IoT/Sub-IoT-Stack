@@ -266,6 +266,50 @@ typedef void (*tx_refill_callback_t)(uint16_t remaining_bytes_len);
  */
 typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
 
+/**
+ * @brief Type definition for the tx_lora_packet callback function.
+ * 
+ * The tx_lora_packet callback is called by the radio driver upon the successful completion of a LoRa transmission, which is indicated through the TxDone interrupt on DIO0.
+ * 
+ * The callback triggers the equivalent LoRaMac function to enable the handling of this case on the MAC layer.
+ */
+typedef void (*tx_lora_packet_callback_t)( void );
+
+/**
+ * @brief  Type definition for the rx_lora_packet callback function.
+ * 
+ * The rx_lora_packet callback is called by the radio driver upon the successful reception of a LoRa transmission, which is indicated through the RxDone interrupt on DIO0.
+ * 
+ * The callback triggers the equivalent LoRaMac function to enable the handling of this case on the MAC layer.
+ * 
+ */
+typedef void (*rx_lora_packet_callback_t)( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
+
+/**
+ * @brief  Type definition for the rx_lora_error callback function.
+ * 
+ * The rx_lora_error callback is called by the radio driver after the reception of a LoRa transmission, but when the CRC check of the transmission has failed. The reception of the frame is indicated through the RxDone interrupt on DIO0.
+ * The validity of the CRC is then checked through the PAYLOADCRCERROR interrupt flag. If the flag is set, this callback is called.
+ * 
+ * The callback triggers the equivalent LoRaMac function to enable the handling of this case on the MAC layer
+ * 
+ */
+typedef void (*rx_lora_error_callback_t)( void );
+
+/**
+ * @brief Type definition for the rx_lora_timeout callback function.
+ * 
+ * The rx_lora_timeout callback is called by the radio driver in the cases where the chip's time in receive mode has exceeded an expected threshold, without the detection of any frame.
+ * 
+ * This occurs in two cases: 
+ * 
+ * 1) where the chip has been set into RXSINGLE mode, and no preamble is detected during the time in receive mode. This is indicated through the RxTimeout interrupt on DIO1.
+ * 
+ * 2) where a timeout has been set just prior to going into receive mode. This is typically used with RXCONTINUOUS mode, as the timeout would have no effect when used with RXSINGLE.
+ * 
+ */
+typedef void (*rx_lora_timeout_callback_t)( void );
+
 /*!
  * hwradio callbacks structure
  * Used to notify upper layers of radio events
@@ -278,6 +322,10 @@ typedef struct hwradio_init_args
     rx_packet_header_callback_t rx_packet_header_cb;
     tx_packet_callback_t tx_packet_cb;
     tx_refill_callback_t tx_refill_cb;
+    tx_lora_packet_callback_t tx_lora_packet_cb;
+    rx_lora_packet_callback_t rx_lora_packet_cb;
+    rx_lora_error_callback_t rx_lora_error_cb;
+    rx_lora_timeout_callback_t rx_lora_timeout_cb; 
 } hwradio_init_args_t;
 
 /** \brief Initialize the radio driver.
@@ -449,8 +497,86 @@ void hw_radio_enable_refill(bool enable);
 void hw_radio_enable_preloading(bool enable);
 
 #ifdef USE_SX127X
+/**
+ * @brief swaps the chip between LoRa and FSK modes
+ * 
+ * @param use_lora: if true, use LoRa. If false, use FSK
+ */
 void hw_radio_switch_longRangeMode(bool use_lora);
+
+/**
+ * @brief sets the bandwidth and spreading factor of the chip in LoRa mode
+ * 
+ * @param lora_bw: the bandwidth of the channel
+ * @param lora_SF: the spreading factor to send/receive using
+ */
 void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF);
+
+/**
+ * @brief puts the device into a continous tx mode (in FSK mode)
+ * 
+ * NOTE: not implemented, as not used in regular use of LoRaMac-node
+ * 
+ * @param freq: the frequency to transmit at continuously
+ * @param power: the tx power to transmit at 
+ * @param time: the amount of time to transmit for 
+ */
+void hw_lora_set_tx_continuous_wave( uint32_t freq, int8_t power, uint16_t time );
+
+/**
+ * @brief changes the syncword in the LoRa preamble to indicate a "public" or "private" network
+ * 
+ * @param enable: if true, use public network. If false, use private network
+ * 
+ * Note that Semtech's intention behind future use of syncwords is unclear, but effectively at the moment if a device is using LoRaWAN it should use the 
+ * public syncword set here (which comes from the LoRaWAN regional parameters document). If a device is transmitting using LoRa, but not LoRaWAN, then the private
+ * syncword should be used.
+ */
+void hw_lora_set_public_network( bool enable );
+
+/**
+ * @brief sets the maximum payload length of the LoRa transmission. In LoRaWAN, the maximum payload length is dependent on the used data rate.
+ * 
+ * @param max: the max payload length 
+ */
+void hw_lora_set_max_payload_length( uint8_t max );
+
+/**
+ * @brief sets all of the LoRa TX-related parameters. This function is required by LoRaMac-node, to set all the required parameters all at once.
+ */
+void hw_lora_set_tx_config(uint32_t bandwidth, uint32_t datarate,
+                        uint8_t coderate, uint16_t preambleLen,
+                        bool fixLen, bool crcOn, bool freqHopOn,
+                        uint8_t hopPeriod, bool iqInverted, uint32_t timeout);
+
+/**
+ * @brief sets all of the LoRa RX-related parameters. This function is required by LoRaMac-node, to set all the required parameters all at once.
+ *
+ * @param rxContinuous: whether the reception should use RXCONTINUOUS or RXSINGLE mode
+ */
+void hw_lora_set_rx_config(uint32_t bandwidth,
+                         uint32_t datarate, uint8_t coderate,
+                         uint16_t preambleLen,
+                         uint16_t symbTimeout, bool fixLen,
+                         uint8_t payloadLen,
+                         bool crcOn, bool freqHopOn, uint8_t hopPeriod,
+                         bool iqInverted, bool rxContinuous);
+
+
+void hw_radio_set_lora_cont_tx(bool activate);
+
+/**
+ * @brief generates a random number using RSSI value readings
+ * 
+ * @return uint32_t the random number
+ */
+uint32_t hw_lora_random( void ); 
+
+/** 
+ * @brief resets callbacks used only in the LoRaMac stack. Used only in engineering mode, to prevent those callbacks from being used when going from LoRaWAN mode -> LoRa engineering mode
+ * 
+ */
+void hw_lora_reset_callbacks( void );
 #endif
 
 void hw_radio_set_tx_power(int8_t eirp);

@@ -109,6 +109,10 @@
   #error "Invalid configuration"
 #endif
 
+#define LORA_MAC_PRIVATE_SYNCWORD                   0x12 // Sync word for Private LoRa networks
+#define LORA_MAC_PUBLIC_SYNCWORD                    0x34 // Sync word for Public LoRa networks
+#define RF_MID_BAND_THRESH                          525000000
+
 static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 151, 177, 226, 277, 329, 
   427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
 
@@ -129,6 +133,7 @@ typedef enum {
   OPMODE_TX = 3,
   OPMODE_FSRX = 4,
   OPMODE_RX = 5,
+  OPMODE_RXSINGLE = 6, //RXSINGLE is only used in LoRa mode, not FSK
 } opmode_t;
 
 typedef enum {
@@ -160,6 +165,8 @@ FskPacketHandler_t FskPacketHandler_sx127x;
  * - research if it has advantages to use chip's top level sequencer
  */
 
+static void rx_timeout(void *arg);
+
 static spi_handle_t* spi_handle = NULL;
 static spi_slave_handle_t* sx127x_spi = NULL;
 static alloc_packet_callback_t alloc_packet_callback;
@@ -168,6 +175,15 @@ static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
+
+static tx_lora_packet_callback_t tx_lora_packet_callback;
+static rx_lora_packet_callback_t rx_lora_packet_callback;
+static rx_lora_error_callback_t rx_lora_error_callback;
+static rx_lora_timeout_callback_t rx_lora_timeout_callback;
+
+#define RX_BUFFER_SIZE                              256
+uint8_t * rx_buffer;
+
 static state_t state = STATE_STANDBY;
 static hw_radio_packet_t* current_packet;
 
@@ -180,6 +196,9 @@ static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
 
 static bool lora_mode = false;
+
+static uint32_t current_center_freq = 0;
+static bool rx_type_continuous = true; //if true, use RXCONT, if false use RX_SINGLE
 
 void set_opmode(uint8_t opmode);
 static void fifo_threshold_isr();
@@ -415,10 +434,17 @@ static void packet_transmitted_isr() {
 
   DEBUG_TX_END();
   DEBUG_FG_END();
-  hw_busy_wait(110); // TO DO: OPTIMISE
 
-  if(tx_packet_callback)
-    tx_packet_callback(timer_get_counter_value());
+   
+  if(tx_lora_packet_callback) {
+    if(lora_mode) {
+      tx_lora_packet_callback();
+    }
+  } else {
+    hw_busy_wait(110);
+    if(tx_packet_callback)
+      tx_packet_callback(timer_get_counter_value());
+  }
 }
 
 static void bg_scan_rx_done() 
@@ -452,36 +478,75 @@ static void lora_rxdone_isr() {
   int8_t raw_snr = read_reg(REG_LR_PKTSNRVALUE);
   uint8_t irqflags = read_reg(REG_LR_IRQFLAGS);
   assert(irqflags & RFLR_IRQFLAGS_RXDONE_MASK);
-  // TODO check PayloadCRCError and ValidHeader?
+
+  // TODO check ValidHeader?
+  if((irqflags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK) == RFLR_IRQFLAGS_PAYLOADCRCERROR) { 
+    if(rx_lora_error_callback) {
+      rx_lora_error_callback();
+      hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+      return;
+    }
+  }
 
   uint8_t len = read_reg(REG_LR_RXNBBYTES);
   write_reg(REG_LR_FIFOADDRPTR, read_reg(REG_LR_FIFORXCURRENTADDR));
-  DPRINT("rx packet len=%i\n", len);
-  current_packet = alloc_packet_callback(len);
-  if(current_packet == NULL) {
-    DPRINT("could not allocate package, discarding.");
-    return;
+  DPRINT("rx packet len=%i", len);
+
+  int16_t rssi;
+  if(raw_snr > 0) { 
+      rssi = -157 + 16*raw_rssi/15; // TODO only valid for HF port;
+  } else {
+      rssi = -157 + raw_rssi + raw_snr / 4;
   }
-  current_packet->length = len;
-  read_fifo(current_packet->data, len);
-  write_reg(REG_LR_IRQFLAGS, 0xFF);
 
-  current_packet->rx_meta.timestamp = timer_get_counter_value();
-  current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-  if(raw_snr > 0)
-    current_packet->rx_meta.rssi = -157 + 16*raw_rssi/15; // TODO only valid for HF port
-  else
-    current_packet->rx_meta.rssi = -157 + raw_rssi + raw_snr / 4;
-  current_packet->rx_meta.lqi = 0; // TODO
+  if(rx_lora_packet_callback) {
+    read_fifo(rx_buffer, len);
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+    rx_lora_packet_callback(rx_buffer, len, rssi, raw_snr);
+  } else {
+    //engineering mode
+    current_packet = alloc_packet_callback(len);
+    if(current_packet == NULL) {
+      log_print_error_string("could not allocate package, discarding.");
+      return;
+    }
+    current_packet->length = len;
+    read_fifo(current_packet->data, len);
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+
+    current_packet->rx_meta.timestamp = timer_get_counter_value();
+    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+    current_packet->rx_meta.rssi = rssi;
+    current_packet->rx_meta.lqi = 0; // TODO
+
+    rx_packet_callback(current_packet);
+  }
   DPRINT("RX done\n");
-
-  rx_packet_callback(current_packet);
+  
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+}
+
+static void lora_rxtimeout_isr() {
+  uint8_t irqflags = read_reg(REG_LR_IRQFLAGS);
+  
+  if((irqflags & RFLR_IRQFLAGS_RXTIMEOUT_MASK) == RFLR_IRQFLAGS_RXTIMEOUT) {
+      hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+      timer_cancel_task(&rx_timeout); //cancel the timer which would otherwise call the same callback
+      rx_lora_timeout_callback();
+  } else {
+      log_print_error_string("DIO1 ISR should only be handling RxTimeout but a different interrupt was handled, unexpected behaviour.");
+      assert(false);
+  }
 }
 
 static void rx_timeout(void *arg) {
   DEBUG_BG_END();
   DPRINT("RX timeout");
+  if(lora_mode) {
+    if(rx_lora_timeout_callback) {
+      rx_lora_timeout_callback();
+    }
+  }
   hw_radio_set_idle();
 }
 
@@ -646,14 +711,18 @@ static void fifo_threshold_isr() {
 }
 
 static void dio1_isr(void *arg) {
-    DPRINT("DIO1_irq");
+  DPRINT("DIO1_irq");
+  hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
 
-    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    if(state == STATE_RX) {
-      sched_post_task(&fifo_threshold_isr);
+  if(state == STATE_RX) {
+    if(lora_mode && rx_lora_timeout_callback) {
+      sched_post_task(&lora_rxtimeout_isr);
     } else {
-      fifo_level_irq_triggered = true;
+      sched_post_task(&fifo_threshold_isr);
     }
+  } else {
+      fifo_level_irq_triggered = true;
+  }
 }
 
 static void restart_rx_chain() {
@@ -695,6 +764,12 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   rx_packet_header_callback = init_args->rx_packet_header_cb;
   tx_packet_callback = init_args->tx_packet_cb;
   tx_refill_callback = init_args->tx_refill_cb;
+
+  //link callbacks to LoRaMac-node
+  tx_lora_packet_callback = init_args->tx_lora_packet_cb;
+  rx_lora_packet_callback = init_args->rx_lora_packet_cb;
+  rx_lora_error_callback = init_args->rx_lora_error_cb;
+  rx_lora_timeout_callback = init_args->rx_lora_timeout_cb;
 
   if(sx127x_spi == NULL) {
     spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false);
@@ -738,6 +813,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   sched_register_task(&rx_timeout);
   sched_register_task(&bg_scan_rx_done);
   sched_register_task(&lora_rxdone_isr);
+  sched_register_task(&lora_rxtimeout_isr);
   sched_register_task(&packet_transmitted_isr);
   sched_register_task(&fifo_threshold_isr);
   sched_register_task(&wait_for_fifo_level_isr);
@@ -788,6 +864,9 @@ hw_radio_state_t hw_radio_get_opmode(void) {
     case OPMODE_RX:
       return HW_STATE_RX;
       break;
+    case OPMODE_RXSINGLE:
+      return HW_STATE_RX; 
+      break;
     case OPMODE_SLEEP:
       return HW_STATE_SLEEP;
       break;
@@ -806,6 +885,9 @@ void set_opmode(uint8_t opmode) {
       state = STATE_IDLE;
       break;
     case OPMODE_RX:
+      state = STATE_RX;
+      break;
+    case OPMODE_RXSINGLE:
       state = STATE_RX;
       break;
     case OPMODE_TX:
@@ -833,22 +915,39 @@ void set_opmode(uint8_t opmode) {
 
 void set_state_rx() {
   if(lora_mode) {
-    write_reg(REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+    set_opmode(OPMODE_STANDBY);
+
+    //from errata
+    write_reg( REG_LR_TEST30, 0x00 ); 
+    write_reg(REG_LR_TEST2F, 0x40 ); 
+    
+    
+    write_reg(REG_LR_FIFORXBASEADDR, 0);
+    write_reg(REG_LR_FIFOADDRPTR, 0);
+
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+    write_reg(REG_LR_IRQFLAGSMASK, //RFLR_IRQFLAGS_RXTIMEOUT |
                                    // RFLR_IRQFLAGS_RXDONE |
-                                   RFLR_IRQFLAGS_PAYLOADCRCERROR |
+                                   // RFLR_IRQFLAGS_PAYLOADCRCERROR |
                                    RFLR_IRQFLAGS_VALIDHEADER |
                                    RFLR_IRQFLAGS_TXDONE |
                                    RFLR_IRQFLAGS_CADDONE |
                                    RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
                                    RFLR_IRQFLAGS_CADDETECTED );
     
-    write_reg(REG_DIOMAPPING1, (read_reg(REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00); //enable RxDone
-    write_reg(REG_LR_FIFORXBASEADDR, 0);
-    write_reg(REG_LR_FIFOADDRPTR, 0);
+    write_reg(REG_DIOMAPPING1, RFLR_DIOMAPPING1_DIO0_00 | RFLR_DIOMAPPING1_DIO1_00); // DIO0 mapped to RXDone, DIO1 mapped to RXTimeout
 
     hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 
-    write_reg(REG_LR_IRQFLAGS, 0xFF);
+    memset( rx_buffer, 0, ( size_t ) RX_BUFFER_SIZE );
+
+    if(rx_type_continuous) {
+      set_opmode(OPMODE_RX); //put into RXCONT mode
+    } else {
+      set_opmode(OPMODE_RXSINGLE); //put into RXSINGLE mode  
+    }
+
   } else {
     if(get_opmode() >= OPMODE_FSRX || get_opmode() == OPMODE_SLEEP) {
       set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
@@ -871,9 +970,9 @@ void set_state_rx() {
       hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
     }
-  }
 
-  set_opmode(OPMODE_RX);
+    set_opmode(OPMODE_RX);
+  }
 }
 
 void hw_radio_set_opmode(hw_radio_state_t opmode) {
@@ -909,6 +1008,8 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq) {
+  if(current_center_freq != center_freq) current_center_freq = center_freq; 
+  
   center_freq = (uint32_t)(center_freq / FREQ_STEP);
 
   write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
@@ -972,6 +1073,10 @@ void hw_radio_set_crc_on(uint8_t enable) {
 }
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
+  if(rx_lora_packet_callback) { //if in LoRaMAC node i.e. callbacks have been defined. Otherwise a buffer in the d7 layer will be used for rx.
+    if(rx_buffer != data) rx_buffer = data; //save this so we can use the same buffer in the rx
+  }
+
   if(len == 0)
     return ESIZE;
 
@@ -1132,9 +1237,19 @@ void hw_radio_set_tx_power(int8_t eirp) {
 }
 
 void hw_radio_switch_longRangeMode(bool use_lora) {
-  set_opmode(OPMODE_SLEEP);
-  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7));
-  lora_mode = use_lora;
+  if(use_lora != lora_mode) {
+      set_opmode(OPMODE_SLEEP);
+      write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7));
+      lora_mode = use_lora;
+
+      if(!use_lora) {
+        //swapping back to FSK mode, remove LoRaMac callbacks. If the LoRaMac is reinitialised, these will be reset.
+        tx_lora_packet_callback  = NULL;
+        rx_lora_packet_callback  = NULL;
+        rx_lora_error_callback   = NULL;
+        rx_lora_timeout_callback = NULL;
+      }
+  }
 }
 
 void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
@@ -1189,4 +1304,260 @@ int16_t hw_radio_get_rssi() {
       hw_busy_wait(rx_bw_startup_time[lora_bw_indexes[lora_closest_bw_index]] + ((rssi_smoothing_full * 1000)/(4 * lora_available_bw[lora_closest_bw_index] / 1000)));
       return ( - 157 + read_reg(REG_LR_RSSIVALUE));
     }
+}
+
+/*
+   * Radio setup for random number generation
+*/
+uint32_t hw_lora_random( void ) {
+  uint8_t i;
+  uint32_t rnd = 0;
+
+  hw_radio_switch_longRangeMode( true ); // Set LoRa modem ON  
+  hw_radio_set_opmode(HW_STATE_RX); // Set radio in rx mode
+
+  // Disable LoRa modem interrupts
+  write_reg( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+              RFLR_IRQFLAGS_RXDONE |
+              RFLR_IRQFLAGS_PAYLOADCRCERROR |
+              RFLR_IRQFLAGS_VALIDHEADER |
+              RFLR_IRQFLAGS_TXDONE |
+              RFLR_IRQFLAGS_CADDONE |
+              RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
+              RFLR_IRQFLAGS_CADDETECTED );
+
+  for( i = 0; i < 32; i++ )
+  {
+    hw_busy_wait(1000); //wait for 1ms
+    // Unfiltered RSSI value reading. Only takes the LSB value
+    rnd |= ( ( uint32_t )read_reg( REG_LR_RSSIWIDEBAND ) & 0x01 ) << i;
+  }
+
+  hw_radio_set_idle();
+
+  return rnd;
+}
+
+void hw_lora_set_tx_continuous_wave( uint32_t freq, int8_t power, uint16_t time )
+{
+  //NOTE: not used.
+}
+
+void hw_lora_set_public_network( bool enable ) {
+  hw_radio_switch_longRangeMode(true);
+  if( enable )
+  {
+    // Change LoRa modem SyncWord
+    write_reg( REG_LR_SYNCWORD, LORA_MAC_PUBLIC_SYNCWORD );
+  }
+  else
+  {
+    // Change LoRa modem SyncWord
+    write_reg( REG_LR_SYNCWORD, LORA_MAC_PRIVATE_SYNCWORD );
+  }
+}
+
+void hw_lora_set_max_payload_length( uint8_t max ) {
+  write_reg( REG_LR_PAYLOADMAXLENGTH, max );
+}
+
+void hw_lora_set_rx_config(uint32_t bandwidth,
+                         uint32_t datarate, uint8_t coderate,
+                         uint16_t preambleLen,
+                         uint16_t symbTimeout, bool fixLen,
+                         uint8_t payloadLen,
+                         bool crcOn, bool freqHopOn, uint8_t hopPeriod,
+                         bool iqInverted, bool rxContinuous) {
+
+               
+  assert(bandwidth <= 2); // Fatal error: When using LoRa modem only bandwidths 125, 250 and 500 kHz are supported
+    
+  bandwidth += 7;
+    
+  if( datarate > 12 )
+  {
+    datarate = 12;
+  }
+  else if( datarate < 6 )
+  {
+    datarate = 6;
+  }
+
+  bool lowDatarateOptimize = 0;
+  if( ( ( bandwidth == 7 ) && ( ( datarate == 11 ) || ( datarate == 12 ) ) ) || ( ( bandwidth == 8 ) && ( datarate == 12 ) ) )
+  {
+    lowDatarateOptimize = 0x01;
+  }
+
+  write_reg( REG_LR_MODEMCONFIG1,
+        ( read_reg( REG_LR_MODEMCONFIG1 ) &
+        RFLR_MODEMCONFIG1_BW_MASK &
+        RFLR_MODEMCONFIG1_CODINGRATE_MASK &
+        RFLR_MODEMCONFIG1_IMPLICITHEADER_MASK ) |
+        ( bandwidth << 4 ) | ( coderate << 1 ) |
+        fixLen );
+
+  write_reg( REG_LR_MODEMCONFIG2,
+        ( read_reg( REG_LR_MODEMCONFIG2 ) &
+        RFLR_MODEMCONFIG2_SF_MASK &
+        RFLR_MODEMCONFIG2_RXPAYLOADCRC_MASK &
+        RFLR_MODEMCONFIG2_SYMBTIMEOUTMSB_MASK ) |
+        ( datarate << 4 ) | ( crcOn << 2 ) |
+        ( ( symbTimeout >> 8 ) & ~RFLR_MODEMCONFIG2_SYMBTIMEOUTMSB_MASK ) );
+
+  write_reg( REG_LR_MODEMCONFIG3,
+        ( read_reg( REG_LR_MODEMCONFIG3 ) &
+        RFLR_MODEMCONFIG3_LOWDATARATEOPTIMIZE_MASK ) |
+        ( lowDatarateOptimize << 3 ) );
+
+  write_reg( REG_LR_SYMBTIMEOUTLSB, ( uint8_t )( symbTimeout & 0xFF ) );
+
+  write_reg( REG_LR_PREAMBLEMSB, ( uint8_t )( ( preambleLen >> 8 ) & 0xFF ) );
+  write_reg( REG_LR_PREAMBLELSB, ( uint8_t )( preambleLen & 0xFF ) );
+
+  if( fixLen ) write_reg( REG_LR_PAYLOADLENGTH, payloadLen );
+
+
+  if( freqHopOn )
+  {
+    write_reg( REG_LR_PLLHOP, ( read_reg( REG_LR_PLLHOP ) & RFLR_PLLHOP_FASTHOP_MASK ) | RFLR_PLLHOP_FASTHOP_ON );
+    write_reg( REG_LR_HOPPERIOD, hopPeriod );
+  }
+
+  if( ( bandwidth == 9 ) && ( current_center_freq > RF_MID_BAND_THRESH ) )
+  {
+    // ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth
+    write_reg( REG_LR_HIGHBWOPTIMIZE1, 0x02 );
+    write_reg( REG_LR_HIGHBWOPTIMIZE2, 0x64 );
+  }
+  else if( bandwidth == 9 )
+  {
+    // ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth
+    write_reg( REG_LR_HIGHBWOPTIMIZE1, 0x02 );
+    write_reg( REG_LR_HIGHBWOPTIMIZE2, 0x7F );
+  }
+  else
+  {
+    // ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth
+    write_reg( REG_LR_HIGHBWOPTIMIZE1, 0x03 );
+  }
+
+  if( datarate == 6 )
+  {
+    write_reg( REG_LR_DETECTOPTIMIZE,
+                ( read_reg( REG_LR_DETECTOPTIMIZE ) &
+                RFLR_DETECTIONOPTIMIZE_MASK ) |
+                RFLR_DETECTIONOPTIMIZE_SF6 );
+    write_reg( REG_LR_DETECTIONTHRESHOLD, RFLR_DETECTIONTHRESH_SF6 );
+  }
+  else
+  {
+    write_reg( REG_LR_DETECTOPTIMIZE,
+                ( read_reg( REG_LR_DETECTOPTIMIZE ) &
+                RFLR_DETECTIONOPTIMIZE_MASK ) |
+                RFLR_DETECTIONOPTIMIZE_SF7_TO_SF12 );
+    write_reg( REG_LR_DETECTIONTHRESHOLD, RFLR_DETECTIONTHRESH_SF7_TO_SF12 );
+  }
+
+  if( iqInverted )
+  {
+    write_reg( REG_LR_INVERTIQ, ( ( read_reg( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_ON | RFLR_INVERTIQ_TX_OFF ) );
+    write_reg( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_ON );
+  }
+  else
+  {
+    write_reg( REG_LR_INVERTIQ, ( ( read_reg( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+    write_reg( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+  }
+  rx_type_continuous = rxContinuous;
+}
+
+void hw_lora_set_tx_config(uint32_t bandwidth, uint32_t datarate,
+                        uint8_t coderate, uint16_t preambleLen,
+                        bool fixLen, bool crcOn, bool freqHopOn,
+                        uint8_t hopPeriod, bool iqInverted, uint32_t timeout) {
+  
+  assert(bandwidth <= 2); // Fatal error: When using LoRa modem only bandwidths 125, 250 and 500 kHz are supported
+
+  bandwidth += 7;
+
+            
+  if( datarate > 12 )
+  {
+    datarate = 12;
+  }
+  else if( datarate < 6 )
+  {
+    datarate = 6;
+  }
+
+  bool lowDatarateOptimize = 0;
+  if( ( ( bandwidth == 7 ) && ( ( datarate == 11 ) || ( datarate == 12 ) ) ) || ( ( bandwidth == 8 ) && ( datarate == 12 ) ) )
+  {
+    lowDatarateOptimize = 0x01;
+  }
+  else
+  {
+    lowDatarateOptimize = 0x00;
+  }
+
+  if( freqHopOn  )
+  {
+    write_reg( REG_LR_PLLHOP, ( read_reg( REG_LR_PLLHOP ) & RFLR_PLLHOP_FASTHOP_MASK ) | RFLR_PLLHOP_FASTHOP_ON );
+    write_reg( REG_LR_HOPPERIOD, hopPeriod );
+  }
+
+  write_reg( REG_LR_MODEMCONFIG1,
+        ( read_reg( REG_LR_MODEMCONFIG1 ) &
+        RFLR_MODEMCONFIG1_BW_MASK &
+        RFLR_MODEMCONFIG1_CODINGRATE_MASK &
+        RFLR_MODEMCONFIG1_IMPLICITHEADER_MASK ) |
+        ( bandwidth << 4 ) | ( coderate << 1 ) |   fixLen );
+
+  write_reg( REG_LR_MODEMCONFIG2,
+        ( read_reg( REG_LR_MODEMCONFIG2 ) &
+        RFLR_MODEMCONFIG2_SF_MASK &
+        RFLR_MODEMCONFIG2_RXPAYLOADCRC_MASK ) | ( datarate << 4 ) | ( crcOn << 2 ) );
+
+  write_reg( REG_LR_MODEMCONFIG3,
+        ( read_reg( REG_LR_MODEMCONFIG3 ) &
+        RFLR_MODEMCONFIG3_LOWDATARATEOPTIMIZE_MASK ) | ( lowDatarateOptimize << 3 ) );
+
+  write_reg( REG_LR_PREAMBLEMSB, ( preambleLen >> 8 ) & 0x00FF );
+  write_reg( REG_LR_PREAMBLELSB, preambleLen & 0xFF );
+
+  if( datarate == 6 )
+  {
+    write_reg( REG_LR_DETECTOPTIMIZE,
+            ( read_reg( REG_LR_DETECTOPTIMIZE ) &
+            RFLR_DETECTIONOPTIMIZE_MASK ) |
+            RFLR_DETECTIONOPTIMIZE_SF6 );
+    write_reg( REG_LR_DETECTIONTHRESHOLD, RFLR_DETECTIONTHRESH_SF6 );
+  }
+  else
+  {
+    write_reg( REG_LR_DETECTOPTIMIZE,
+            ( read_reg( REG_LR_DETECTOPTIMIZE ) &
+            RFLR_DETECTIONOPTIMIZE_MASK ) |
+            RFLR_DETECTIONOPTIMIZE_SF7_TO_SF12 );
+    write_reg( REG_LR_DETECTIONTHRESHOLD, RFLR_DETECTIONTHRESH_SF7_TO_SF12 );
+  }
+
+  if( iqInverted )
+  {
+    write_reg( REG_LR_INVERTIQ, ( ( read_reg( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_ON ) );
+    write_reg( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_ON );
+  }
+  else
+  {
+    write_reg( REG_LR_INVERTIQ, ( ( read_reg( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+    write_reg( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+  }
+}
+
+void hw_lora_reset_callbacks( void ) {
+    tx_lora_packet_callback  = NULL;
+    rx_lora_packet_callback  = NULL;
+    rx_lora_error_callback   = NULL;
+    rx_lora_timeout_callback = NULL;
 }
