@@ -231,10 +231,6 @@ int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_heade
 
   d7ap_fs_read_file_header(file_id, &header);
 
-  // maybe root should have permission to change allocated length but then fs.c should also be changed
-  if((file_header->allocated_length != header.allocated_length) || (file_header->length > header.allocated_length))
-      return -ESIZE;
-
 #ifndef MODULE_D7AP_FS_DISABLE_PERMISSIONS
   if(((auth == USER_AUTH) && (!header.file_permissions.user_write)) || ((auth == GUEST_AUTH) && (!header.file_permissions.guest_write)))
     return -EACCES;
