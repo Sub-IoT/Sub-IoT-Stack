@@ -592,6 +592,8 @@ error_t phy_init(void) {
 
     error_t ret = SUCCESS;
 
+    state = STATE_IDLE;
+
     init_args.alloc_packet_cb = alloc_new_packet;
     init_args.release_packet_cb = release_packet;
     init_args.rx_packet_cb = packet_received;
