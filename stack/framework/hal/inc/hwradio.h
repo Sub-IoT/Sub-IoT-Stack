@@ -571,12 +571,6 @@ void hw_radio_set_lora_cont_tx(bool activate);
  * @return uint32_t the random number
  */
 uint32_t hw_lora_random( void ); 
-
-/** 
- * @brief resets callbacks used only in the LoRaMac stack. Used only in engineering mode, to prevent those callbacks from being used when going from LoRaWAN mode -> LoRa engineering mode
- * 
- */
-void hw_lora_reset_callbacks( void );
 #endif
 
 void hw_radio_set_tx_power(int8_t eirp);

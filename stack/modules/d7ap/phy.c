@@ -443,10 +443,7 @@ static void configure_channel(const channel_id_t* channel) {
     fact_settings_changed = false;
 
 #ifdef USE_SX127X
-    if(channel->channel_header.ch_class != current_channel_id.channel_header.ch_class && ((channel->channel_header.ch_class == PHY_CLASS_LORA) || (current_channel_id.channel_header.ch_class == PHY_CLASS_LORA))) {
-        hw_radio_switch_longRangeMode(channel->channel_header.ch_class == PHY_CLASS_LORA);
-        hw_lora_reset_callbacks();
-    }
+    hw_radio_switch_longRangeMode(channel->channel_header.ch_class == PHY_CLASS_LORA);
 #endif
 
     // configure modulation settings
@@ -514,8 +511,6 @@ static void configure_channel(const channel_id_t* channel) {
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
-    if(current_syncword == sync_word_value[syncword_class][channel->channel_header.ch_coding ])
-        return;
     current_syncword_class = syncword_class;
     current_syncword = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
 

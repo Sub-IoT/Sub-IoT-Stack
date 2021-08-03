@@ -1008,7 +1008,7 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq) {
-  if(current_center_freq != center_freq) current_center_freq = center_freq; 
+  current_center_freq = center_freq; 
   
   center_freq = (uint32_t)(center_freq / FREQ_STEP);
 
@@ -1074,7 +1074,8 @@ void hw_radio_set_crc_on(uint8_t enable) {
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(rx_lora_packet_callback) { //if in LoRaMAC node i.e. callbacks have been defined. Otherwise a buffer in the d7 layer will be used for rx.
-    if(rx_buffer != data) rx_buffer = data; //save this so we can use the same buffer in the rx
+    if(rx_buffer != data) 
+      rx_buffer = data; //save this so we can use the same buffer in the rx
   }
 
   if(len == 0)
@@ -1553,11 +1554,4 @@ void hw_lora_set_tx_config(uint32_t bandwidth, uint32_t datarate,
     write_reg( REG_LR_INVERTIQ, ( ( read_reg( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
     write_reg( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
   }
-}
-
-void hw_lora_reset_callbacks( void ) {
-    tx_lora_packet_callback  = NULL;
-    rx_lora_packet_callback  = NULL;
-    rx_lora_error_callback   = NULL;
-    rx_lora_timeout_callback = NULL;
 }
