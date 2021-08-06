@@ -28,8 +28,11 @@
 #include "hwsystem.h"
 #include "platform_defs.h"
 
-static void init_clock(void)
+#define MAX_INIT_CLOCK_RETRY_TIMES 2
+
+static HAL_StatusTypeDef init_clock(void)
 {
+  HAL_StatusTypeDef ret = HAL_OK;
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
@@ -63,13 +66,18 @@ static void init_clock(void)
   RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
   RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
-  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+  ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
+  if(ret != HAL_OK)
+    return ret;
+
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
 
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+  ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
+  if(ret != HAL_OK)
+    return ret;
 
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   clocks dividers */
@@ -77,7 +85,9 @@ static void init_clock(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
+  ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
+  if(ret != HAL_OK)
+    return ret;
 
 
 #ifdef FRAMEWORK_DEBUG_ENABLE_SWD
@@ -97,8 +107,16 @@ static void init_clock(void)
 
 void stm32_common_mcu_init()
 {
+  HAL_StatusTypeDef ret = HAL_ERROR;
+  uint8_t counter = 0;
   HAL_Init();
-  init_clock();
+
+  while((ret != HAL_OK) && (counter++ < MAX_INIT_CLOCK_RETRY_TIMES))   // HAL_RCC_OscConfig fails sometimes
+  {
+    ret = init_clock();
+  }
+  assert(ret == HAL_OK);
+
   hw_system_save_reboot_reason();
 }
 
