@@ -58,6 +58,7 @@ __LINK_C uart_handle_t* uart_get_handle(uint8_t port_idx);
 __LINK_C bool           uart_is_enabled(uart_handle_t* uart);
 __LINK_C bool           uart_disable(uart_handle_t* uart);
 __LINK_C bool           uart_get_rx_port_state(uart_handle_t* uart);
+__LINK_C void           uart_pull_down_rx(uart_handle_t* uart);
 __LINK_C bool           uart_enable(uart_handle_t* uart);
 
 __LINK_C void           uart_send_byte(uart_handle_t* uart, uint8_t data);

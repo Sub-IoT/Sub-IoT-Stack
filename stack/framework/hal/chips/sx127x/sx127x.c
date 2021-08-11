@@ -36,6 +36,8 @@
 #include "hwspi.h"
 #include "platform.h"
 #include "errors.h"
+#include "power_profile_file.h"
+#include "timer.h"
 
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
@@ -123,6 +125,11 @@ uint8_t lora_closest_bw_index;
 static uint8_t rx_bw_number = 21;
 static uint8_t rx_bw_khz = 0;
 static uint8_t rssi_smoothing_full = 0;
+static int8_t current_tx_power;
+
+static timer_tick_t tx_start_time = 0;
+static timer_tick_t rx_start_time = 0;
+static timer_tick_t standby_start_time = 0;
 
 static volatile bool fifo_level_irq_triggered = false;
 
@@ -202,6 +209,7 @@ static bool rx_type_continuous = true; //if true, use RXCONT, if false use RX_SI
 
 void set_opmode(uint8_t opmode);
 static void fifo_threshold_isr();
+static void update_active_times(hw_radio_state_t opmode);
 
 static void enable_spi_io() {
   if(!io_inited){
@@ -522,7 +530,6 @@ static void lora_rxdone_isr() {
     rx_packet_callback(current_packet);
   }
   DPRINT("RX done\n");
-  
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
 }
 
@@ -531,6 +538,7 @@ static void lora_rxtimeout_isr() {
   
   if((irqflags & RFLR_IRQFLAGS_RXTIMEOUT_MASK) == RFLR_IRQFLAGS_RXTIMEOUT) {
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+      update_active_times(HW_STATE_STANDBY); //RXTIMEOUT interrupt automatically sets SX1276 back to standby mode
       timer_cancel_task(&rx_timeout); //cancel the timer which would otherwise call the same callback
       rx_lora_timeout_callback();
   } else {
@@ -730,7 +738,7 @@ static void restart_rx_chain() {
   // for some reason, when already in RX and after a freq change.
   // The chip is unable to receive on the new freq
   // For now the workaround is to go back to standby mode, to be optimized later
-  set_opmode(OPMODE_STANDBY);
+  hw_radio_set_opmode(HW_STATE_STANDBY);
 
   // TODO for now we assume we need a restart with PLL lock.
   // this can be optimized for case where there is no freq change
@@ -740,7 +748,6 @@ static void restart_rx_chain() {
 
 static void calibrate_rx_chain() {
   // TODO currently assumes to be called on boot only
-  DPRINT("Calibrating RX chain");
   assert(get_opmode() == OPMODE_STANDBY);
   uint8_t reg_pa_config_initial_value = read_reg(REG_PACONFIG);
 
@@ -786,10 +793,8 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
 
   uint8_t chip_version = read_reg(REG_VERSION);
   if(chip_version == 0x12) {
-    DPRINT("Detected sx1276");
     is_sx1272 = false;
   } else if(chip_version == 0x22) {
-    DPRINT("Detected sx1272");
     is_sx1272 = true;
   } else {
     assert(false);
@@ -808,7 +813,6 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE, &dio0_isr, NULL); assert(e == SUCCESS);
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
-  DPRINT("inited sx127x");
 
   sched_register_task(&rx_timeout);
   sched_register_task(&bg_scan_rx_done);
@@ -841,7 +845,6 @@ error_t hw_radio_set_idle() {
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
     timer_cancel_task(&rx_timeout);
-    DPRINT("set to sleep at %i\n", timer_get_counter_value());
     DEBUG_RX_END();
     DEBUG_TX_END();
     DEBUG_BG_END();
@@ -915,7 +918,7 @@ void set_opmode(uint8_t opmode) {
 
 void set_state_rx() {
   if(lora_mode) {
-    set_opmode(OPMODE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_STANDBY);
 
     //from errata
     write_reg( REG_LR_TEST30, 0x00 ); 
@@ -947,10 +950,11 @@ void set_state_rx() {
     } else {
       set_opmode(OPMODE_RXSINGLE); //put into RXSINGLE mode  
     }
+    update_active_times(HW_STATE_RX);
 
   } else {
     if(get_opmode() >= OPMODE_FSRX || get_opmode() == OPMODE_SLEEP) {
-      set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
+      hw_radio_set_opmode(HW_STATE_STANDBY); //Restart when changing freq/datarate
       while(!(read_reg(REG_IRQFLAGS1) & 0x80));
     }
     flush_fifo();
@@ -972,7 +976,52 @@ void set_state_rx() {
     }
 
     set_opmode(OPMODE_RX);
+    update_active_times(HW_STATE_RX);
   }
+}
+
+static void update_active_times(hw_radio_state_t opmode)
+{    
+    timer_tick_t current_time = timer_get_counter_value();
+
+    uint8_t curr_mode = lora_mode ? POWER_PROFILE_LORA : POWER_PROFILE_D7;
+
+    // Check all 3 tracked modes to stop and start timers
+    if(opmode != HW_STATE_STANDBY)
+    {
+        if(standby_start_time) {
+            DPRINT("registering standby, going into: %u", opmode);
+            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_STANDBY, timer_calculate_difference(standby_start_time, current_time), NULL);
+        }
+            
+        standby_start_time = 0;
+    }
+    else
+        standby_start_time = standby_start_time ? standby_start_time : current_time;
+
+    if(opmode != HW_STATE_TX)
+    {
+        if(tx_start_time) {
+            DPRINT("registering tx, going into: %u", opmode);
+            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_TX, timer_calculate_difference(tx_start_time, current_time), (void*)&current_tx_power);
+        }
+            
+        tx_start_time = 0;
+    }
+    else
+        tx_start_time = tx_start_time ? tx_start_time : current_time;
+
+    if((opmode != HW_STATE_RX) && (opmode != HW_STATE_IDLE))
+    {
+        if(rx_start_time) {
+            DPRINT("registering rx, going into: %u", opmode);
+            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_RX, timer_calculate_difference(rx_start_time, current_time), NULL);
+        }
+            
+        rx_start_time = 0;
+    }
+    else
+        rx_start_time = rx_start_time ? rx_start_time : current_time;
 }
 
 void hw_radio_set_opmode(hw_radio_state_t opmode) {
@@ -1005,6 +1054,7 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
       hw_reset();
       break;
   }
+  update_active_times(opmode);
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq) {
@@ -1093,13 +1143,13 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(state == STATE_RX) {
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    set_opmode(OPMODE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_STANDBY);
     if(!lora_mode)
       while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
 
   if(state == STATE_IDLE) { //Sleeping
-    set_opmode(OPMODE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_STANDBY);
     if(!lora_mode)
       while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
@@ -1142,7 +1192,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 
     set_packet_handler_enabled(true);
   } else {
-    set_opmode(OPMODE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_STANDBY);
     write_reg(REG_LR_PAYLOADLENGTH, len);
     write_reg(REG_LR_FIFOTXBASEADDR, 0);
     write_reg(REG_LR_FIFOADDRPTR, 0);
@@ -1187,7 +1237,7 @@ bool hw_radio_is_rx(void) {
 void hw_radio_enable_refill(bool enable) {
   if(lora_mode) {
     write_reg(REG_LR_MODEMCONFIG2, read_reg(REG_LR_MODEMCONFIG2) | (enable * RFLR_MODEMCONFIG2_TXCONTINUOUSMODE_ON));
-    set_opmode(OPMODE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_STANDBY);
   } else
     enable_refill = enable;
 }
@@ -1209,6 +1259,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
     DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
     // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
   }
+  current_tx_power = eirp;
   if(eirp <= 5) {
     write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
     write_reg(REG_PADAC, (read_reg(REG_PADAC) & RF_PADAC_20DBM_MASK) | RF_PADAC_20DBM_OFF); //Default Power
@@ -1229,6 +1280,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
     DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
     // assert(eirp <= 15); // Pmax = 15 dBm
   }
+  current_tx_power = eirp;
   if(eirp <= 5)
     write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
   else
@@ -1240,6 +1292,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
 void hw_radio_switch_longRangeMode(bool use_lora) {
   if(use_lora != lora_mode) {
       set_opmode(OPMODE_SLEEP);
+      update_active_times(HW_STATE_SLEEP);
       write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7));
       lora_mode = use_lora;
 
@@ -1254,7 +1307,7 @@ void hw_radio_switch_longRangeMode(bool use_lora) {
 }
 
 void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
-  set_opmode(OPMODE_STANDBY); //device has to be in sleep or standby when configuring
+  hw_radio_set_opmode(HW_STATE_STANDBY); //device has to be in sleep or standby when configuring
   uint32_t min_diff = UINT32_MAX;
 
   for(uint8_t bw_cnt = 0; bw_cnt < 10; bw_cnt++) {
@@ -1296,6 +1349,7 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 /* with TS_RSSI = 2^(rssi_smoothing + 1) / (4 * RXBW[kHz]) [ms] */
 int16_t hw_radio_get_rssi() {
     set_opmode(OPMODE_RX); //0.103 ms
+    update_active_times(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     if(!lora_mode) {

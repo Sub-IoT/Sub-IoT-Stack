@@ -22,6 +22,7 @@
 #include <debug.h>
 #include "ports.h"
 #include "errors.h"
+#include "stm32_common_gpio.h"
 
 #if defined(PLATFORM_USE_DEBUGPINS) && PLATFORM_NUM_DEBUGPINS > 0
 

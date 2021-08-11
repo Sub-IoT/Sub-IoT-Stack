@@ -80,6 +80,15 @@ typedef struct
  */
 #define TIMER_TICKS_PER_SEC ___CONCAT(HWTIMER_TICKS_, FRAMEWORK_TIMER_RESOLUTION)
 
+/*! \brief The number of ticks the framework timer generates every minute
+ *
+ */
+#define TIMER_TICKS_PER_MINUTE TIMER_TICKS_PER_SEC * 60UL
+
+/*! \brief The number of ticks the framework timer generates every hour
+ *
+ */
+#define TIMER_TICKS_PER_HOUR TIMER_TICKS_PER_SEC * 60UL * 60UL
 
 
 /*! \brief Initialise the timer sub system

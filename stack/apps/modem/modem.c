@@ -27,12 +27,15 @@
 #include "d7ap_fs.h"
 #include "log.h"
 #include "platform.h"
+#include "power_profile_file.h"
 
 void bootstrap()
 {
     log_print_string("Device booted\n");
 
     alp_layer_init(NULL, true);
+
+    power_profile_file_initialize();
 
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);

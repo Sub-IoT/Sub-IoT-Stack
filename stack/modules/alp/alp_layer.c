@@ -841,7 +841,7 @@ static void process_async(void* arg)
             //TODO put error code in action status and send to requester
             error = (alp_status != ALP_STATUS_BREAK_QUERY_FAILED);
             if(error)
-                log_print_error_string("process async process command %i went wrong with error code %i", action.ctrl.operation, alp_status);
+                log_print_error_string("process async process command %i went wrong with error code 0x%02X", action.ctrl.operation, alp_status);
             break;
         }
 

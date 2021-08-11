@@ -110,6 +110,7 @@ static void modem_interface_disable(void)
 {
   modem_listen_uart_inited = false;
   assert(uart_disable(uart));
+  uart_pull_down_rx(uart);
   DPRINT("uart disabled @ %i",timer_get_counter_value());
 }
 

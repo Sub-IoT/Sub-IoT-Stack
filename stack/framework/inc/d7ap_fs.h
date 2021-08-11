@@ -99,7 +99,8 @@ typedef enum {
   EM_CONTINUOUS_TX = 1,
   EM_TRANSIENT_TX = 2,
   EM_PER_RX = 3,
-  EM_PER_TX = 4
+  EM_PER_TX = 4,
+  EM_CONTINUOUS_STANDBY = 5
 } engineering_mode_t;
 
 /* \brief The callback function for when a user file is modified

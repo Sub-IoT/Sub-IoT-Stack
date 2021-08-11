@@ -68,20 +68,23 @@ typedef struct {
   };
 } per_packet_t;
 static per_packet_t per_packet;
+static engineering_mode_t active_mode = EM_OFF;
 
-static void start_per_rx();
-static void transmit_per_packet();
+static void start_mode();
+static void stop_mode();
 
-void cont_tx_done_callback(packet_t* packet) {}
+static void cont_tx_done_callback(packet_t* packet) { 
+  phy_switch_to_sleep_mode();
+}
 
-void packet_transmitted_callback(packet_t* packet) {
+static void packet_transmitted_callback(packet_t* packet) {
   DPRINT("packet %i transmitted", per_packet_counter);
   if(per_packet_counter >= per_packet_limit && per_packet_limit != 25500) { //timeout of 255 = unlimited
     DPRINT("PER test done");
     return;
   }
 
-  timer_post_task_delay(&transmit_per_packet, PER_PACKET_DELAY);
+  timer_post_task_delay(&start_mode, PER_PACKET_DELAY);
 }
 
 static void packet_received_em(packet_t* packet) {
@@ -122,7 +125,7 @@ static void packet_received_em(packet_t* packet) {
       }
       else
       {
-          sched_post_task(&start_per_rx);
+          sched_post_task(&start_mode);
       }
 
       double per = 0;
@@ -140,45 +143,58 @@ static void packet_received_em(packet_t* packet) {
   packet_queue_free_packet(packet);
 }
 
-static void start_per_rx() {
-  phy_start_rx(&(rx_cfg.channel_id), rx_cfg.syncword_class, &packet_received_em);
-}
+static void start_mode() {
+  switch (active_mode)
+  {
+    case EM_OFF:
+      hw_reset();
+      break;
+    case EM_CONTINUOUS_TX:
+      phy_continuous_tx(&tx_cfg, timeout_em, &cont_tx_done_callback);
+      break;
+    case EM_TRANSIENT_TX:
+      if(!stop) {
+        timer_post_task_delay(&start_mode, 1200);
 
+        phy_continuous_tx(&tx_cfg, 1, &cont_tx_done_callback);
+      }
+      break;
+    case EM_PER_RX:
+      phy_start_rx(&(rx_cfg.channel_id), rx_cfg.syncword_class, &packet_received_em);
+      break;
+    case EM_PER_TX:
+      DPRINT("transmitting packet");
 
-static void stop_transient_tx() {
-    stop = true;
-}
-
-static void start_transient_tx() {
-  if(!stop) {
-    timer_post_task_delay(&start_transient_tx, 1200);
-
-    phy_continuous_tx(&tx_cfg, 1, &cont_tx_done_callback);
+      per_packet_counter++;
+      per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
+      memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
+      /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+      memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
+      uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
+      memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
+      memcpy(&per_packet.hw_radio_packet.data, per_data, sizeof(per_data));
+      per_packet.hw_radio_packet.length = per_data[0] + 1;
+      error_t e = phy_send_packet(&per_packet.hw_radio_packet, &tx_cfg, &packet_transmitted_callback);
+      break;
+    case EM_CONTINUOUS_STANDBY:
+      phy_switch_to_standby_mode();
+      break;
   }
 }
 
-static void transmit_per_packet() {
-    DPRINT("transmitting packet");
-
-    per_packet_counter++;
-    per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
-    memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
-    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
-    memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
-    uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
-    memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
-    memcpy(&per_packet.hw_radio_packet.data, per_data, sizeof(per_data));
-    per_packet.hw_radio_packet.length = per_data[0] + 1;
-
-    error_t e = phy_send_packet(&per_packet.hw_radio_packet, &tx_cfg, &packet_transmitted_callback);
-}
-
-static void start_tx() {
-    phy_continuous_tx(&tx_cfg, timeout_em, &cont_tx_done_callback);
-}
-
-static void em_reset() {
-  hw_reset();
+static void stop_mode() {
+  switch (active_mode)
+  {
+    case EM_TRANSIENT_TX:
+      stop = true;
+      break;
+    case EM_CONTINUOUS_STANDBY:
+      phy_switch_to_sleep_mode();
+      break;
+    default:
+      log_print_error_string("we can't 'stop' mode %i", active_mode);
+      break;
+  }
 }
 
 static void em_file_change_callback(uint8_t file_id) {
@@ -196,12 +212,14 @@ static void em_file_change_callback(uint8_t file_id) {
     tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
     timeout_em = em_command->timeout;
-  
+
+    active_mode = em_command->mode;
+
     switch (em_command->mode)
     {
       case EM_OFF:
         DPRINT("EM_MODEM_OFF");
-        timer_post_task_delay(&em_reset, 500);
+        timer_post_task_delay(&start_mode, 500);
         break;
       case EM_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
@@ -214,10 +232,8 @@ static void em_file_change_callback(uint8_t file_id) {
         tx_cfg.syncword_class, tx_cfg.eirp, em_command->flags);
 
         /* start the radio */
-        sched_register_task(&start_tx);
         //give it time to answer through uart
-        timer_post_task_delay(&start_tx, 500);
-
+        timer_post_task_delay(&start_mode, 500);
         break;
       case EM_TRANSIENT_TX:
         DPRINT("EM_MODE_TRANSIENT_TX\n");
@@ -226,13 +242,11 @@ static void em_file_change_callback(uint8_t file_id) {
 
         stop = false;
         if(timeout_em != 0) {
-          sched_register_task(&stop_transient_tx);
-          timer_post_task_delay(&stop_transient_tx, timeout_em * 1000 + 500);
+          timer_post_task_delay(&stop_mode, timeout_em * TIMER_TICKS_PER_SEC + 500);
         }
 
-        sched_register_task(&start_transient_tx);
         //give it time to answer through uart
-        timer_post_task_delay(&start_transient_tx, 500);
+        timer_post_task_delay(&start_mode, 500);
         break;
       case EM_PER_RX:
         DPRINT("EM_MODE_PER_RX\n");
@@ -241,16 +255,23 @@ static void em_file_change_callback(uint8_t file_id) {
         per_received_packets_counter = 0;
         per_start_index = 65535;
         rx_cfg.channel_id = em_command->channel_id;
-        sched_post_task(&start_per_rx);
+        sched_post_task(&start_mode);
         break;
       case EM_PER_TX:
         DPRINT("EM_MODE_PER_TX\n");
         per_packet_counter = 0;
         tx_cfg.channel_id = em_command->channel_id;
         tx_cfg.eirp = em_command->eirp;
-        per_packet_limit = em_command->timeout * 100;
+        per_packet_limit = timeout_em * 100;
         hw_radio_set_idle();
-        timer_post_task_delay(&transmit_per_packet, 500);
+        timer_post_task_delay(&start_mode, 500);
+        break;
+      case EM_CONTINUOUS_STANDBY:
+        DPRINT("EM_MODEM_CONTINUOUS_STANDBY");
+        if(timeout_em != 0) {
+            timer_post_task_delay(&stop_mode, timeout_em * TIMER_TICKS_PER_SEC + 500);
+        }
+        timer_post_task_delay(&start_mode, 500);
         break;
     }
 }
@@ -263,11 +284,9 @@ error_t engineering_mode_init()
 
   d7ap_fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
 
-  sched_register_task(&start_transient_tx);
-  sched_register_task(&transmit_per_packet);
-  sched_register_task(&start_per_rx);
-  sched_register_task(&em_reset);
-  
+  sched_register_task(&start_mode);
+  sched_register_task(&stop_mode);
+
   return SUCCESS;
 }
 

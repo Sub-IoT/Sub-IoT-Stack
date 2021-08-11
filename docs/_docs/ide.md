@@ -8,6 +8,7 @@ permalink: /docs/ide-support/
 The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any.
 CMake supports generating project files for Eclipse CDT, CodeBlocks etc, instead of plain makefiles using the -G option.
 Alternatively you can use an IDE which natively uses cmake projects like Qt Creator or JetBrain's CLion.
+A compile_commands.json file is generated during compilation which can assist the IDE in understanding the project.
 
 # Debugging
 

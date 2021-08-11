@@ -72,6 +72,9 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_MODEM_LOG_ENABLED)
 SET(FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the modem interface component")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED)
 
+SET(FRAMEWORK_POWER_PROFILE_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the power profiling component")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_POWER_PROFILE_LOG_ENABLED)
+
 SET(FRAMEWORK_SCHED_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the scheduler component")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_SCHED_LOG_ENABLED)
 
@@ -124,6 +127,12 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_FS_LOG_ENABLED)
 SET(FRAMEWORK_USE_WATCHDOG "TRUE" CACHE BOOL "Select wheter to enable or disable watchdog")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_USE_WATCHDOG)
 
+SET(FRAMEWORK_POWER_PROFILE_FILE_ID "50" CACHE STRING "Specifies the file ID of the power profile file")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_POWER_PROFILE_FILE_ID)
+
+SET(FRAMEWORK_POWER_PROFILE_RF "TRUE" CACHE BOOL "Select wheter to enable or disable RF power profiling")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_POWER_PROFILE_RF)
+
 #Generate the 'framework_defs.h'
 FRAMEWORK_BUILD_SETTINGS_FILE()
 
@@ -144,6 +153,7 @@ SET(FRAMEWORK_HEADERS
         inc/debug.h
         inc/console.h
         inc/shell.h
+        inc/power_profile_file.h
 )
 
 # Assemble the library

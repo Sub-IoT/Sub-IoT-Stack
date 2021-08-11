@@ -401,8 +401,8 @@ static void timer_fired()
     timer_tick_t current_time = timer_get_counter_value();
     // if event got fired to early, show error logging
     if((current_time + timer_info->min_delay_ticks) < NG(timers)[NG(next_event)].next_event)
-        log_print_error_string("timer fired too early with current time %i + min delay ticks %i < next event %i",
-            current_time, timer_info->min_delay_ticks, NG(timers)[NG(next_event)].next_event);
+        log_print_error_string("timer fired too early with current time %i + min delay ticks %i < next event %i: function 0x%X",
+            current_time, timer_info->min_delay_ticks, NG(timers)[NG(next_event)].next_event, NG(timers)[NG(next_event)].f);
     sched_post_task_prio(
         NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
     if(NG(timers)[NG(next_event)].period > 0) {

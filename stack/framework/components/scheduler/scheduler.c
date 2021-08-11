@@ -37,6 +37,7 @@
 #include "errors.h"
 #include "timer.h"
 #include "hwwatchdog.h"
+#include "power_profile_file.h"
 
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
@@ -84,6 +85,12 @@ uint8_t NGDEF(m_head)[NUM_PRIORITIES];
 uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
 volatile uint8_t NGDEF(current_priority);
 unsigned int NGDEF(num_registered_tasks);
+#if defined FRAMEWORK_USE_WATCHDOG
+bool watchdog_wakeup;
+#endif
+
+volatile bool task_scheduled_after_sched_loop = false;
+
 #ifdef SCHEDULER_DEBUG
 void check_structs_are_valid()
 {
@@ -147,7 +154,7 @@ static inline void check_structs_are_valid(){}
 #endif
 
 #if defined FRAMEWORK_USE_WATCHDOG
-static void __feed_watchdog_task(void *arg) { }
+static void __feed_watchdog_task(void *arg) { watchdog_wakeup = true; }
 #endif
 
 __LINK_C void scheduler_init()
@@ -288,6 +295,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 	}
 	end_atomic();
 	check_structs_are_valid();
+	task_scheduled_after_sched_loop = true;
 	return retVal;
 }
 
@@ -364,16 +372,21 @@ void sched_set_low_power_mode(uint8_t mode) {
 
 __LINK_C void scheduler_run()
 {
-	
 	while(1)
 	{
+#if defined FRAMEWORK_USE_WATCHDOG
 		bool task_list_empty = true;
+		uint8_t executed_tasks = 0;
+		watchdog_wakeup = false;
+#endif
+		timer_tick_t wakeup_time = timer_get_counter_value();
 		while(NG(current_priority) < NUM_PRIORITIES)
 		{
 			check_structs_are_valid();
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
 #if defined FRAMEWORK_USE_WATCHDOG
+				executed_tasks++;
 				task_list_empty = false;
 				hw_watchdog_feed();
 #endif
@@ -398,8 +411,9 @@ __LINK_C void scheduler_run()
 			for(int i = 0; i < NG(current_priority); i++)
 				assert(!tasks_waiting(i));
 #endif
-			end_atomic();
-		}
+			task_scheduled_after_sched_loop = false;
+			end_atomic();	
+		}		
 #if defined FRAMEWORK_USE_WATCHDOG
 		if(!task_list_empty) //avoid rescheduling watchdog tasks when we didn't execute any tasks
 		{
@@ -407,8 +421,23 @@ __LINK_C void scheduler_run()
 			timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 		}
 		hw_watchdog_feed();
+		//we don't want to register wake-ups that only trigger the watchdog
+		//we also need to check that the watchdog task was the only task that was executed as there is a small chance that
+		//the watchdog task is triggered when also other tasks are executing. In that case we want to track the time as active.
+		if(!(task_list_empty || (watchdog_wakeup && executed_tasks == 1)))
+		{
 #endif
-		hw_enter_lowpower_mode(low_power_mode);
-	}
+			timer_tick_t current_time = timer_get_counter_value();
+			power_profile_register_run_time(timer_calculate_difference(wakeup_time, current_time));
+#if defined FRAMEWORK_USE_WATCHDOG
+		}
+#endif
 
+		//during some oss7-testsuite cases we can see a scheduling of the flushing of the fifos for the UART in between the end of the scheduler 
+		//priority loop, and the call to enter low power mode. This caused the test to fail as the response was received by the testsuite only 
+		//after the watchdog woke up the device. So, task_scheduled_after_sched_loop is used to ensure the tasklist is really empty.
+		if(!task_scheduled_after_sched_loop) {
+			hw_enter_lowpower_mode(low_power_mode);
+		}
+	}
 }
