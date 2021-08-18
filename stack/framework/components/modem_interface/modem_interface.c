@@ -483,7 +483,9 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
 
   uint8_t reboot_reason = (uint8_t)hw_system_reboot_reason();
   log_print_error_string("rebooted with reason %i", reboot_reason);
+#ifndef PLATFORM_NO_REBOOT_REASON_TRANSMIT
   modem_interface_transfer_bytes(&reboot_reason, 1, SERIAL_MESSAGE_TYPE_REBOOTED);
+#endif
 }
 
 void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
