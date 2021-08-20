@@ -183,7 +183,7 @@ job 4:
   when: manual
   script:
   - gateway_addr="192.168.1.84"
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite
   - cd Sub-IoT-testsuite/lorawan-test-scripts 
   - ./reset_gw.sh $gateway_addr
   - ./add_device.sh $gateway_addr
