@@ -21,6 +21,7 @@ stages:
   - build stack
   - flash test boards 
   - run tests
+  - run lorawan tests
 variables:
   GIT_STRATEGY: none
   GIT_SUBMODULE_STRATEGY: none
@@ -176,10 +177,10 @@ job 3:
     reports:
       junit: Sub-IoT-testsuite/report.xml
 
-job 4:
+set-up-lorawan-gateway:
   tags:
   - testsuite
-  stage: set up lorawan gateway
+  stage: run lorawan tests
   when: manual
   script:
   - gateway_addr="192.168.1.84"
@@ -190,10 +191,10 @@ job 4:
   - ./add_one_test.sh $gateway_addr
   - ../..
 
-job 5:
+flash-lorawan-build:
   tags:
   - testsuite
-  stage: flash lorawan build
+  stage: run lorawan tests
   when: manual
   script:
   - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
@@ -208,11 +209,7 @@ job 5:
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cd ../../../
 
-job 6:
-  tags:
-  - testsuite
-  stage: run lorawan tests
-  when: manual
+.lorawan_test_runner: &lorawan_test_runner
   script:
   - gateway_addr="192.168.1.84"
   #  scrape web interface to check test progression
@@ -221,3 +218,20 @@ job 6:
   #  generate a report based on the outcome of the scripts
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/
   - python3 pull_results.py -g $gateway_addr
+
+run-lorawan-tests:
+  stage: run tests
+  dependencies:
+  - set-up-lorawan-gateway
+  - flash-lorawan-build
+  when: manual
+  <<: *lorawan_test_runner
+
+run-lorawan-tests-scheduled:
+  stage: run tests
+  dependencies:
+  - set-up-lorawan-gateway
+  - flash-lorawan-build
+  only:
+  - schedules
+  <<: *lorawan_test_runner
