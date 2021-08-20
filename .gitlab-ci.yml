@@ -175,3 +175,49 @@ job 3:
   artifacts:
     reports:
       junit: Sub-IoT-testsuite/report.xml
+
+job 4:
+  tags:
+  - testsuite
+  stage: set up lorawan gateway
+  when: manual
+  script:
+  - gateway_addr="192.168.1.84"
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
+  - cd Sub-IoT-testsuite/lorawan-test-scripts 
+  - ./reset_gw.sh $gateway_addr
+  - ./add_device.sh $gateway_addr
+  - ./add_one_test.sh $gateway_addr
+  - ../..
+
+job 5:
+  tags:
+  - testsuite
+  stage: flash lorawan build
+  when: manual
+  script:
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
+  - mkdir build && cd build
+  - platform="B_L072Z_LRWAN1"
+  - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
+  - make
+  - cd build/apps/sensor_push_lorawan
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
+  - cd ../../../
+
+job 6:
+  tags:
+  - testsuite
+  stage: run lorawan tests
+  when: manual
+  script:
+  - gateway_addr="192.168.1.84"
+  #  scrape web interface to check test progression
+  - cd Sub-IoT-testsuite/lorawan-test-scripts
+  - python3 check_if_finished.py -g $gateway_addr
+  #  generate a report based on the outcome of the scripts
+  - wget -r -k -K  -l4 html-extension http://$gateway_addr/
+  - python3 pull_results.py -g $gateway_addr
