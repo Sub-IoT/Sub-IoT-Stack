@@ -220,7 +220,8 @@ lorawan_test_runner:
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/
   - python3 pull_results.py -g $gateway_addr
   artifacts:
-      paths: Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
+    paths: 
+    - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
 
 set-up-lorawan-gateway-scheduled:
   tags:
