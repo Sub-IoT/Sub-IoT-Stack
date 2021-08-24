@@ -198,7 +198,9 @@ flash-lorawan-build:
   stage: flash lorawan build
   when: manual
   script:
-  - mkdir build
+  - cd stack/modules/lorawan
+  - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
+  - cd ../../..
   - cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
@@ -218,7 +220,7 @@ lorawan_test_runner:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - python3 check_if_finished.py -g $gateway_addr
   #  generate a report based on the outcome of the scripts
-  - wget -r -k -K  -l4 html-extension http://$gateway_addr/
+  # - wget -r -k -K  -l4 html-extension http://$gateway_addr/ #this only works if ran locally on the gw, skipping for now
   - python3 pull_results.py -g $gateway_addr
   artifacts:
     paths: 
@@ -244,8 +246,10 @@ flash-lorawan-build-scheduled:
   stage: flash lorawan build
   only:
   - schedules
-  script:
-  - mkdir build  
+  script: 
+  - cd stack/modules/lorawan
+  - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
+  - cd ../../..
   - cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
@@ -266,7 +270,7 @@ lorawan_test_runner-scheduled:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - python3 check_if_finished.py -g $gateway_addr
   #  generate a report based on the outcome of the scripts
-  - wget -r -k -K  -l4 html-extension http://$gateway_addr/
+  # - wget -r -k -K  -l4 html-extension http://$gateway_addr/ #this only works if ran locally on the gw, skipping for now
   - python3 pull_results.py -g $gateway_addr
   artifacts:
       paths: 
