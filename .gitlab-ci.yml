@@ -198,6 +198,10 @@ flash-lorawan-build:
   stage: flash lorawan build
   when: manual
   script:
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - cd stack/modules/lorawan
   - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
   - cd ../../..
@@ -247,6 +251,10 @@ flash-lorawan-build-scheduled:
   only:
   - schedules
   script: 
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - cd stack/modules/lorawan
   - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
   - cd ../../..
