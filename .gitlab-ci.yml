@@ -190,7 +190,7 @@ set-up-lorawan-gateway:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./reset_gw.sh $gateway_addr
   - ./add_device.sh $gateway_addr
-  - ./add_one_test.sh $gateway_addr
+  - ./add_tests.sh $gateway_addr
 
 flash-lorawan-build:
   tags:
@@ -244,7 +244,7 @@ set-up-lorawan-gateway-scheduled:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./reset_gw.sh $gateway_addr
   - ./add_device.sh $gateway_addr
-  - ./add_one_test.sh $gateway_addr
+  - ./add_tests.sh $gateway_addr
 
 flash-lorawan-build-scheduled:
   tags:
