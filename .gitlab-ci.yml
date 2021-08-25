@@ -76,6 +76,7 @@ job 1:
    - build/apps/gateway/*
    - build/apps/modem/*
    - build/apps/sensor_push/*
+<<<<<<< HEAD
 job 1b:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags: 
@@ -144,6 +145,12 @@ build sample apps:
   - cmake ../stack/ -DAPP_SENSOR_MULTIMODAL=y -DAPP_SENSOR_PUSH_LORAWAN=y -DPLATFORM=$platform -DMODULE_LORAWAN=y -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DMODULE_LORAWAN_REGION=MODEM_REGION_EU868
   - make -j
 
+=======
+  only:
+    variables:
+      - $LORAWAN_GRAB_TEST_RESULTS!="true"
+  
+>>>>>>> ae7397b3 (removing check_if_finished script, as it requires the pipeline to be running for a long time. Instead, a new variable is defined in CI. If this variable is false, the first five jobs run. If it is true, the final job (to grab the results) runs. A new call of the pipeline will be performed by the gateway when the testset finishes.)
 job 2:
   tags:
   - testsuite
@@ -160,6 +167,9 @@ job 2:
   - cat flashOutput2.txt
   - if grep -q 'FAILED\|ERROR' "flashOutput1.txt"; then exit 1; fi
   - if grep -q 'FAILED\|ERROR' "flashOutput2.txt"; then exit 1; fi
+  only:
+    variables:
+      - $LORAWAN_GRAB_TEST_RESULTS!="true"
 job 3:
   tags:
   - testsuite
@@ -178,6 +188,9 @@ job 3:
   artifacts:
     reports:
       junit: Sub-IoT-testsuite/report.xml
+  only:
+    variables:
+      - $LORAWAN_GRAB_TEST_RESULTS!="true"
 
 set-up-lorawan-gateway:
   tags:
@@ -211,26 +224,6 @@ flash-lorawan-build:
   - make
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
-
-lorawan_test_runner:
-  tags:
-  - testsuite
-  stage: run lorawan tests
-  when: manual
-  script:
-  - gateway_addr="192.168.1.84"
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
-  #  scrape web interface to check test progression
-  - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - python3 check_if_finished.py -g $gateway_addr
-  #  generate a report based on the outcome of the scripts
-  - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
-  - mv $gateway_addr full_results
-  - python3 pull_results.py -g $gateway_addr
-  artifacts:
-    paths: 
-    - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
-    - Sub-IoT-testsuite/lorawan-test-scripts/full_results/*
 
 set-up-lorawan-gateway-scheduled:
   tags:
@@ -267,18 +260,16 @@ flash-lorawan-build-scheduled:
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
 
-lorawan_test_runner-scheduled:
+lorawan_test_runner:
   tags:
   - testsuite
   stage: run lorawan tests
-  only:
-  - schedules
   script:
   - gateway_addr="192.168.1.84"
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   #  scrape web interface to check test progression
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - python3 check_if_finished.py -g $gateway_addr
+  #- python3 check_if_finished.py -g $gateway_addr
   #  generate a report based on the outcome of the scripts
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
   - mv $gateway_addr full_results
@@ -287,3 +278,7 @@ lorawan_test_runner-scheduled:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
       - Sub-IoT-testsuite/lorawan-test-scripts/full_results/*
+  #timeout: 3 hours
+  only:
+    variables:
+      - $LORAWAN_GRAB_TEST_RESULTS!="true"
