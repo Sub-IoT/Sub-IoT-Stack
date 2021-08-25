@@ -281,4 +281,4 @@ lorawan_test_runner:
   #timeout: 3 hours
   only:
     variables:
-      - $LORAWAN_GRAB_TEST_RESULTS!="true"
+      - $LORAWAN_GRAB_TEST_RESULTS=="true"
