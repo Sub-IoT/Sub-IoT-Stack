@@ -699,7 +699,7 @@ bool d7asp_process_received_packet(packet_t* packet)
                                                           packet->phy_config.rx.channel_id.channel_header.ch_coding,
                                                           len, false);
 
-        estimated_tl += 2; // Tt
+        estimated_tl += t_g; // Tt < silent time < Tg ~ in practice 4.26 ms
         // TX duration for dormant session
         estimated_tl += phy_calculate_tx_duration(packet->phy_config.rx.channel_id.channel_header.ch_class,
                                                   packet->phy_config.rx.channel_id.channel_header.ch_coding,

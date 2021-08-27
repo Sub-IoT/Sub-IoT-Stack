@@ -654,14 +654,14 @@ static void fifo_threshold_isr() {
       memcpy(backup_buffer, buffer, rx_bytes);
        rx_packet_header_callback(buffer, rx_bytes);
        if(FskPacketHandler_sx127x.Size == 0) {
-         DPRINT("Length was too large, discarding packet");
+         log_print_error_string("Length was too large, discarding packet");
          reinit_rx();
          return;
        }
 
        current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
        if(current_packet == NULL) {
-         DPRINT("Could not allocate package, discarding.");
+         log_print_error_string("Could not allocate package, discarding.");
          reinit_rx();
          return;
        }
@@ -683,6 +683,14 @@ static void fifo_threshold_isr() {
       current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO);
 
    uint16_t remaining_bytes = FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes;
+
+   // blocking to get last data
+   while((remaining_bytes < 3) && (remaining_bytes != 0)) {
+      if(!CHECK_FIFO_EMPTY()) {
+        current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO);
+        remaining_bytes--;
+      }
+   }
 
    if(remaining_bytes == 0) {
     current_packet->rx_meta.timestamp = timer_get_counter_value();
@@ -708,8 +716,9 @@ static void fifo_threshold_isr() {
        write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (BYTES_IN_RX_FIFO - 1));
        FskPacketHandler_sx127x.FifoThresh = BYTES_IN_RX_FIFO;
    } else {
-       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (remaining_bytes - 1));
-       FskPacketHandler_sx127x.FifoThresh = remaining_bytes;
+      // wakeup right before the entire message arrives to get the data asap
+      write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (remaining_bytes - 3));
+      FskPacketHandler_sx127x.FifoThresh = remaining_bytes - 2;
    }
 
    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);

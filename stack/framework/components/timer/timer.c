@@ -116,6 +116,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
             {
                 NG(timers)[i].period = period;
                 NG(timers)[i].next_event = fire_time;
+                empty_index = i;
                 goto config;
             }
             else
@@ -158,7 +159,7 @@ config:
             DPRINT("next_fire_delay <%lu>" , next_fire_delay);
 
             int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
-            do_config = (next_fire_delay < old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
+            do_config = (next_fire_delay <= old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
         }
 
         if (do_config) {
@@ -350,6 +351,9 @@ static bool configure_next_event()
 			//set hw_event_scheduled explicitly to false to allow timer_overflow
 			//to schedule the event when needed
 			NG(hw_event_scheduled) = false;
+
+            // Cancel the timer, the next event should only be set after an overflow
+		    hw_timer_cancel(HW_TIMER_ID);
 		}
     }
     timer_busy_programming = false;
@@ -399,10 +403,15 @@ static void timer_fired()
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
     timer_tick_t current_time = timer_get_counter_value();
+#ifdef FRAMEWORK_LOG_ENABLED
     // if event got fired to early, show error logging
     if((current_time + timer_info->min_delay_ticks) < NG(timers)[NG(next_event)].next_event)
         log_print_error_string("timer fired too early with current time %i + min delay ticks %i < next event %i: function 0x%X",
             current_time, timer_info->min_delay_ticks, NG(timers)[NG(next_event)].next_event, NG(timers)[NG(next_event)].f);
+    else if(current_time > (NG(timers)[NG(next_event)].next_event + 5))
+        log_print_error_string("timer fired too late with current time %i > next event %i + 5: function 0x%X",
+            current_time, timer_info->min_delay_ticks, NG(timers)[NG(next_event)].next_event, NG(timers)[NG(next_event)].f);
+#endif
     sched_post_task_prio(
         NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
     if(NG(timers)[NG(next_event)].period > 0) {

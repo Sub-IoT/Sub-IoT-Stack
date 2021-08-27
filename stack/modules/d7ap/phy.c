@@ -404,19 +404,19 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
     {
     case PHY_CLASS_LO_RATE:
         if(!payload_only)
-          packet_length += PREAMBLE_LOW_RATE_CLASS;
+          packet_length += preamble_size_lo_rate;
 
         data_rate = 1.2; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
         if(!payload_only)
-          packet_length += PREAMBLE_NORMAL_RATE_CLASS;
+          packet_length += preamble_size_normal_rate;
 
         data_rate = 6.9; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
         if(!payload_only)
-          packet_length += PREAMBLE_HI_RATE_CLASS;
+          packet_length += preamble_tol_hi_rate;
 
         data_rate = 20.8; // High rate 166.667 kbps: 20.83 byte/tick
         break;
@@ -704,7 +704,9 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
     //uint8_t rssi_samples = scan_duration
     //hw_radio_set_rssi_smoothing(rssi_samples);
 
+    DEBUG_RX_START();
     int16_t rssi = hw_radio_get_rssi();
+    DEBUG_RX_END();
     rssi_cb(rssi);
 
     return SUCCESS;

@@ -124,6 +124,8 @@ static uint16_t NGDEF(_tsched);
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
+static timer_tick_t guarded_channel_time_stop;
+
 static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER_MEASUREMENTS]; //3 measurement per channel
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
@@ -155,11 +157,6 @@ static timer_event dll_scan_automation_timer;
  * D7A timer used to start a background scan
  */
 static timer_event dll_background_scan_timer;
-
-/*!
- * D7A timer used to expire the guard period
- */
-static timer_event dll_guard_period_expiration_timer;
 
 /*!
  * D7A timer used to delay the processing of a received packet
@@ -281,20 +278,6 @@ static bool is_tx_busy()
     }
 }
 
-void guard_period_expiration()
-{
-    guarded_channel = false;
-    DPRINT("Channel guarding period is terminated, Tx is now conditioned by CSMA");
-}
-
-void start_guard_period(timer_tick_t period)
-{
-    DPRINT("guard channel");
-    guarded_channel = true;
-    dll_guard_period_expiration_timer.next_event = period;
-    timer_add_event(&dll_guard_period_expiration_timer);
-}
-
 void median_measured_noisefloor(uint8_t position) {
     if(position == UINT8_MAX) {
         E_CCA = - current_access_profile.subbands[0].cca;
@@ -360,11 +343,7 @@ void dll_signal_packet_received(packet_t* packet)
                                                          packet->hw_radio_packet.length + 1, false);
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
         // the channel guard period is extended by TG following the transmission.
-        if (tx_duration >= t_g)
-            start_guard_period(t_g);
-        else
-            start_guard_period(t_g - tx_duration);
-
+        guarded_channel_time_stop = packet->hw_radio_packet.rx_meta.timestamp + ((tx_duration >= t_g) ? t_g : t_g - tx_duration);
         guarded_channel = true;
     }
 
@@ -397,12 +376,7 @@ void dll_signal_packet_transmitted(packet_t* packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet @ %i with length = %i", packet->hw_radio_packet.tx_meta.timestamp, packet->hw_radio_packet.length);
   
-    if (packet->tx_duration >= t_g )
-    {
-        start_guard_period(t_g);
-    }
-    else
-        start_guard_period(t_g - packet->tx_duration);
+    guarded_channel_time_stop = timer_get_counter_value() + ((packet->tx_duration >= t_g) ? t_g : t_g - packet->tx_duration);
 
     switch_state(DLL_STATE_IDLE);
     d7anp_signal_packet_transmitted(packet);
@@ -443,7 +417,6 @@ static void discard_tx()
     }
     else if (dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED)
     {
-        timer_cancel_event(&dll_guard_period_expiration_timer);
         guarded_channel = false;
     }
 
@@ -533,15 +506,17 @@ static void execute_csma_ca(void *arg)
     (void)arg;
     // TODO select Channel at front of the channel queue
 
+    // update guarded channel to check if it's actually still guarded
+    guarded_channel = (guarded_channel
+        && (timer_calculate_difference(timer_get_counter_value(), guarded_channel_time_stop) <= t_g));
     /*
      * During the period when the channel is guarded by the Requester, the transmission
      * of a subsequent requests, or a single response to a unicast request on the
      * guarded channel, is not conditioned by CSMA-CA
      */
-    if ((current_packet->type == SUBSEQUENT_REQUEST ||
-        current_packet->type == RESPONSE_TO_UNICAST ||
-         current_packet->type == REQUEST_IN_DIALOG_EXTENSION) && guarded_channel)
-    {
+    if ((current_packet->type == SUBSEQUENT_REQUEST || current_packet->type == RESPONSE_TO_UNICAST
+            || current_packet->type == REQUEST_IN_DIALOG_EXTENSION)
+        && guarded_channel) {
         DPRINT("Guarded channel, UNC CSMA-CA");
         switch_state(DLL_STATE_TX_FOREGROUND);
         error_t rtc = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx, &dll_signal_packet_transmitted);
@@ -936,7 +911,6 @@ void dll_init()
     timer_init_event(&dll_csma_timer, &execute_csma_ca);
     timer_init_event(&dll_scan_automation_timer, &execute_scan_automation);
     timer_init_event(&dll_background_scan_timer, &start_background_scan);
-    timer_init_event(&dll_guard_period_expiration_timer, &guard_period_expiration);
     timer_init_event(&dll_process_received_packet_timer, &packet_received);
 
     phy_init();
@@ -993,7 +967,6 @@ void dll_stop()
     timer_cancel_event(&dll_csma_timer);
     timer_cancel_event(&dll_scan_automation_timer);
     timer_cancel_event(&dll_background_scan_timer);
-    timer_cancel_event(&dll_guard_period_expiration_timer);
     timer_cancel_event(&dll_process_received_packet_timer);
 
     d7ap_fs_unregister_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID);

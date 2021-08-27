@@ -416,10 +416,8 @@ __LINK_C void scheduler_run()
 		}		
 #if defined FRAMEWORK_USE_WATCHDOG
 		if(!task_list_empty) //avoid rescheduling watchdog tasks when we didn't execute any tasks
-		{
-			timer_cancel_task(&__feed_watchdog_task);
 			timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
-		}
+
 		hw_watchdog_feed();
 		//we don't want to register wake-ups that only trigger the watchdog
 		//we also need to check that the watchdog task was the only task that was executed as there is a small chance that
