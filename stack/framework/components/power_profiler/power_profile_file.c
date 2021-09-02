@@ -42,6 +42,9 @@ static bool persist_file = true;
 
 static error_t power_profile_file_write(power_profile_file_t* power_profile_file);
 
+_Static_assert(POWER_PROFILE_FILE_SIZE == sizeof(power_profile_file_t),
+               "length define of power profile file is not the same size as the define");
+
 error_t power_profile_file_initialize()
 {
     // perform check on file sizes (needed in order to have decent packaging using the bytes member of the file)
@@ -51,8 +54,7 @@ error_t power_profile_file_initialize()
         .length = POWER_PROFILE_FILE_SIZE,
         .allocated_length = 200 };
     // perform check on file sizes (needed in order to have decent packaging using the bytes member of the file)
-    assert((POWER_PROFILE_FILE_SIZE == sizeof(power_profile_file_t))
-        && (permanent_file_header.allocated_length >= POWER_PROFILE_FILE_SIZE));
+    assert(permanent_file_header.allocated_length >= POWER_PROFILE_FILE_SIZE);
 
     error_t ret = d7ap_fs_init_file(POWER_PROFILE_FILE_ID, &permanent_file_header, NULL);
     switch (ret) {
