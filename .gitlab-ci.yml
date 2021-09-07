@@ -225,6 +225,9 @@ flash-lorawan-build:
   - make
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
+  artifacts:
+    paths:
+    - build/apps/sensor_push_lorawan/*
 
 set-up-lorawan-gateway-scheduled:
   tags:
@@ -261,7 +264,9 @@ flash-lorawan-build-scheduled:
   - make
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
-
+  artifacts:
+    paths:
+    - build/apps/sensor_push_lorawan/*
 lorawan_test_runner:
   tags:
   - testsuite
