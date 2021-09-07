@@ -203,7 +203,8 @@ set-up-lorawan-gateway:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $gateway_addr
   - ./add_device.sh $gateway_addr
-  - ./add_tests.sh $gateway_addr
+  #- ./add_tests.sh $gateway_addr
+  - ./add_one_test.sh $gateway_addr
 
 flash-lorawan-build:
   tags:
