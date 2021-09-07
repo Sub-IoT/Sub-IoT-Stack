@@ -201,7 +201,7 @@ set-up-lorawan-gateway:
   - gateway_addr="192.168.1.84"
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - ./reset_gw.sh $gateway_addr
+  - ./clear_tests_and_devices.sh $gateway_addr
   - ./add_device.sh $gateway_addr
   - ./add_tests.sh $gateway_addr
 
@@ -235,9 +235,10 @@ set-up-lorawan-gateway-scheduled:
   - gateway_addr="192.168.1.84"
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - ./reset_gw.sh $gateway_addr
+  - ./clear_tests_and_devices.sh $gateway_addr
   - ./add_device.sh $gateway_addr
-  - ./add_tests.sh $gateway_addr
+  - ./add_one_test.sh $gateway_addr
+  #- ./add_tests.sh $gateway_addr
 
 flash-lorawan-build-scheduled:
   tags:
@@ -274,6 +275,7 @@ lorawan_test_runner:
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
   - mv $gateway_addr full_results
   - python3 pull_results.py -g $gateway_addr
+  - python3 analyse_results.py
   # there is a bug on the gateway sw related to decoding the codr which can typically occur after a few days
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
@@ -281,7 +283,6 @@ lorawan_test_runner:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
       - Sub-IoT-testsuite/lorawan-test-scripts/full_results/*
-  #timeout: 3 hours
   only:
     variables:
       - $LORAWAN_GRAB_TEST_RESULTS=="true"
