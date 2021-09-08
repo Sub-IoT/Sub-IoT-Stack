@@ -130,6 +130,14 @@ void fifo_clear(fifo_t* fifo);
 uint16_t fifo_get_size(fifo_t* fifo);
 
 /**
+ * @brief Gives access to the continuos block of bytes currently in the FIFO
+ * @param fifo      Pointer to the fifo object
+ * @param pdata     Pointer to a data pointer in which the start of the continuos block will be written
+ * @param plen      Pointer to a length variable in which the length of the continuos block will be written
+ */
+void fifo_get_continuos_raw_data(fifo_t* fifo, uint8_t** pdata, uint16_t* plen);
+
+/**
  * @brief Returns if the FIFO is completely full or if there is still space left
  * @param fifo      Pointer to the fifo object
  * @return Flag indicating if FIFO is full

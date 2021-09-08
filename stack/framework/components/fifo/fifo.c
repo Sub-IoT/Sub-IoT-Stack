@@ -219,6 +219,19 @@ uint16_t fifo_get_size(fifo_t* fifo)
         return fifo->tail_idx + (fifo->max_size - fifo->head_idx);
 }
 
+void fifo_get_continuos_raw_data(fifo_t* fifo, uint8_t** pdata, uint16_t* plen)
+{
+    *pdata = fifo->buffer + fifo->head_idx;
+    if(fifo->is_full || (fifo->tail_idx < fifo->head_idx))
+    {
+        *plen = fifo->max_size - fifo->head_idx;
+    }
+    else
+    {
+        *plen = fifo->tail_idx - fifo->head_idx;
+    }
+}
+
 void fifo_clear(fifo_t* fifo)
 {
     fifo->head_idx = 0;

@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "hwuart.h"
+#include "hwdma.h"
 #include "alp_layer.h"
 #include "framework_defs.h"
 #include "platform_defs.h"
@@ -29,6 +30,15 @@
                                     // TODO baudrate dependent
 
 static uart_handle_t* uart;
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+static dma_handle_t* dma_rx;
+static dma_handle_t* dma_tx;
+static uint16_t tx_size;
+static bool tx_dma_busy = false;
+#ifndef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
+_Static_assert(false, "FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES should be defined if FRAMEWORK_MODEM_INTERFACE_USE_DMA is used.");
+#endif
+#endif
 
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static fifo_t rx_fifo;
@@ -99,7 +109,13 @@ static void modem_interface_enable(void)
 {
   DPRINT("uart enabled @ %i",timer_get_counter_value());
   assert(uart_enable(uart));
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+  assert(dma_channel_enable(dma_rx));
+  uart_start_read_bytes_via_DMA(uart, rx_buffer, RX_BUFFER_SIZE, PLATFORM_MODEM_INTERFACE_DMA_RX);
+  uart_tx_interrupt_enable(uart);
+#else 
   uart_rx_interrupt_enable(uart);
+#endif
   modem_listen_uart_inited = true;
 }
 
@@ -111,6 +127,13 @@ static void modem_interface_disable(void)
   modem_listen_uart_inited = false;
   assert(uart_disable(uart));
   uart_pull_down_rx(uart);
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+  assert(dma_channel_disable(dma_rx));
+  assert(dma_channel_disable(dma_tx));
+  uart_tx_interrupt_disable(uart);
+#else
+  uart_rx_interrupt_disable(uart);
+#endif
   DPRINT("uart disabled @ %i",timer_get_counter_value());
 }
 
@@ -120,7 +143,7 @@ static void modem_interface_disable(void)
  */
 static void release_receiver()
 {
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   DPRINT("release receiver\n");
   modem_interface_disable();
   hw_gpio_clr(uart_state_pin);
@@ -139,6 +162,35 @@ static void flush_modem_interface_tx_fifo(void *arg)
   uint8_t buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
   fifo_pop(&modem_interface_tx_fifo, buffer, len);
   uart_send_bytes(uart, buffer, len);
+#elif defined(FRAMEWORK_MODEM_INTERFACE_USE_DMA)
+  //Execute atomic, otherwise there is a chance that the DMA complete callback is called during execution of this code.
+  // If that would happen a DMA transfer with length 0 is started which will not trigger a complete callback
+  // This means that we have to fetch the data size inside the fifo inside the atomic part again
+  start_atomic();
+  len = fifo_get_size(&modem_interface_tx_fifo);
+  if(len > 0)
+  {
+    //log_print_string("flush %d", tx_dma_busy);
+    if(!tx_dma_busy)
+    {
+      assert(dma_channel_enable(dma_tx));
+      dma_channel_interrupt_enable(dma_tx);
+      uint8_t* buffer;
+      fifo_get_continuos_raw_data(&modem_interface_tx_fifo, &buffer, &tx_size);
+      uart_send_bytes_via_DMA(uart, buffer, tx_size, PLATFORM_MODEM_INTERFACE_DMA_TX);
+      tx_dma_busy = true;
+    }
+    //To keep awake
+    sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+  }
+  else
+  {
+    request_pending = false;
+    dma_channel_interrupt_disable(dma_tx);
+    release_receiver();
+    sched_post_task(&execute_state_machine);
+  }
+  end_atomic();
 #else
   // only send small chunks over uart each invocation, to make sure
   // we don't interfer with critical stack timings.
@@ -151,7 +203,7 @@ static void flush_modem_interface_tx_fifo(void *arg)
     uart_send_bytes(uart, chunk, len);
     request_pending = false;
     release_receiver();
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
     sched_post_task(&execute_state_machine);
 #endif
   } 
@@ -181,12 +233,12 @@ static void modem_listen(void* arg)
 }
 
 
-/** @Brief Schedules flush tx fifo when receiver is ready
+/** @Brief Handles the different states of the modem interrupt line handshake mechanism
  *  @return void
  */
 static void execute_state_machine()
 {
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
     switch (state) {
     case STATE_REC:
       if(hw_gpio_get_in(target_uart_state_pin))
@@ -194,7 +246,12 @@ static void execute_state_machine()
       SWITCH_STATE(STATE_RESP);
       //Intentional fall through
     case STATE_RESP:
+    {
       // response period completed, process the request
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+      size_t received_bytes = uart_stop_read_bytes_via_DMA(uart);
+      fifo_init_filled(&rx_fifo, rx_buffer, received_bytes, RX_BUFFER_SIZE);
+#endif
       sched_post_task(&process_rx_fifo);
       if(request_pending) {
         SWITCH_STATE(STATE_RESP_PENDING_REQ);
@@ -206,11 +263,24 @@ static void execute_state_machine()
         modem_interface_disable();
       }
       break;
+    }
     case STATE_IDLE:
       if(hw_gpio_get_in(target_uart_state_pin)) {
         // wake-up requested
-        SWITCH_STATE(STATE_REC);
-        modem_listen(NULL);
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+        if(fifo_get_size(&rx_fifo) == 0)
+        {
+#endif
+          SWITCH_STATE(STATE_REC);
+          modem_listen(NULL);
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+        }
+        else
+        {
+          // We are still processing previous data, wait until fifo is empty
+          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+        }
+#endif
         break;
       } else if(request_pending) { //check if we are really requesting a start
         SWITCH_STATE(STATE_REQ_START);
@@ -241,14 +311,24 @@ static void execute_state_machine()
       }
     case STATE_REQ_BUSY:
       if(request_pending) {
-        modem_interface_enable();
-        sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+        //if receiver reacts fast this code is executed twice (once due to the fall through of the previous state and once scheduled by the uart_int_cb)
+        //To be sure that modem_interface_enable is not called the second time when the transfer is already busy it is guaranteed that the code is only executed once.
+        if(!sched_is_scheduled(&flush_modem_interface_tx_fifo) 
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+        || !tx_dma_busy
+#endif
+        )
+        {
+          modem_interface_enable();
+          sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+        }
       } else if (!hw_gpio_get_in(target_uart_state_pin) || !uart_get_rx_port_state(uart)){
         SWITCH_STATE(STATE_IDLE);
         sched_post_task(&execute_state_machine);
-      } else
+      } else{
         sched_post_task(&execute_state_machine); 
         //keep active until target reacts
+      }
       break;
     case STATE_RESP_PENDING_REQ:
       assert(request_pending);
@@ -310,6 +390,10 @@ void modem_interface_clear_handler() {
     fifo_clear(&rx_fifo);
 
     //clear TX
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+    tx_dma_busy = false;
+    tx_size = 0;
+#endif
     request_pending = false;
     fifo_clear(&modem_interface_tx_fifo);
     SWITCH_STATE(STATE_IDLE);
@@ -408,6 +492,14 @@ static void process_rx_fifo(void *arg)
       sched_post_task(&process_rx_fifo);
   }
 }
+
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+static void uart_tx_cb()
+{
+  tx_dma_busy = false;
+  fifo_skip(&modem_interface_tx_fifo, tx_size);
+}
+#else
 /** @Brief put received UART data in fifo
  *  @return void
  */
@@ -419,10 +511,11 @@ static void uart_rx_cb(uint8_t data)
     assert(err == SUCCESS);
     end_atomic();
 
-#ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifndef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
     sched_post_task(&process_rx_fifo);
 #endif
 }
+#endif
 
 /** @Brief Processes events on UART interrupt line
  *  @return void
@@ -459,11 +552,16 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
   DPRINT("uart initialized");
   
   fifo_init(&rx_fifo, rx_buffer, sizeof(rx_buffer));
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
+  dma_rx = dma_channel_init(PLATFORM_MODEM_INTERFACE_DMA_RX);
+  dma_tx = dma_channel_init(PLATFORM_MODEM_INTERFACE_DMA_TX);
+  uart_set_tx_interrupt_callback(uart, &uart_tx_cb);
+#else
   modem_interface_set_rx_interrupt_callback(&uart_rx_cb);
-
+#endif
   modem_interface_set_error_callback(&uart_error_cb);
 
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   assert(sched_register_task(&modem_listen) == SUCCESS);
   DPRINT("using interrupt lines");
   assert(hw_gpio_configure_interrupt(target_uart_state_pin, GPIO_RISING_EDGE | GPIO_FALLING_EDGE, &uart_int_cb, NULL) == SUCCESS);
@@ -477,7 +575,7 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
 
 // When not using interrupt lines we keep uart enabled so we can use RX IRQ.
 // If the platform has interrupt lines the UART should be re-enabled when handling the modem interrupt
-#ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifndef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   modem_interface_enable();
 #endif
 
@@ -514,7 +612,7 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
   fifo_put(&modem_interface_tx_fifo, bytes, length);
   end_atomic();
 
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
 #else
   sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // state machine is not used when not using interrupt lines

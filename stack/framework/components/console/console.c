@@ -28,7 +28,7 @@ static bool flush_in_progress = false;
 
 static void flush_console_tx_fifo(void *arg) {
   uint8_t len = fifo_get_size(&console_tx_fifo);
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   // TODO remove this when ALP serial interface is removed from console
   if(!flush_in_progress)
     platform_app_mcu_wakeup();
@@ -49,7 +49,7 @@ static void flush_console_tx_fifo(void *arg) {
     fifo_pop(&console_tx_fifo, chunk, len);
     uart_send_bytes(uart, chunk, len);
     flush_in_progress = false;
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
     platform_app_mcu_release();
 #endif
   } else {

@@ -38,6 +38,7 @@
 #include "modem_interface.h"
 #include "platform_defs.h"
 #include "platform.h"
+#include "framework_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -87,8 +88,8 @@ void serial_interface_register() {
 
     alp_layer_register_interface(&alp_modem_interface);
 
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, SERIAL_MODEM_INTERFACE_UART_STATE_PIN, SERIAL_MODEM_INTERFACE_TARGET_UART_STATE_PIN);
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, PLATFORM_MODEM_INTERFACE_UART_STATE_PIN, PLATFORM_MODEM_INTERFACE_TARGET_UART_STATE_PIN);
 #else
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif

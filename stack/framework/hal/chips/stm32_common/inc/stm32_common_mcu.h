@@ -21,6 +21,7 @@
 
 #include "stm32_device.h"
 #include "hwgpio.h"
+#include "hwdma.h"
 
 #define PIN(port, pin)  ((GPIOA_BASE + (port << 10)) | pin)
 #define PIN_UNDEFINED 0xFFFFFFFF
@@ -59,6 +60,13 @@ typedef struct {
   pin_id_t sda_pin;
   uint32_t alternate;
 } i2c_port_t;
+
+
+typedef struct {
+  dma_peripheral_t peripheral;
+  uint8_t channel_nr;
+  IRQn_Type irq;
+} dma_channel_t;
 
 void stm32_common_mcu_init();
 

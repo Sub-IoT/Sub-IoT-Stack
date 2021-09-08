@@ -42,6 +42,9 @@ typedef struct uart_handle uart_handle_t;
 // callback handler for received byte
 typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
+// callback handler for transmit complete (only used when DMA is used)
+typedef void (*uart_tx_inthandler_t)(void);
+
 typedef enum
 {
   UART_NO_ERROR,
@@ -64,12 +67,21 @@ __LINK_C bool           uart_enable(uart_handle_t* uart);
 __LINK_C void           uart_send_byte(uart_handle_t* uart, uint8_t data);
 __LINK_C void           uart_send_bytes(uart_handle_t* uart, void const *data, size_t length);
 __LINK_C void           uart_send_string(uart_handle_t* uart, const char *string);
+__LINK_C void           uart_send_bytes_via_DMA(uart_handle_t* uart, void const *data, size_t length, uint8_t dma_channel_idx);
+
+__LINK_C void           uart_start_read_bytes_via_DMA(uart_handle_t* uart, void *data, size_t length, uint8_t dma_channel_idx);
+__LINK_C size_t         uart_stop_read_bytes_via_DMA(uart_handle_t* uart);
 
 __LINK_C error_t        uart_rx_interrupt_enable(uart_handle_t* uart);
 __LINK_C void           uart_rx_interrupt_disable(uart_handle_t* uart);
 
+__LINK_C error_t        uart_tx_interrupt_enable(uart_handle_t* uart);
+__LINK_C void           uart_tx_interrupt_disable(uart_handle_t* uart);
+
 __LINK_C void           uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                                        uart_rx_inthandler_t rx_handler);
+__LINK_C void           uart_set_tx_interrupt_callback(uart_handle_t* uart,
+                                                       uart_tx_inthandler_t tx_handler);
 
 __LINK_C void           cdc_set_rx_interrupt_callback(uart_rx_inthandler_t rx_handler);
 

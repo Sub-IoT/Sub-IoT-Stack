@@ -30,6 +30,7 @@
 #include "string.h"
 #include "ports.h"
 #include "errors.h"
+#include "hwdma.h"
 
 // private definition of the UART handle, passed around publicly as a pointer
 struct uart_handle {
@@ -37,6 +38,7 @@ struct uart_handle {
   UART_HandleTypeDef handle;
   uint32_t baudrate;
   uart_rx_inthandler_t rx_cb;
+  uart_tx_inthandler_t tx_cb;
   uart_error_handler_t error_cb;
 };
 
@@ -180,6 +182,12 @@ void uart_set_rx_interrupt_callback(uart_handle_t* uart,
   uart->rx_cb = rx_handler;
 }
 
+void uart_set_tx_interrupt_callback(uart_handle_t* uart,
+                                    uart_tx_inthandler_t tx_handler)
+{
+  uart->tx_cb = tx_handler;
+}
+
 void uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler) {
     uart->error_cb = error_handler;
 }
@@ -201,6 +209,19 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 //  HAL_UART_Receive(&uart->uart, data, length, timeout);
 //}
 
+void uart_start_read_bytes_via_DMA(uart_handle_t* uart, void *data, size_t length, uint8_t dma_channel_idx)
+{
+  uart->handle.hdmarx = dma_channel_get_hal_handle(dma_channel_idx);
+  uart->handle.hdmarx->Parent = uart;
+  HAL_UART_Receive_DMA(&uart->handle, data, length);
+}
+
+size_t uart_stop_read_bytes_via_DMA(uart_handle_t* uart)
+{
+  HAL_UART_DMAStop(&uart->handle);
+  return uart->handle.RxXferSize - uart->handle.hdmarx->Instance->CNDTR;
+}
+
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
   HAL_UART_Transmit(&uart->handle, (uint8_t*) data, length, HAL_MAX_DELAY);
@@ -211,6 +232,13 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
 void uart_send_string(uart_handle_t* uart, const char *string) {
   uart_send_bytes(uart, string, strlen(string));
+}
+
+void uart_send_bytes_via_DMA(uart_handle_t* uart, void const *data, size_t length, uint8_t dma_channel_idx)
+{
+  uart->handle.hdmatx = dma_channel_get_hal_handle(dma_channel_idx);
+  uart->handle.hdmatx->Parent = &uart->handle;
+  HAL_UART_Transmit_DMA(&uart->handle, (uint8_t*)data, length);
 }
 
 error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
@@ -232,6 +260,21 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
   HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
   HAL_NVIC_DisableIRQ(uart->uart_port->irq);
   LL_USART_DisableIT_RXNE(uart->handle.Instance);
+  LL_USART_DisableIT_ERROR(uart->handle.Instance);
+}
+
+error_t uart_tx_interrupt_enable(uart_handle_t* uart) {
+  if(uart->tx_cb == NULL) { return EOFF; }
+
+  HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
+  HAL_NVIC_EnableIRQ(uart->uart_port->irq);
+  LL_USART_EnableIT_ERROR(uart->handle.Instance);
+  return SUCCESS;
+}
+
+void uart_tx_interrupt_disable(uart_handle_t* uart) {
+  HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
+  HAL_NVIC_DisableIRQ(uart->uart_port->irq);
   LL_USART_DisableIT_ERROR(uart->handle.Instance);
 }
 
@@ -286,6 +329,21 @@ static void uart_irq_handler(USART_TypeDef* uart)
         } while (idx < UART_COUNT);
 
         assert(false); // we should not reach this point
+    }
+    if(LL_USART_IsActiveFlag_TC(uart) && LL_USART_IsEnabledIT_TC(uart))
+    {
+      uint8_t idx = 0;
+      do {
+        if (handle[idx].uart_port != NULL && handle[idx].handle.Instance == uart)
+        {
+          //Easy way would be to just call HAL_UART_IRQHandler but this pulls a lot of unnecessary code with it so we put the required code here.
+          LL_USART_DisableIT_TC(uart);
+          handle[idx].handle.gState = HAL_UART_STATE_READY;
+          handle[idx].tx_cb();
+          return;
+        }
+        idx++;
+      }while (idx < UART_COUNT);
     }
 }
 

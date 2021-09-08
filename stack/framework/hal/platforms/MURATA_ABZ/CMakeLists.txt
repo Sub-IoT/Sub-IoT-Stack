@@ -28,7 +28,6 @@ PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x 
 PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_VCC_TXCO "Platform has access to the VCC TCXO pin of sx127x chip" TRUE)
-PLATFORM_OPTION(PLATFORM_USE_MODEM_INTERRUPT_LINES "Enable interrupt lines to wake up modem and MCU for signaling serial communication" FALSE)
 PLATFORM_OPTION(PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION "A dedicated linker section is used for storing the systemfiles" TRUE) # on stm32l0 we use this to move the systemfiles to embedded EEPROM
 
 PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_UART     "0"      STRING "The UART port used by the serial modem interface.")
@@ -79,7 +78,6 @@ PLATFORM_HEADER_DEFINE(
     PLATFORM_SX127X_USE_DIO3_PIN
     PLATFORM_SX127X_USE_PA_BOOST
     PLATFORM_SX127X_USE_VCC_TXCO
-    PLATFORM_USE_MODEM_INTERRUPT_LINES
     PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION
 )
 
