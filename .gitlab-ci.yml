@@ -21,6 +21,7 @@ stages:
   - build stack
   - flash test boards 
   - run tests
+  - erase current lorawan
   - set up lorawan gateway
   - flash lorawan build
   - run lorawan tests
@@ -192,6 +193,17 @@ job 3:
     variables:
       - $LORAWAN_GRAB_TEST_RESULTS!="true"
 
+
+erase-current-lorawan:
+  tags:
+  - testsuite
+  stage: erase current lorawan
+  when: manual
+  script:
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - cd oss7-testsuite/lorawan-test-scripts
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
+
 set-up-lorawan-gateway:
   tags:
   - testsuite
@@ -203,8 +215,8 @@ set-up-lorawan-gateway:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $gateway_addr
   - ./add_device.sh $gateway_addr
-  #- ./add_tests.sh $gateway_addr
   - ./add_one_test.sh $gateway_addr
+  #- ./add_tests.sh $gateway_addr
 
 flash-lorawan-build:
   tags:
@@ -244,6 +256,17 @@ set-up-lorawan-gateway-scheduled:
   - ./add_one_test.sh $gateway_addr
   #- ./add_tests.sh $gateway_addr
 
+erase-current-lorawan-scheduled:
+  tags:
+  - testsuite
+  stage: erase current lorawan
+  only:
+  - schedules
+  script:
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - cd oss7-testsuite/lorawan-test-scripts
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
+
 flash-lorawan-build-scheduled:
   tags:
   - testsuite
@@ -267,6 +290,7 @@ flash-lorawan-build-scheduled:
   artifacts:
     paths:
     - build/apps/sensor_push_lorawan/*
+
 lorawan_test_runner:
   tags:
   - testsuite
@@ -281,7 +305,7 @@ lorawan_test_runner:
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
   - mv $gateway_addr full_results
   - python3 pull_results.py -g $gateway_addr
-  - python3 analyse_results.py
+  - python3 analyse_results.py --access_token $LORAWAN_CI_ACCESS_TOKEN
   # there is a bug on the gateway sw related to decoding the codr which can typically occur after a few days
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
