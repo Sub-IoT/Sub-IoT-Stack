@@ -29,8 +29,6 @@ include(${PROJECT_SOURCE_DIR}/cmake/framework_macros.cmake)
 
 #add the hal
 ADD_SUBDIRECTORY("hal")
-#add the non-hal components
-ADD_SUBDIRECTORY("components")
 
 #Add framework options && import them in the framework_defs.h file
 #This is NOT done seperately for each component since components can be overridden by a platform
@@ -133,11 +131,22 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_FS_LOG_ENABLED)
 SET(FRAMEWORK_USE_WATCHDOG "TRUE" CACHE BOOL "Select wheter to enable or disable watchdog")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_USE_WATCHDOG)
 
-SET(FRAMEWORK_POWER_PROFILE_FILE_ID "50" CACHE STRING "Specifies the file ID of the power profile file")
-FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_POWER_PROFILE_FILE_ID)
+SET(FRAMEWORK_USE_POWER_PROFILE "TRUE" CACHE BOOL "Select wheter to enable or disable power profiling")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_USE_POWER_PROFILE)
 
 SET(FRAMEWORK_POWER_PROFILE_RF "TRUE" CACHE BOOL "Select wheter to enable or disable RF power profiling")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_POWER_PROFILE_RF)
+
+IF(NOT FRAMEWORK_USE_POWER_PROFILE)
+  LIST(APPEND FRAMEWORK_EXCLUDE_LIBS FRAMEWORK_COMPONENT_power_profiler)
+  SET(FRAMEWORK_POWER_PROFILE_RF "FALSE")
+ENDIF()
+
+SET(FRAMEWORK_POWER_PROFILE_FILE_ID "50" CACHE STRING "Specifies the file ID of the power profile file")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_POWER_PROFILE_FILE_ID)
+
+#add the non-hal components
+ADD_SUBDIRECTORY("components")
 
 #Generate the 'framework_defs.h'
 FRAMEWORK_BUILD_SETTINGS_FILE()

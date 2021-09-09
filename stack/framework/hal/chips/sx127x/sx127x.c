@@ -31,6 +31,7 @@
 
 #include "debug.h"
 #include "log.h"
+#include "framework_defs.h"
 #include "hwradio.h"
 #include "hwdebug.h"
 #include "hwspi.h"
@@ -127,9 +128,11 @@ static uint8_t rx_bw_khz = 0;
 static uint8_t rssi_smoothing_full = 0;
 static int8_t current_tx_power;
 
+#ifdef FRAMEWORK_POWER_PROFILE_RF
 static timer_tick_t tx_start_time = 0;
 static timer_tick_t rx_start_time = 0;
 static timer_tick_t standby_start_time = 0;
+#endif //FRAMEWORK_POWER_PROFILE_RF
 
 static volatile bool fifo_level_irq_triggered = false;
 
@@ -991,6 +994,7 @@ void set_state_rx() {
 
 static void update_active_times(hw_radio_state_t opmode)
 {    
+#ifdef FRAMEWORK_POWER_PROFILE_RF
     timer_tick_t current_time = timer_get_counter_value();
 
     uint8_t curr_mode = lora_mode ? POWER_PROFILE_LORA : POWER_PROFILE_D7;
@@ -1031,6 +1035,7 @@ static void update_active_times(hw_radio_state_t opmode)
     }
     else
         rx_start_time = rx_start_time ? rx_start_time : current_time;
+#endif //FRAMEWORK_POWER_PROFILE_RF
 }
 
 void hw_radio_set_opmode(hw_radio_state_t opmode) {

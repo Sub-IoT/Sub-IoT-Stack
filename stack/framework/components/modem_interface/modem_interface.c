@@ -8,6 +8,7 @@
 #include "fifo.h"
 #include "scheduler.h"
 #include "modem_interface.h"
+#include "modules_defs.h"
 #include "hal_defs.h"
 #include "debug.h"
 #include "errors.h"
@@ -463,8 +464,10 @@ static void process_rx_fifo(void *arg)
         logging_handler(&payload_fifo);
       else if (header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_PING_REQUEST)
       {
+#ifdef MODULE_ALP
         // free all alp commands
         alp_layer_free_commands();
+#endif
         uint8_t ping_reply[1]={0x02};
         fifo_skip(&payload_fifo,1);
         modem_interface_transfer_bytes(ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
