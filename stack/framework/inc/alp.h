@@ -42,7 +42,7 @@
 
 #include "modules_defs.h"
 
-#define MODULE_ALP_INTERFACE_CNT 5
+#define MODULE_ALP_INTERFACE_CNT 6
 
 #define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
 #define ALP_QUERY_COMPARE_BODY_MAX_SIZE 100
@@ -59,8 +59,9 @@ typedef enum
     ALP_ITF_ID_HOST = 0x00,
     ALP_ITF_ID_SERIAL = 0x01, // not part of the spec
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
-    ALP_ITF_ID_NFC = 0x04,
-    ALP_ITF_ID_D7ASP = 0xD7
+    ALP_ITF_ID_NFC = 0x04, // not part of the spec
+    ALP_ITF_ID_BLE = 0x05, // not part of the spec
+    ALP_ITF_ID_D7ASP = 0xD7,
 } alp_itf_id_t;
 
 typedef enum {
