@@ -236,6 +236,7 @@ void fifo_clear(fifo_t* fifo)
 {
     fifo->head_idx = 0;
     fifo->tail_idx = 0;
+    fifo->is_full = false;
 }
 
 bool fifo_is_full(fifo_t* fifo) {
