@@ -101,6 +101,11 @@ bool uart_enable(uart_handle_t* uart) {
   uart->handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   uart->handle.Init.OverSampling = UART_OVERSAMPLING_16;
   uart->handle.Instance = uart->uart_port->uart;
+  if(uart->uart_port->swap_tx_rx)
+  {
+    uart->handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_SWAP_INIT;
+    uart->handle.AdvancedInit.Swap = UART_ADVFEATURE_SWAP_ENABLE;
+  }
   if (HAL_UART_Init(&(uart->handle)) != HAL_OK)
   {
     return false;

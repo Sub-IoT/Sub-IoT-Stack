@@ -53,6 +53,7 @@ typedef struct {
   uint32_t alternate;
   USART_TypeDef* uart;
   IRQn_Type irq;
+  bool swap_tx_rx;
 } uart_port_t;
 
 typedef struct {
