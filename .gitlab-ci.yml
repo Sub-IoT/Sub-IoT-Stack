@@ -305,7 +305,7 @@ lorawan_test_runner:
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
   - mv $gateway_addr full_results
   - python3 pull_results.py -g $gateway_addr
-  - python3 analyse_results.py --access_token $LORAWAN_CI_ACCESS_TOKEN
+  - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN} --job_token ${CI_JOB_TOKEN}
   # there is a bug on the gateway sw related to decoding the codr which can typically occur after a few days
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
