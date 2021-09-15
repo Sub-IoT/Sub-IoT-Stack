@@ -64,6 +64,10 @@ job 1:
     - git fetch --all
     - git reset --hard origin/$CI_COMMIT_REF_NAME
   script: 
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
+  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y -DAPP_MODEM_FORWARD_ALP_OVER_SERIAL=y
@@ -200,8 +204,8 @@ erase-current-lorawan:
   stage: erase current lorawan
   when: manual
   script:
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
-  - cd oss7-testsuite/lorawan-test-scripts
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
 
 set-up-lorawan-gateway:
@@ -224,7 +228,7 @@ flash-lorawan-build:
   stage: flash lorawan build
   when: manual
   script:
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
   - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
   - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
   - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
@@ -263,8 +267,8 @@ erase-current-lorawan-scheduled:
   only:
   - schedules
   script:
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
-  - cd oss7-testsuite/lorawan-test-scripts
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
 
 flash-lorawan-build-scheduled:
@@ -274,7 +278,7 @@ flash-lorawan-build-scheduled:
   only:
   - schedules
   script: 
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
   - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
   - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
   - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
