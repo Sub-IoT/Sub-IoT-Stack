@@ -48,6 +48,7 @@ A quick run-down of what happens:
 * Based on the toolchain a number of supported platform options are available. By default the `B_L072Z_LRWAN1` platform is selected. If you want another platform you can specify this using `-DPLATFORM=<platform-name>`. Each subdirectory beneath `stack/framework/hal/platforms` contains a different platform, and the platform name to use is equal to the name of the subdirectory.
 * A platform is a combination of one or more chips (MCU or RF) and the wiring between them. Based on the platform a number of chips will be added to the build, in this example the `stm32l0xx` MCU and the `sx127x` RF chip.
 * Applications can be added by setting `-DAPP_<name>=y`. The name of the application is the name of a subdirectory of stack/apps, but uppercased. In this example we enabled the sensor and gateway application.
+* You can change these options, and many more through ccmake interactive console interface as well.
 
 # Build it!
 
@@ -110,7 +111,7 @@ Please refer to the [running the examples section]({{ site.baseurl }}{% link _do
 
 # MS Windows support
 
-While the above is written for Unix OS's (GNU/Linux and Mac OS X) it works on MS Windows as well. On MS Windows you should install the mingw32 compiler and use the "MinGW32 Makefiles" generator option when running cmake. Finally, you should use the `mingw32-make` command instead of `make`.
+While the above is written for Unix OS's (GNU/Linux and Mac OS X) it works on MS Windows as well. On MS Windows you should install WSL, Windows Subsystem for Linux, to be able to build the code without any problems.
 
 # Unittests on native platform
 

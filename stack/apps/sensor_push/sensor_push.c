@@ -54,8 +54,6 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
-uint8_t alp_command[128];
-
 // Define the D7 interface configuration used for sending the ALP command on
 
 static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){

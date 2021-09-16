@@ -53,24 +53,24 @@
     led_off(0);
   }
 
-  void led_blink()
+  void led_blink(alp_command_t* command, alp_interface_status_t* origin_itf_status)
   {
+    log_print_string("gotten message from interface 0x%X", origin_itf_status ? origin_itf_status->itf_id : 0xFF);
     led_on(0);
 
     timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
   }
+  static alp_init_args_t alp_init_args = { .alp_command_result_cb = &led_blink };
+#else
+  static alp_init_args_t alp_init_args;
 #endif
 
-static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-  d7ap_fs_init();
-  d7ap_init();
+  alp_layer_init(&alp_init_args, true);
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
-
-  alp_layer_init(&alp_init_args, true);
 
 #ifdef HAS_LCD
   lcd_write_string("GW %s", _GIT_SHA1);

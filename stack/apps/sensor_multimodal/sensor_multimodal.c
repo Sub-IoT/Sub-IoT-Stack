@@ -44,157 +44,122 @@
 
 #define DEBUG_PRINTF(...) 							log_print_string(__VA_ARGS__)
 
-#define LORAWAN_APP_PORT                10
-#define LORAWAN_MTU                     51
-#define LORAWAN_DEVICE_ADDR             0
-#define LORAWAN_APP_SESSION_KEY         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-#define LORAWAN_NETW_SESSION_KEY        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-#define SENSOR_FILE_ID                  0x40
+#define SENSOR_FILE_ID                  0x42
 #define SENSOR_FILE_SIZE                2
 #define SENSOR_INTERVAL_LORAWAN_SEC     TIMER_TICKS_PER_SEC * 60
 #define SENSOR_INTERVAL_D7AP_SEC        TIMER_TICKS_PER_SEC * 20
 
-typedef struct {
-  char name[4];
-  uint16_t mtu;
-  void (*init)(void);
-  void (*stop)(void);
-  uint8_t (*send)(uint8_t* buffer, uint16_t length);
-} network_driver_t;
+static uint8_t devEui[] = { 0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x81 };
+static uint8_t appEui[] = { 0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x9F };
+static uint8_t appKey[] = { 0x7E, 0xEF, 0x56, 0xEC, 0xDA, 0x1D, 0xD5, 0xA4, 0x70, 0x59, 0xFD, 0x35, 0x9C, 0xE6, 0x80, 0xCD };
 
-network_driver_t lora;
-network_driver_t d7;
-network_driver_t* current_network_driver;
+typedef enum {
+  D7_ACTIVE,
+  LORA_ACTIVE
+} active_network_t;
 
+static active_network_t current_network;
 
 static alp_init_args_t alp_init_args;
 
 // Define the D7 interface configuration used for sending the ALP command on
-static alp_interface_config_d7ap_t itf_cfg = {
+static alp_interface_config_d7ap_t d7_itf_cfg = {
   .itf_id = ALP_ITF_ID_D7ASP,
   .d7ap_session_config = {
     .qos = {
-      .qos_resp_mode = SESSION_RESP_MODE_ANY,
-      .qos_retry_mode = SESSION_RETRY_MODE_NO
+        .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
+        .qos_retry_mode = SESSION_RETRY_MODE_NO
     },
     .dormant_timeout = 0,
     .addressee = {
-      .ctrl = {
-        .nls_method = AES_NONE,
-        .id_type = ID_TYPE_NOID,
-      },
-      .access_class = 0x01,
-      .id = 0
+        .ctrl = {
+            .nls_method = AES_NONE,
+            .id_type = ID_TYPE_NOID,
+        },
+        .access_class = 0x01,
+        .id = { 0 }
     }
   }
 };
 
-uint8_t network_driver_send(uint8_t *data, uint16_t length) {
-  DEBUG_PRINTF("network_driver_send(): sending %d bytes of data", length);
-  return current_network_driver->send(data, length);
-}
 
+// Define the lora interface configuration used for sending the ALP command on
+static alp_interface_config_lorawan_otaa_t lora_itf_cfg = { .itf_id = ALP_ITF_ID_LORAWAN_OTAA,
+    .lorawan_session_config_otaa
+    = { .adr_enabled = true, .application_port = 2, .data_rate = 0, .request_ack = true } };
+
+static void execute_sensor_measurement();
+
+// alp layer will answer if it succeeded or not
 void on_alp_command_completed_cb(uint8_t tag_id, bool success) {
   if (success)
-    log_print_string("Command completed successfully");
+    DEBUG_PRINTF("Command completed successfully\n");
   else
-    log_print_string("Command failed, no ack received");
+    DEBUG_PRINTF("Command failed, no ack received\n");
 }
 
+// alp layer will let you know if any noticable events happened or you got an answer including metadata
 void on_alp_command_result_cb(alp_command_t* alp_command, alp_interface_status_t* origin_itf_status)
 {
-    if (origin_itf_status && (origin_itf_status->itf_id == ALP_ITF_ID_D7ASP) && (origin_itf_status->len > 0)) {
-        d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)origin_itf_status->itf_status);
-        log_print_string("recv response @ %i dB link budget from:", d7_result->rx_level);
-        log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
+    if(origin_itf_status && (origin_itf_status->len > 0)) {
+        // gotten answer from D7
+        if(origin_itf_status->itf_id == ALP_ITF_ID_D7ASP) {
+            d7ap_session_result_t* d7_result = (d7ap_session_result_t*)origin_itf_status->itf_status;
+            DEBUG_PRINTF("recv response @ %i dB link budget from:", d7_result->link_budget);
+            log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
+        // gotten answer from LoRaWAN
+        } else if(origin_itf_status->itf_id == ALP_ITF_ID_LORAWAN_OTAA) {
+            lorawan_session_result_t* lora_result = (lorawan_session_result_t*)origin_itf_status->itf_status;
+            if(lora_result->error_state == LORAWAN_STACK_JOINED) {
+                DEBUG_PRINTF("lora joined, sending message again");
+                sched_post_task(&execute_sensor_measurement);
+            } else if(lora_result->error_state == LORAWAN_STACK_ERROR_OK) {
+                DEBUG_PRINTF("tried to transmit %i times", lora_result->attempts);
+            }
+        }
     }
-    log_print_string("response payload:");
-    log_print_data(alp_command->alp_command, fifo_get_size(&alp_command->alp_command_fifo));
-    fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
+    if(fifo_get_size(&alp_command->alp_command_fifo)) {
+        DEBUG_PRINTF("response payload:");
+        log_print_data(alp_command->alp_command, fifo_get_size(&alp_command->alp_command_fifo));
+        fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
+    }
 }
 
-static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
-  alp_command_t* command = alp_layer_command_alloc(false, false);
-  
-  // forward to the D7 interface
-  alp_append_forward_action(command, (alp_interface_config_t*)&itf_cfg, sizeof(itf_cfg));
+static uint8_t transmit(uint8_t* alp, uint16_t len) {
+  DEBUG_PRINTF("sending over %s", (current_network == D7_ACTIVE) ? "D7" : "LoRa");
+  alp_command_t* command = alp_layer_command_alloc(true, true);
+  if(!command)
+      log_print_error_string("could not allocate command, make sure there are enough commands active (using cmake "
+                             "option MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT)");
+
+  alp_interface_config_t* itf_cfg = (current_network == D7_ACTIVE) ? (alp_interface_config_t*) &d7_itf_cfg : (alp_interface_config_t*) &lora_itf_cfg;
+  uint8_t itf_cfg_len = (current_network == D7_ACTIVE) ? sizeof(d7_itf_cfg) : sizeof(lora_itf_cfg);
+
+  alp_append_forward_action(command, itf_cfg, itf_cfg_len);
 
   fifo_put(&command->alp_command_fifo, alp, len);
-  
+
+  alp_layer_process(command);
+
   return 0;
 }
 
-static void init_d7ap() {
-  d7ap_init();
-  d7ap_fs_write_dll_conf_active_access_class(0x21);
-  DEBUG_PRINTF("DASH7 init");
-}
-
-static void lora_init(void) {
-  DEBUG_PRINTF("LoRa init");
-
-  static lorawan_session_config_abp_t lorawan_session_config = {
-     .appSKey = LORAWAN_APP_SESSION_KEY,
-     .nwkSKey = LORAWAN_NETW_SESSION_KEY,
-     .devAddr = LORAWAN_DEVICE_ADDR,
-     .request_ack = false
-  };
-
-  lorawan_register_cbs(NULL, NULL, NULL);
-  lorawan_stack_init_abp(&lorawan_session_config);
-}
-
-static uint8_t lora_send(uint8_t* buffer, uint16_t length) {
-  lorawan_stack_status_t err;
-  err = lorawan_stack_send(buffer, length, LORAWAN_APP_PORT, false);
-
-  DEBUG_PRINTF("network_driver_send(): lorawan_stack_send returned %d, ", err);
-  if (err == LORAWAN_STACK_ERROR_OK) {
-    led_toggle(0);
-    DEBUG_PRINTF("Ok!");
-    return 1;
-  } else {
-    DEBUG_PRINTF("Packet not sent!");
-    return 0;
-  }
-}
-
-void network_drivers_init() {
-  lora.mtu = LORAWAN_MTU;
-  lora.init = &lora_init;
-  lora.send = &lora_send;
-  lora.stop = &lorawan_stack_deinit;
-  memcpy(lora.name, "LoRa", 4);
-
-  d7.init = &init_d7ap;
-  d7.stop = &d7ap_stop;
-  d7.send = &transmit_d7ap;
-  memcpy(d7.name, "DSH7", 4);
-}
-
 static void on_button_pressed(button_id_t button_id) {
-  network_driver_t* nd = &d7;
-  if(current_network_driver == &d7)
-    nd = &lora;
+  // alp layer will handle the switch
+  DEBUG_PRINTF("Switching from %s", (current_network == D7_ACTIVE) ? "D7 to LoRa" : "LoRa to D7");
 
-  DEBUG_PRINTF("Switching from %s to %s", current_network_driver->name, nd->name);
-  // stop previous network driver
-  current_network_driver->stop();
-
-  // init new network driver
-  current_network_driver = nd;
-  current_network_driver->init();
-  DEBUG_PRINTF("Switching done");
+  current_network = !current_network;
 }
 
-void execute_sensor_measurement()
+static void execute_sensor_measurement()
 {
   // first get the sensor reading ...
-  int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
+  static int16_t temperature = 0; // in decicelsius. When there is no sensor, we transmit a rising number
 
 #if defined USE_HTS221
   HTS221_Get_Temperature(hts221_handle, &temperature);
+#else
+  temperature++;
 #endif
 
   // Generate ALP command. We do this manually for now (until we have an API for this).
@@ -214,26 +179,27 @@ void execute_sensor_measurement()
 
   temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
   memcpy(alp_command + 4, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
 
-  current_network_driver->send(alp_command, sizeof(alp_command));
+  transmit(alp_command, sizeof(alp_command));
 
-  timer_tick_t delay = SENSOR_INTERVAL_D7AP_SEC;
-  if(current_network_driver == &lora)
-    delay = SENSOR_INTERVAL_LORAWAN_SEC;
+  timer_tick_t delay = (current_network == D7_ACTIVE) ? SENSOR_INTERVAL_D7AP_SEC : SENSOR_INTERVAL_LORAWAN_SEC;
 
+  DEBUG_PRINTF("sensor measurement executed with temperature %i, now waiting %i ticks to measure again", temperature, delay);
   timer_post_task_delay(&execute_sensor_measurement, delay);
 }
 
 void bootstrap() {
   DEBUG_PRINTF("Device booted\n");
 
-  network_drivers_init();
-  current_network_driver = &d7;
-  current_network_driver->init();
-
   alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
   alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
   alp_layer_init(&alp_init_args, false);
+
+  // this can also be specified in d7ap_fs_data.c but is here for clarity
+  d7ap_fs_write_file(D7A_FILE_UID_FILE_ID, 0, devEui, D7A_FILE_UID_SIZE, ROOT_AUTH);
+  d7ap_fs_write_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, appEui, 8, ROOT_AUTH);
+  d7ap_fs_write_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 8, appKey, 16, ROOT_AUTH);
 
   ubutton_register_callback(0, &on_button_pressed);
 

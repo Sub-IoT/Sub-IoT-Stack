@@ -46,9 +46,9 @@
 // which results in reading this file and sending the result to the D7 interface. The D7 session is configured not to request ACKs.
 // Temperature data is used as a sensor value, when a HTS221 is available, otherwise value 0 is used.
 
-#define SENSOR_FILE_ID           0x40
-#define ACTION_FILE_ID           0x41
-#define INTERFACE_FILE_ID        0x42
+#define SENSOR_FILE_ID           0x42
+#define ACTION_FILE_ID           0x43
+#define INTERFACE_FILE_ID        0x44
 
 #define SENSOR_FILE_SIZE         2
 #define ACTION_FILE_SIZE         20
@@ -93,7 +93,7 @@ void init_user_files()
   };
 
   d7ap_fs_file_header_t action_file_header = (d7ap_fs_file_header_t) {
-      .file_properties.action_protocol_enabled = 0,
+      .file_properties.action_protocol_enabled = false,
       .file_properties.storage_class = FS_STORAGE_PERMANENT,
       .file_permissions = (file_permission_t) { .guest_read = true, .user_read = true },
       .length = sizeof(alp_command),
@@ -117,15 +117,15 @@ void init_user_files()
             .id_type = ID_TYPE_NOID,
           },
           .access_class = 0x01,
-          .id = 0
+          .id = { 0 }
         }
     }
   };
 
   d7ap_fs_file_header_t itf_file_header = (d7ap_fs_file_header_t){
-      .file_properties.action_protocol_enabled = 0,
+      .file_properties.action_protocol_enabled = false,
       .file_properties.storage_class = FS_STORAGE_PERMANENT,
-      .file_permissions = 0, // TODO
+      .file_permissions = (file_permission_t) { .guest_read = true, .user_read = true },
       .length = sizeof(alp_interface_config_t),
       .allocated_length = sizeof(alp_interface_config_t),
   };
@@ -134,10 +134,10 @@ void init_user_files()
 
   // finally, register the sensor file, configured to use D7AActP
   d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
-    .file_properties.action_protocol_enabled = 1,
+    .file_properties.action_protocol_enabled = true,
     .file_properties.action_condition = D7A_ACT_COND_WRITE,
     .file_properties.storage_class = FS_STORAGE_PERMANENT,
-    .file_permissions = 0, // TODO
+    .file_permissions = { .user_read = true, .guest_read = true },
     .action_file_id = ACTION_FILE_ID,
     .interface_file_id = INTERFACE_FILE_ID,
     .length = SENSOR_FILE_SIZE,
@@ -152,8 +152,6 @@ void bootstrap()
     log_print_string("Device booted\n");
     
     alp_layer_init(NULL, false);
-    
-    d7ap_init();
 
     init_user_files();
 

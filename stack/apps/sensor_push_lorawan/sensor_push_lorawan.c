@@ -50,15 +50,13 @@
   #include "hwi2c.h"
 #endif
 
-#define SENSOR_FILE_ID           0x40
+#define SENSOR_FILE_ID           0x42
 #define SENSOR_FILE_SIZE         2
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 120
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 60
 
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
 #endif
-
-uint8_t alp_command[128];
 
 // Define the LoRaWAN interface configuration used for sending the ALP command on
 static alp_interface_config_lorawan_otaa_t itf_config = (alp_interface_config_lorawan_otaa_t){
@@ -70,6 +68,10 @@ static alp_interface_config_lorawan_otaa_t itf_config = (alp_interface_config_lo
     .data_rate = 0
   }
 };
+
+static uint8_t devEui[] = { 0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x81 };
+static uint8_t appEui[] = { 0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x9F };
+static uint8_t appKey[] = { 0x7E, 0xEF, 0x56, 0xEC, 0xDA, 0x1D, 0xD5, 0xA4, 0x70, 0x59, 0xFD, 0x35, 0x9C, 0xE6, 0x80, 0xCD };
 
 void execute_sensor_measurement()
 {
@@ -121,6 +123,11 @@ void bootstrap()
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_layer_init(&alp_init_args, false);
+
+    // this can also be specified in d7ap_fs_data.c but is here for clarity
+    d7ap_fs_write_file(D7A_FILE_UID_FILE_ID, 0, devEui, D7A_FILE_UID_SIZE, ROOT_AUTH);
+    d7ap_fs_write_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 0, appEui, 8, ROOT_AUTH);
+    d7ap_fs_write_file(USER_FILE_LORAWAN_KEYS_FILE_ID, 8, appKey, 16, ROOT_AUTH);
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000, true);

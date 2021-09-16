@@ -15,7 +15,7 @@ this also allows logging using RTT (see [here for more info]({{ site.baseurl }}{
 
 The serial console on this platform is configured to use UART2 by default. This has the advantage that is useable from the VCOM which is exposed by ST-LINK and JLink (see above).
 This means that after plugging in your device using the ST-LINK USB connection you will get a serial interface (next to the USB mass storage device). This interface can be used for interacting with the console or the serial modem interface.
-More information on how to enable the JLink VCOM funtionalility can be found [here](https://wiki.segger.com/Using_J-Link_VCOM_functionality).
+More information on how to enable the JLink VCOM functionalility can be found [here](https://wiki.segger.com/Using_J-Link_VCOM_functionality).
 
 # Low power operation
 

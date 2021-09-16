@@ -16,15 +16,27 @@
  * limitations under the License.
  */
 
+// this example is back to basics. We're only using the scheduler, timer and leds here.
+// Toggling the leds at a different interval while the buttons can also control the leds
+
 #include "hwleds.h"
 #include "scheduler.h"
 #include "timer.h"
 #include "log.h"
 #include "debug.h"
 #include "hwwatchdog.h"
-#include "console.h"
-
+#include "framework_defs.h"
 #include "platform.h"
+
+#ifdef FRAMEWORK_USE_POWER_PROFILE
+	#error "This example can't be used in combination with use_power_profile as the filesystem is not initialized here"
+#endif
+
+#define LED0_PERIOD TIMER_TICKS_PER_SEC
+#define LED1_PERIOD TIMER_TICKS_PER_SEC * 2
+
+// this is needed as we're not using the filesystem, also possible to remove blockdevices from platf_main.c
+uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 #if PLATFORM_NUM_BUTTONS > 0
 #include "button.h"
@@ -32,39 +44,25 @@
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
-	console_print("Button Pressed\r\n");
 	led_toggle(0);
 }
 
 #endif
 
-void led_off_callback()
+void led0_toggle_callback()
 {
-	led_off(0);
-	log_print_string("Toggled off %d", 0);
-
-}
-
-void led_on_callback()
-{
-  led_toggle(0);
-  timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC * 70);
-  //timer_post_task_delay(&led_off_callback, TIMER_TICKS_PER_SEC*0.050);
-	log_print_string("Toggled on %d", 0);
-	console_print("Toggle led 0\r\n");
-
-	hw_watchdog_feed();
-
+	led_toggle(0);
+	timer_post_task_delay(&led0_toggle_callback, LED0_PERIOD);
+	log_print_string("Toggled on 0");
 }
 
 
 
-void timer1_callback()
+void led1_toggle_callback()
 {
 	led_toggle(1);
-	timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
-	log_print_string("Toggled led %d", 1);
-	console_print("Toggle led 1\r\n");
+	timer_post_task_delay(&led1_toggle_callback, LED1_PERIOD);
+	log_print_string("Toggled led 1");
 }
 
 void bootstrap()
@@ -73,14 +71,12 @@ void bootstrap()
 	led_on(1);
 
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
-	console_print("Device Booted\r\n");
 
-    sched_register_task(&led_on_callback);
-    sched_register_task(&led_off_callback);
-    sched_register_task(&timer1_callback);
+    sched_register_task(&led0_toggle_callback);
+    sched_register_task(&led1_toggle_callback);
 
-    timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
-    //timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
+    timer_post_task_delay(&led0_toggle_callback, LED0_PERIOD);
+    timer_post_task_delay(&led1_toggle_callback, LED1_PERIOD);
 
 #if PLATFORM_NUM_BUTTONS > 0
     int i= 0;
