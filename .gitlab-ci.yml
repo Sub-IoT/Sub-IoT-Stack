@@ -64,10 +64,6 @@ job 1:
     - git fetch --all
     - git reset --hard origin/$CI_COMMIT_REF_NAME
   script: 
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
-  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y -DAPP_MODEM_FORWARD_ALP_OVER_SERIAL=y
@@ -81,7 +77,7 @@ job 1:
    - build/apps/gateway/*
    - build/apps/modem/*
    - build/apps/sensor_push/*
-<<<<<<< HEAD
+
 job 1b:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags: 
@@ -149,13 +145,10 @@ build sample apps:
   - rm -rf *
   - cmake ../stack/ -DAPP_SENSOR_MULTIMODAL=y -DAPP_SENSOR_PUSH_LORAWAN=y -DPLATFORM=$platform -DMODULE_LORAWAN=y -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DMODULE_LORAWAN_REGION=MODEM_REGION_EU868
   - make -j
-
-=======
   only:
     variables:
       - $LORAWAN_GRAB_TEST_RESULTS!="true"
   
->>>>>>> ae7397b3 (removing check_if_finished script, as it requires the pipeline to be running for a long time. Instead, a new variable is defined in CI. If this variable is false, the first five jobs run. If it is true, the final job (to grab the results) runs. A new call of the pipeline will be performed by the gateway when the testset finishes.)
 job 2:
   tags:
   - testsuite
@@ -228,10 +221,6 @@ flash-lorawan-build:
   stage: flash lorawan build
   when: manual
   script:
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
-  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - cd stack/modules/lorawan
   - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
   - cd ../../..
@@ -278,10 +267,6 @@ flash-lorawan-build-scheduled:
   only:
   - schedules
   script: 
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 --no-check-certificate
-  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - cd stack/modules/lorawan
   - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
   - cd ../../..
@@ -309,10 +294,10 @@ lorawan_test_runner:
   - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
   - mv $gateway_addr full_results
   - python3 pull_results.py -g $gateway_addr
-  - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN} --job_token ${CI_JOB_TOKEN}
   # there is a bug on the gateway sw related to decoding the codr which can typically occur after a few days
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
+  - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN}
   artifacts:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
