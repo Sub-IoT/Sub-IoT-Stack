@@ -216,6 +216,7 @@ set-up-lorawan-gateway:
   #- ./add_tests.sh $gateway_addr
 
 flash-lorawan-build:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
   - testsuite
   stage: flash lorawan build
@@ -227,7 +228,7 @@ flash-lorawan-build:
   - cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
-  - make
+  - make -j
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   artifacts:
@@ -261,6 +262,7 @@ erase-current-lorawan-scheduled:
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
 
 flash-lorawan-build-scheduled:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
   - testsuite
   stage: flash lorawan build
@@ -273,7 +275,7 @@ flash-lorawan-build-scheduled:
   - cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
-  - make
+  - make -j
   - cd apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   artifacts:
