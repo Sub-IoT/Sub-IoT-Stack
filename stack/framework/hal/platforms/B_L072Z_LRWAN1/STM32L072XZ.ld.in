@@ -50,6 +50,7 @@ SECTIONS
     } > FLASH
     __exidx_end = .;
 
+    . = ALIGN(4);
     __etext = .;
     _sidata = .;
 
@@ -115,6 +116,7 @@ SECTIONS
         __data_end__ = .;
         _edata = .;
 
+        ASSERT((${FLASH_LENGTH} >= ((__etext - ${FLASH_ORIGIN}) + (_edata - _sdata))), "Error: The combination of flash and data will not fit in ROM with length ${FLASH_LENGTH}");
     } > RAM
 
     .bss :

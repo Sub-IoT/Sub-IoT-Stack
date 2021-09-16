@@ -1,23 +1,53 @@
 stages:
+  - init
   - build stack
   - flash test boards 
   - run tests
 variables:
-  GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_STRATEGY: none
+  GIT_SUBMODULE_STRATEGY: none
+  DOCKER_TAG: builder1
+  DOCKER_BUILD_LOCATION: /opt/$CI_PROJECT_NAME
+
+create_docker_image:
+  image: "docker"
+  when: manual
+  stage: init
+  tags:
+    - docker
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: recursive
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - 'wget --header="JOB-TOKEN: $CI_JOB_TOKEN" ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/toolchain/8.2018.4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2'
+    - docker build --cache-from registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG --pull -t registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG . && docker push registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG
+
+
 job 1:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags: 
-  - linux
+  - docker
   stage: build stack
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
   script: 
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - tar xvf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - sudo rm gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
-  - export PATH="$(pwd)/gcc-arm-none-eabi-8-2018-q4-major/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y
-  - make
+  - make -j
+  - cd ..
+  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
   artifacts:
    name: "$CI_COMMIT_REF_NAME"
    when: always
@@ -44,6 +74,7 @@ job 3:
   - testsuite
   stage: run tests
   script:
+  - rm -rf oss7-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git
   - cd oss7-testsuite
   - pip install -r requirements.txt
