@@ -28,6 +28,13 @@
 #Cache properties can be set on application parameters just like on regular cache parameters
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+
+SET(${APP_PREFIX}_FORWARD_ALP_OVER_SERIAL "FALSE" CACHE BOOL "forward all unhandeld requests to serial")
+APP_HEADER_DEFINE(BOOL ${APP_PREFIX}_FORWARD_ALP_OVER_SERIAL)
+
+#generate app_defs.h
+APP_BUILD_SETTINGS_FILE()
 
 IF(${MODULE_LORAWAN})
     SET(libs alp d7ap d7ap_fs lorawan framework)

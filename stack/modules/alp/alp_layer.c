@@ -66,7 +66,7 @@
 
 static interface_deinit current_itf_deinit = NULL;
 
-bool use_serial_itf;
+bool fwd_unsollicited_serial;
 
 static alp_command_t NGDEF(_commands)[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
 #define commands NG(_commands)
@@ -307,18 +307,19 @@ static void init_auth_key_files()
     // TODO how to handle situation where these files are not inited correctly?
 }
 
-void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
+void alp_layer_init(alp_init_args_t* alp_init_args, bool forward_unsollicited_over_serial)
 {
   init_args = alp_init_args;
-  use_serial_itf = use_serial_interface;
+  fwd_unsollicited_serial = forward_unsollicited_over_serial;
   fifo_init(&command_fifo, (uint8_t*)command_fifo_buffer, MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT*sizeof(alp_command_t*));
   alp_layer_free_commands();
 
   d7ap_fs_init();
   init_auth_key_files();
 #ifdef MODULE_ALP_SERIAL_INTERFACE_ENABLED
-  if (use_serial_itf)
-    serial_interface_register();
+  serial_interface_register();
+#else
+  assert(!fwd_unsollicited_serial);
 #endif
 
 #ifdef MODULE_D7AP
@@ -702,8 +703,9 @@ static error_t transmit_response(
 {
     DPRINT("async response to ori itf %i completed %i", transmit_itf, resp->is_response_completed);
     // when the command originates from the app code call callbacks directly, since this is not a 'real' interface
-    if ((transmit_itf == ALP_ITF_ID_HOST) && init_args && init_args->alp_command_result_cb) {
-        init_args->alp_command_result_cb(resp, origin_itf_status);
+    if (transmit_itf == ALP_ITF_ID_HOST) {
+        if(init_args && init_args->alp_command_result_cb)
+            init_args->alp_command_result_cb(resp, origin_itf_status);
         return SUCCESS;
     }
 
@@ -917,8 +919,11 @@ static void process_async(void* arg)
         }
     } else {
         if (resp_command->is_unsollicited) {
-            DPRINT("Unsollicited data with serial enabled: %i", use_serial_itf);
-            transmit_response(resp_command, use_serial_itf ? ALP_ITF_ID_SERIAL : ALP_ITF_ID_HOST, &command->origin_itf_status);
+            DPRINT("Unsollicited data with forward over serial enabled: %i", fwd_unsollicited_serial);
+            // if serial is connected, transmit it over serial but also let the host know what happened
+            if(fwd_unsollicited_serial)
+                transmit_response(resp_command, ALP_ITF_ID_SERIAL, &command->origin_itf_status);
+            transmit_response(resp_command, ALP_ITF_ID_HOST, &command->origin_itf_status);
         }
 
         // uint8_t resp_cmd_size = fifo_get_size(&resp_command->alp_command_fifo);

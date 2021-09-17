@@ -24,16 +24,23 @@
 #include <stdlib.h>
 
 #include "alp_layer.h"
+#include "app_defs.h"
 #include "d7ap_fs.h"
 #include "log.h"
 #include "platform.h"
 #include "power_profile_file.h"
 
+static bool forward_over_serial = false;
+
 void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    alp_layer_init(NULL, true);
+#ifdef APP_MODEM_FORWARD_ALP_OVER_SERIAL
+    forward_over_serial = true;
+#endif
+
+    alp_layer_init(NULL, forward_over_serial);
 
     power_profile_file_initialize();
 

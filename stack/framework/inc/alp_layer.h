@@ -82,7 +82,7 @@ typedef struct __attribute__((__packed__)){
  * \param init_args Specifies the callback function pointers
  * \param use_serial_interface Specifies if the ALP layer should initialize and use a serial interface
  */
-void alp_layer_init(alp_init_args_t* init_args, bool use_serial_interface);
+void alp_layer_init(alp_init_args_t* init_args, bool forward_unsollicited_over_serial);
 
 /*!
  * \brief Register a new interface in alp_layer
