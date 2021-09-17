@@ -549,7 +549,6 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
             .missed = false, // TODO
         },
         .response_to = packet->d7atp_tc,
-        .response_expected = packet->d7atp_ctrl.ctrl_is_ack_requested,
         .addressee = *packet->d7anp_addressee
         // .fifo_token and .seqnr filled below
     };
@@ -662,13 +661,12 @@ bool d7asp_process_received_packet(packet_t* packet)
                 .missed = false, // TODO
             },
             .response_to = packet->d7atp_tc,
-            .response_expected = packet->d7atp_ctrl.ctrl_is_ack_requested,
             .addressee = *packet->d7anp_addressee,
             .fifo_token =  packet->d7atp_dialog_id,
             .seqnr = packet->d7atp_transaction_id
         };
 
-        expect_upper_layer_resp_payload = d7ap_stack_process_unsolicited_request(packet->payload, packet->payload_length, result);
+        expect_upper_layer_resp_payload = d7ap_stack_process_unsolicited_request(packet->payload, packet->payload_length, result, packet->d7atp_ctrl.ctrl_is_ack_requested);
     }
 
     if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&

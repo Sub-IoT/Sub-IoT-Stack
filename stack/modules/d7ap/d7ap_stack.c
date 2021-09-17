@@ -286,7 +286,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     return SUCCESS;
 }
 
-bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
+bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7ap_session_result_t result, bool response_expected)
 {
     bool expect_upper_layer_resp_payload = false;
 
@@ -296,13 +296,13 @@ bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7
 
     slave_session.active = true;
     slave_session.token = result.fifo_token;
-    slave_session.expected_response = result.response_expected;
+    slave_session.expected_response = response_expected;
 
     // Forward this unsolicited request to all clients
     for(uint8_t i = 0; i < registered_client_nb; i++)
     {
         if (registered_client[i].unsolicited_cb)
-            expect_upper_layer_resp_payload = registered_client[i].unsolicited_cb(payload, length, result);
+            expect_upper_layer_resp_payload = registered_client[i].unsolicited_cb(payload, length, result, response_expected);
     }
 
     if ((slave_session.expected_response) && (expect_upper_layer_resp_payload))

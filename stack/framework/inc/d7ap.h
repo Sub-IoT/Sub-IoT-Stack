@@ -112,13 +112,11 @@ typedef struct __attribute__((__packed__)) {
     d7ap_channel_t channel;
     uint8_t rx_level;
     uint8_t link_budget;
-    uint8_t link_quality;
     uint8_t target_rx_level;
     d7ap_sp_state_t status;
     uint8_t fifo_token;
     uint8_t seqnr;
     uint8_t response_to;
-    bool response_expected;
     d7ap_addressee_t addressee;
 } d7ap_session_result_t;
 
@@ -157,7 +155,7 @@ typedef void (*d7ap_receive_callback)(uint16_t trans_id, uint8_t* payload, uint8
  * @returns true when the unsolicited request will result in a response payload from the upper layer. If no response is expected
  * the upper layer should return false, so the stack can respond with an ack immediately (if requested by origin).
  */
-typedef bool (*d7ap_receive_unsolicited_callback)(uint8_t* payload, uint8_t len, d7ap_session_result_t result);
+typedef bool (*d7ap_receive_unsolicited_callback)(uint8_t* payload, uint8_t len, d7ap_session_result_t result, bool response_expected);
 typedef void (*d7ap_transmitted_callback)(uint16_t trans_id, error_t error);
 
 typedef struct{
