@@ -192,6 +192,7 @@ job 3:
 
 
 erase-current-lorawan:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
   - testsuite
   stage: erase current lorawan
