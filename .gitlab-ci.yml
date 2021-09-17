@@ -229,7 +229,7 @@ flash-lorawan-build:
     - git fetch --all
     - git reset --hard origin/$CI_COMMIT_REF_NAME
   script:
-  - mkdir build & cd build
+  - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
@@ -279,7 +279,7 @@ flash-lorawan-build-scheduled:
     - git fetch --all
     - git reset --hard origin/$CI_COMMIT_REF_NAME
   script:
-  - mkdir build & cd build
+  - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
