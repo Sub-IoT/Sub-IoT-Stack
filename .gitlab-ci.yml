@@ -193,7 +193,7 @@ job 3:
 
 erase-current-lorawan:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
-  tags:
+  tags: 
   - testsuite
   stage: erase current lorawan
   when: manual
@@ -219,9 +219,15 @@ set-up-lorawan-gateway:
 flash-lorawan-build:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
-  - testsuite
+  - docker
   stage: flash lorawan build
   when: manual
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
   script:
   - cd build
   - platform="B_L072Z_LRWAN1"
