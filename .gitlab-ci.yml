@@ -196,6 +196,12 @@ erase-current-lorawan:
   - testsuite
   stage: erase current lorawan
   when: manual
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
   script:
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
@@ -222,10 +228,7 @@ flash-lorawan-build:
   stage: flash lorawan build
   when: manual
   script:
-  - cd stack/modules/lorawan
-  - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
-  - cd ../../..
-  - cd build
+  - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
@@ -256,6 +259,12 @@ erase-current-lorawan-scheduled:
   stage: erase current lorawan
   only:
   - schedules
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
   script:
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
@@ -269,10 +278,7 @@ flash-lorawan-build-scheduled:
   only:
   - schedules
   script: 
-  - cd stack/modules/lorawan
-  - git checkout AL-1790-excess-stack-usage #temp because otherwise build will fail as some LoRaWAN functions exceed stack limit
-  - cd ../../..
-  - cd build
+  - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
