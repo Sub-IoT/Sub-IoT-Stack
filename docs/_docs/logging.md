@@ -55,12 +55,12 @@ This can be done as shown below:
 
 	JLinkExe -SelectEmuBySN 518007358 -If SWD -Device EZR32LG330F256RXX -AutoConnect 1 -RTTTelnetPort 19021 -Speed 10000
 
-Important to note here are the `-SelectEmuBySN <sn>` and `-RTTTelnetPort <port>` parameters. The first one allows you the specify which JLink adapter to use. The second parameter tells JLinkExe on which port it should listen for RTT clients. You can pass the same parameter to JLinkRTTClient:
+Important to note here are the `-SelectEmuBySN <sn>` and `-RTTTelnetPort <port>` parameters. The first one allows you to specify which JLink adapter to use. The second parameter tells JLinkExe on which port it should listen for RTT clients. You can pass the same parameter to JLinkRTTClient:
 
 	JLinkRTTClient -RTTTelnetPort 19021
 
 This way multiple JLink adapters can be used at the same time, each which a different SN and port.
-Note that flashing can done using the JLinkExe prompt as well using the `loadfile` command.
+Note that flashing can be done using the JLinkExe prompt as well using the `loadfile` command.
 Refer to the JLink documentation for more info
 
 # UART logging

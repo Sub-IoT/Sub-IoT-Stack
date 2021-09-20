@@ -6,7 +6,7 @@ stages:
 variables:
   GIT_STRATEGY: none
   GIT_SUBMODULE_STRATEGY: none
-  DOCKER_TAG: builder1
+  DOCKER_TAG: builder3
   DOCKER_BUILD_LOCATION: /opt/$CI_PROJECT_NAME
 
 create_docker_image:
@@ -74,9 +74,9 @@ job 3:
   - testsuite
   stage: run tests
   script:
-  - rm -rf oss7-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git
-  - cd oss7-testsuite
+  - rm -rf Sub-IoT-testsuite
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
+  - cd Sub-IoT-testsuite
   - pip install -r requirements.txt
   - cd lib/pyd7a/
   - pip install -r requirements.txt
@@ -84,4 +84,4 @@ job 3:
   - python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
   artifacts:
     reports:
-      junit: oss7-testsuite/report.xml
+      junit: Sub-IoT-testsuite/report.xml

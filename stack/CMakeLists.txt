@@ -36,7 +36,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 3.5)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #Allow the project name to be set from the cache
-SET(PROJECT_NAME "OSS-7" CACHE STRING "The name of the project")
+SET(PROJECT_NAME "Sub-IoT" CACHE STRING "The name of the project")
 SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release")
 SET_PROPERTY( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
 

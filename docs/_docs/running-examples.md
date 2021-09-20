@@ -17,8 +17,8 @@ Make sure to flash one board with the `sensor_push` firmware and another one wit
 The `sensor_push` example broadcasts sensor values every 10 seconds. The `gateway` will receive the packets,
 and transmit the Application Layer Protocol (ALP) payload (see [D7AP intro]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}) for more info) over the serial console (see the platform notes for your specific platform to find out how to access the serial console) to your PC.
 
-This payload is a binary format. We will be using [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) for parsing this, so make sure to get and install this as described in the README.md .
-After installation you can use the `unsolicited_response_logger.py` script to connect with your gateway using a serial port and print the received data:
+This payload is a binary format. We will be using [pyd7a](https://github.com/Sub-IoT/pyd7a) for parsing this, so make sure to get and install this as described in the README.md .
+After installation, you can use the `unsolicited_response_logger.py` script to connect with your gateway using a serial port and print the received data:
 
 	$ PYTHONPATH=. python -u examples/unsolicited_response_logger.py -d /dev/ttyACM1
 	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gatewa" with git sha1 73f0c73
@@ -32,12 +32,12 @@ After installation you can use the `unsolicited_response_logger.py` script to co
 	                action: ReturnFileData: file-id=64, size=1, offset=0, length=8, data=[87, 30, 251, 0, 0, 0, 0, 0]
 	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=118, rx_level=40, seq_nr=0, target_rx_level=80, addressee=ac=1, id_type=IdType.UID, id=0x3237303400630011L, response_to=exp=3 mant17, link_budget=50, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868
 
-The raw sensor data is contained in the `data` field. The other fields contain for instance the sensor node UID, reception level and link budget, channel information etc. For now we are not going to dive into this in more detail, refer to the D7A specification for more info.
+The raw sensor data is contained in the `data` field. The other fields contain for instance the sensor node UID, reception level and link budget, channel information etc. For now, we are not going to dive into this in more detail, refer to the D7A specification for more info.
 
 # Pull communication
 
 In this example the sensor does not push sensor data to gateway(s) continuously, but instead writes the sensor value to a local file,
-which can then be fetched on request. The sensor will sniff the channel every second for background adhoc synchronization frames, to be able to receive requests from other nodes. The gateway will synchronize all nodes in the network using adhoc synchronization frames, after which it will send the query in a foreground frame. For this example we need one node running the `gateway` application and one or more node(s) running `sensor_pull`. For executing the query we will be using the `query_nodes.py` example which is provided by pyd7a.
+which can then be fetched on request. The sensor will sniff the channel every second for background ad hoc synchronization frames, to be able to receive requests from other nodes. The gateway will synchronize all nodes in the network using ad hoc synchronization frames, after which it will send the query in a foreground frame. For this example we need one node running the `gateway` application and one or more node(s) running `sensor_pull`. For executing the query we will be using the `query_nodes.py` example which is provided by pyd7a.
 Running this script by providing the serial device of the gateway will show something like this:
 
 	$ PYTHONPATH=. python2 -u examples/query_nodes.py -d /dev/ttyACM1

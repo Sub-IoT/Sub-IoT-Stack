@@ -5,8 +5,8 @@ date:   2017-08-22 11:00:00
 author: Glenn
 ---
 
-Until now, the Silicon Labs EZR32LG_WSTK6200 devkit was our recommend off the shelf kit to get start with OSS-7.
-We had good experiences using this board, however it has the disadvantage of being too expensive. People wanting to give OSS-7
+Until now, the Silicon Labs EZR32LG_WSTK6200 devkit was our recommend off the shelf kit to get started with Sub-IoT.
+We had good experiences using this board, however it has the disadvantage of being too expensive. People wanting to give Sub-IoT
 a try should be able to buy an off the shelf devkit for a reasonable price.
 
 Recently we ported to a platform containing a Semtech sx1276 RF chip, to [demo DASH7 and LoRa multi-modal communication using one MCU and RF chip]({{ site.baseurl }}{% link _posts/2017-07-28-multimodal-demo.md %}). For yet another project we needed to support an STM32 MCU as well.

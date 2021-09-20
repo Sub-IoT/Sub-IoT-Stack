@@ -1,13 +1,13 @@
 # Site settings
-title: OSS-7
-email: glenn.ergeerts@uantwerpen.be
+title: Sub-IoT
+email: liam.oorts@aloxy.io
 description: >
-  An opensource stack implementation of the DASH7 Alliance Protocol.
+  An opensource stack implementation of sub GHz protocols.
 
-baseurl: "/dash7-ap-open-source-stack" # the subpath of your site, e.g. /blog/
-url: https://mosaic-lopow.github.io/dash7-ap-open-source-stack # the base hostname & protocol for your site
-git_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack
-git_edit_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack/blob/master/docs
+baseurl: "/Sub-IoT-Stack" # the subpath of your site, e.g. /blog/
+url: https://sub-iot.github.io/Sub-IoT-Stack # the base hostname & protocol for your site
+git_address: https://github.com/Sub-IoT/Sub-IoT-Stack
+git_edit_address: https://github.com/Sub-IoT/Sub-IoT-Stack/blob/master/docs
 
 # Build settings
 markdown: kramdown

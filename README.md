@@ -1,20 +1,18 @@
-[![Build Status](https://jenkins.idlab.uantwerpen.be/buildStatus/icon?job=BuildForOSS7Repo/master)](https://jenkins.idlab.uantwerpen.be/job/BuildForOSS7Repo/job/master/)
-
-[![Gitter](https://badges.gitter.im/dash7-ap-open-source-stack/community.svg)](https://gitter.im/dash7-ap-open-source-stack/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Gitter](https://badges.gitter.im/Sub-IoT/community.svg)](https://gitter.im/Sub-IoT/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Welcome
 
-OSS-7 is an open source implementation of the [DASH7 Alliance](http://www.dash7-alliance.org) protocol for ultra low power wireless sensor communication. The aim of the project is to provide a reference implementation of the protocol stack which allows for fast development and prototyping of DASH7 based products. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
+Sub-IoT is an open source implementation of a combination of Sub GHz technologies. The implementation exists of the [DASH7 Alliance](http://www.dash7-alliance.org) protocol and the [LoRaWAN specification](https://lora-alliance.org/about-lorawan/) for ultra low power wireless sensor communication. The aim of the project is to provide an implementation of the sub-GHz stacks running consecutively which allows for fast development and prototyping. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
 
-For more information visit the [OSS-7 site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/).
+For more information visit the [Sub-IoT site](https://sub-iot.github.io/Sub-IoT-Stack/).
 
 # Getting Started
 
-Please refer to the [documentation section on our site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/docs/home/).
+Please refer to the [documentation section on our site](https://sub-iot.github.io/Sub-IoT-Stack/docs/home/).
 
 # Related repositories
 
-[pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) provides a collection of python modules, supporting the DASH7 Alliance Protocol in general, and OSS-7 in particular.
+[pyd7a](https://github.com/Sub-IoT/pyd7a) provides a collection of python modules, supporting the DASH7 Alliance Protocol in general, and Sub-IoT in particular.
 
 # Community
 

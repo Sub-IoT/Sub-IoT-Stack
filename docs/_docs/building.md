@@ -6,19 +6,19 @@ permalink: /docs/building/
 
 # Get prerequisites
 
-- OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/), so either fork or clone the repository.
+- Sub-IoT code. The code is hosted on [github](https://github.com/Sub-IoT/Sub-IoT-Stack/), so either fork or clone the repository.
 - [CMake](http://www.cmake.org/) (v3.5 or greater) as a flexible build system
-- a GCC-based toolchain matching the target platform, for example [GNU ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Cortex-M based platforms. By default the build system assumes the GNU ARM Embedded toolchain is located in the PATH environment variable (meaning you can run `arm-none-eabi-gcc` without specifying the full path). The version of the GNU ARM Embedded toolchain that most well supports OSS-7 is gcc-arm-none-eabi-8-2018-q4-major.  
+- a GCC-based toolchain matching the target platform, for example [GNU ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Cortex-M based platforms. By default, the build system assumes the GNU ARM Embedded toolchain is located in the PATH environment variable (meaning you can run `arm-none-eabi-gcc` without specifying the full path). The version of the GNU ARM Embedded toolchain that most well supports Sub-IoT is gcc-arm-none-eabi-8-2018-q4-major.  
 - [JLinkExe](https://www.segger.com/downloads/jlink) (included in 'J-Link Software and Documentation Pack') if you are using a JLink probe to flash/debug your target
 
 # Run cmake
 
 We will create a build directory and run cmake to generate the buildscript:
 
-	$ git clone https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack.git
+	$ git clone https://github.com/Sub-IoT/Sub-IoT-Stack.git
 	$ mkdir build
 	$ cd build
-	$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
+	$ cmake ../stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- The C compiler identification is GNU 4.9.3
@@ -43,16 +43,16 @@ We will create a build directory and run cmake to generate the buildscript:
 
 
 A quick run-down of what happens:
-* We point cmake to the open source stack implementation: `../dash7-ap-open-source-stack/stack/` in this case
+* We point cmake to the open source stack implementation: `../stack/` in this case
 * We are using the default gcc-arm-embedded toolchain, which is in our path. If you prefer not to add the toolchain directory to the PATH you have to specify the path by passing this to cmake as in this example: `-DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/`. If you would want to use another toolchain you have to pass the `-DCMAKE_TOOLCHAIN_FILE=...` option to point to the cmake configuration for the cross compiler.
-* Based on the toolchain a number of supported platform options are available. By default the `B_L072Z_LRWAN1` platform is selected. If you want another platform you can specify this using `-DPLATFORM=<platform-name>`. Each subdirectory beneath `stack/framework/hal/platforms` contains a different platform, and the platform name to use is equal to the name of the subdirectory.
+* Based on the toolchain a number of supported platform options are available. By default, the `B_L072Z_LRWAN1` platform is selected. If you want another platform you can specify this using `-DPLATFORM=<platform-name>`. Each subdirectory beneath `stack/framework/hal/platforms` contains a different platform, and the platform name to use is equal to the name of the subdirectory.
 * A platform is a combination of one or more chips (MCU or RF) and the wiring between them. Based on the platform a number of chips will be added to the build, in this example the `stm32l0xx` MCU and the `sx127x` RF chip.
 * Applications can be added by setting `-DAPP_<name>=y`. The name of the application is the name of a subdirectory of stack/apps, but uppercased. In this example we enabled the sensor and gateway application.
 * You can change these options, and many more through ccmake interactive console interface as well.
 
 # Build it!
 
-If your toolchain is setup correctly you should be able to build the stack and the configured application(s) now. An example of (shortened) output is below:
+If your toolchain is set up correctly you should be able to build the stack and the configured application(s) now. An example of (shortened) output is below:
 
 	$ make
 	[ 18%] Built target d7ap
@@ -117,7 +117,7 @@ While the above is written for Unix OS's (GNU/Linux and Mac OS X) it works on MS
 
 The unittests in `stack/tests` can be executed on the native platform. To do this, generate a buildscript as follows:
 
-    $ cmake ../dash7-ap-open-source-stack/stack/ -DPLATFORM="NATIVE" -DCMAKE_TOOLCHAIN_FILE="../dash7-ap-open-source-stack/stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y
+    $ cmake ../stack/ -DPLATFORM="NATIVE" -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y
 
 This will result in a native binary per test, for example:
 
@@ -136,7 +136,7 @@ This will result in a native binary per test, for example:
 
 # Compiling for running on top of a bootloader
 
-The binaries produced by the build are supposed to be executed directly on the target, and thus linked to make sure the code will be located at the expected entry point in the flash. When the binary needs to be chain-loaded because the target is running a bootloader it is required to link the `.text` section of the binary to a different offset, and use a different length. In most cases it is useful to compile both the standalone version as well as the bootloadable version. By default the buildsystem only builds the standalone binary. When you want to build a bootloadable version as well you can set the cmake variable `PLATFORM_BUILD_BOOTLOADABLE_VERSION=y`. To configure the flash origin and length used in the linker script you can set `BOOTLOADABLE_FLASH_ORIGIN` and `BOOTLOADABLE_FLASH_LENGTH`. These values will replace the `${FLASH_ORIGIN}` and `${FLASH_LENGTH}` placeholders in the linker script's memory section (as shown below)
+The binaries produced by the build are supposed to be executed directly on the target, and thus linked to make sure the code will be located at the expected entry point in the flash. When the binary needs to be chain-loaded because the target is running a bootloader it is required to link the `.text` section of the binary to a different offset, and use a different length. In most cases it is useful to compile both the standalone version as well as the bootloadable version. By default, the buildsystem only builds the standalone binary. When you want to build a bootloadable version as well you can set the cmake variable `PLATFORM_BUILD_BOOTLOADABLE_VERSION=y`. To configure the flash origin and length used in the linker script you can set `BOOTLOADABLE_FLASH_ORIGIN` and `BOOTLOADABLE_FLASH_LENGTH`. These values will replace the `${FLASH_ORIGIN}` and `${FLASH_LENGTH}` placeholders in the linker script's memory section (as shown below)
 
 	MEMORY
 	{

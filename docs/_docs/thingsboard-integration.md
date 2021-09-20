@@ -2,6 +2,11 @@
 title: Integrating gateways with ThingsBoard platform
 permalink: /docs/thingsboard-integration/
 ---
+
+## Note
+
+This integration is deprecated. This is mainly left here as an example but should probably be updated for use.
+
 ## Introduction
 
 This is not strictly related to OSS-7 in terms of stack development, but it can be useful if you want to deploy a number of OSS-7 gateways and build an application on top of this. [ThingsBoard](https://thingsboard.io/) is an open source IoT platform for managing devices, data storage and visualization.

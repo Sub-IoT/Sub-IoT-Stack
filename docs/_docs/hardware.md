@@ -6,9 +6,9 @@ permalink: /docs/supported-hardware/
 # Platforms
 
 ## Overview
-A goal of OSS-7 is to support different hardware platforms and radio's.
+A goal of Sub-IoT is to support different hardware platforms and radio's.
 The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations.
-As explained in the [architecture section]({{ site.baseurl }}{% link _docs/architecture.md %}), OSS-7 has the concept of chips and platforms inside the hardware abstraction layer.
+As explained in the [architecture section]({{ site.baseurl }}{% link _docs/architecture.md %}), Sub-IoT has the concept of chips and platforms inside the hardware abstraction layer.
 A chip implementation contains drivers for MCU peripherals or radio chips. A platform is a combination of a set of chips (for example an MCU and a radio chip), and describes the board wiring and features like LEDs or buttons. You can think of a platform as a specific board.
 
 Currently we support the following platforms, in decreasing order of completeness/stability:
@@ -21,7 +21,7 @@ NUCLEO_L073RZ   | STMicroelectronics STM32L073RZ (Cortex-M0+) | Semtech SX1276 (
 EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| Silicon Labs si4460 			|
 EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | none on-board (Texas Instruments CC1101 extension board available)      |
 
-Currently the B_L072Z_LRWAN1, NUCLEO_L073RZ (+SX1276MB1MAS) and EZR32LG_WSTK6200 boards are the only off the shelf, commercially available devkits which includes a radio. Because of this, these boards are the easiest way to get started. The B_L072Z_LRWAN1 or the NUCLEO_L073RZ are currently the best options. While the EZR32LG_WSTK6200 is a nice devkit it is not as cheap as we would want it to be. Also it appears to be out of stock lately and we think it might be discontinued soon. Additionally, the sx1276 driver is more feature complete and better tested than the si4460 driver, at the moment.
+Currently the B_L072Z_LRWAN1, NUCLEO_L073RZ (+SX1276MB1MAS) and EZR32LG_WSTK6200 boards are the only off the shelf, commercially available devkits which includes a radio. Because of this, these boards are the easiest way to get started. The B_L072Z_LRWAN1 or the NUCLEO_L073RZ are currently the best options. While the EZR32LG_WSTK6200 is a nice devkit it is not as cheap as we would want it to be. Also it appears to be out of stock lately, and we think it might be discontinued soon. Additionally, the sx1276 driver is more feature complete and better tested than the si4460 driver, at the moment.
 
 Below you will find more information on each platform, and a section about supporting other platforms as well.
 
@@ -70,12 +70,12 @@ Currently there are two baluns available for this module, 433MHz and 868MHz.
 
 ![Gaint Gecko with CC1101 RF module]({{site.baseurl}}/img/GG_CC1101.jpg)
 
-Schematics and Eagle files are available in the [git repository](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
+Schematics and Eagle files are available in the [git repository](https://github.com/Sub-IoT/Sub-IoT-Stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
 
 ## Other platforms
 
-The list above only shows the readily available, public, platforms. It is of course possible to define your own platform for custom designs. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform. Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.
+The list above only shows the readily available, public, platforms. It is of course possible to define your own platform for custom designs. Especially if you are using an MCU and radio which is already implemented, it takes very little effort to add support to Sub-IoT for your platform. Designing your own platform gives you the most flexibility regarding form factor and sensors specific for your use case. We are glad to assist in designing a custom board.
 It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available,
 so the choice should increase in the near future.
 
-For more info on adding support for custom platforms or porting to new MCU's or RF chips please refer to the [porting section]({{ site.baseurl }}{% link _docs/porting.md %})
+For more info on adding support for custom platforms or porting to new MCU's or RF chips please refer to the [porting section]({{ site.baseurl }}{% link _docs/porting.md %}).

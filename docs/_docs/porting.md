@@ -3,11 +3,11 @@ title: Porting
 permalink: /docs/porting/
 ---
 
-If you want to run OSS-7 on a board which is not listed in the [supported hardware section]({{ site.baseurl }}{% link _docs/hardware.md %}) there is some porting effort required. There are two main options:
+If you want to run Sub-IoT on a board which is not listed in the [supported hardware section]({{ site.baseurl }}{% link _docs/hardware.md %}) there is some porting effort required. There are two main options:
 - Custom board reusing existing MCU and radio drivers from a supported platform
 - Custom board with an MCU and/or radio chip for which no driver exists yet
 
-In the first case the porting effort is very low, it is only required to add a new platform in `stack/framework/hal/platforms`. The subdirectory name equals the name of the new platform. Inside this subdirectory there should be a `CMakeLists.txt`, a `platform.h` and a .c file implementing the `main()` entry point for your platform. The easiest way would be to copy the files from a resembling platform and adapt it to your needs. Basically what needs to be done at the platform level is the initialization of the platform, the wiring of the chips and platform specific configuration. Please note that the OSS-7 buildsystem allows to keep custom platform (or chips) outside of the main source tree if you are not able to share this, see [out-of-tree section]({{ site.baseurl }}{% link _docs/out-of-tree.md %}) for more info.
+In the first case the porting effort is very low, it is only required to add a new platform in `stack/framework/hal/platforms`. The subdirectory name equals the name of the new platform. Inside this subdirectory there should be a `CMakeLists.txt`, a `platform.h` and a .c file implementing the `main()` entry point for your platform. The easiest way would be to copy the files from a resembling platform and adapt it to your needs. Basically what needs to be done at the platform level is the initialization of the platform, the wiring of the chips and platform specific configuration. Please note that the Sub-IoT buildsystem allows keeping custom platform (or chips) outside of the main source tree if you are not able to share this, see [out-of-tree section]({{ site.baseurl }}{% link _docs/out-of-tree.md %}) for more info.
 
 In the second case the HAL API for the new MCU and/or the radio driver for the new radio chip needs to be implemented. While this takes some more effort it is certainly feasible, especially if you already have knowledge about the chip.
 
