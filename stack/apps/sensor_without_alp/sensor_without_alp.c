@@ -71,7 +71,7 @@ static d7ap_session_config_t d7ap_session_config = (d7ap_session_config_t){
 
 void on_receive(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result);
 void on_transmitted(uint16_t trans_id, error_t error);
-bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result);
+bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result, bool response_expected);
 
 d7ap_resource_desc_t callbacks = {
     .receive_cb = &on_receive,
@@ -107,7 +107,7 @@ void on_transmitted(uint16_t trans_id, error_t error)
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
-bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result)
+bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result, bool response_expected)
 {
     log_print_string("Unsolicited response received\n");
     return false;
