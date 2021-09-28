@@ -1,7 +1,8 @@
-/*! \file d7ap_fs_data.c
+/*
+ * Copyright (c) 2015-2021 University of Antwerp, Aloxy NV.
  *
-
- *  \copyright (C) Copyright 2019 University of Antwerp and others (http://mosaic-lopow.github.io/dash7-ap-open-source-stack/)
+ * This file is part of Sub-IoT.
+ * See https://github.com/Sub-IoT/Sub-IoT-Stack for further info.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

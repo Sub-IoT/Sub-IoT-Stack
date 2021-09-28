@@ -1,7 +1,8 @@
-/*! \file d7asp.c
+/*
+ * Copyright (c) 2015-2021 University of Antwerp, Aloxy NV.
  *
-
- *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
+ * This file is part of Sub-IoT.
+ * See https://github.com/Sub-IoT/Sub-IoT-Stack for further info.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

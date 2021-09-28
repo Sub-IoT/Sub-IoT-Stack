@@ -1,7 +1,8 @@
-/*! \file alp_layer.h
+/*
+ * Copyright (c) 2015-2021 University of Antwerp, Aloxy NV.
  *
-
- *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
+ * This file is part of Sub-IoT.
+ * See https://github.com/Sub-IoT/Sub-IoT-Stack for further info.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +15,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * \author glenn.ergeerts@uantwerpen.be
- * \author maarten.weyn@uantwerpen.be
- *
  */
 
 /*! \file alp_layer.h
@@ -27,6 +24,7 @@
  * \brief Application Layer Protocol APIs
  * \author	glenn.ergeerts@uantwerpen.be
  * \author	philippe.nunes@cortus.com
+ * \author maarten.weyn@uantwerpen.be
  */
 
 #ifndef ALP_LAYER_H_

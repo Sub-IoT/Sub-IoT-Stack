@@ -1,9 +1,20 @@
 /*
- * This is a stress test application to test the modeminterface component. The application should run on 2 micro-controllers (eg. MCU and modem) that are connected with each other via UART.
- * The application has 2 compile options:
- * - APP_MODEMINTERFACE_TEST_SEND_PING: Enable transmission of ping request to other µC and check ping response is received. This option can be activated on both µCs.
- * - APP_MODEMINTERFACE_TEST_SEND_DATA: Enable transmission of big data buffers to other µC. Other µC will send the data buffer back. This option can only be activated on one µC. If the option is not enabled the µC will send all received data back.
- * The application will print a message for each 1000 packets that are properly send and received back. When a packet is not received in time or is not correct the application will assert.
+ * Copyright (c) 2015-2021 University of Antwerp, Aloxy NV.
+ *
+ * This file is part of Sub-IoT.
+ * See https://github.com/Sub-IoT/Sub-IoT-Stack for further info.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <stdio.h>
