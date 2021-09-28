@@ -2,7 +2,7 @@
 
 # Welcome
 
-Sub-IoT is an open source implementation of a combination of Sub GHz technologies. The implementation exists of the [DASH7 Alliance](http://www.dash7-alliance.org) protocol and the [LoRaWAN specification](https://lora-alliance.org/about-lorawan/) for ultra low power wireless sensor communication. The aim of the project is to provide an implementation of the sub-GHz stacks running consecutively which allows for fast development and prototyping. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
+Sub-IoT houses an implementation of the [DASH 7 Alliance](http://www.dash7-alliance.org) protocol, which can be optionally combined with a 3rd party implementation [LoRaMAC-node](https://github.com/Lora-net/LoRaMac-node) of the [LoRaWAN](https://lora-alliance.org/about) specification for ultra low power communication. The aim of the project is to provide an implementation of the sub-GHz stacks which allows for fast development and prototyping. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
 
 For more information visit the [Sub-IoT site](https://sub-iot.github.io/Sub-IoT-Stack/).
 
@@ -24,4 +24,4 @@ Licensed under the Apache License, Version 2.0 (the "License"): You may not use 
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-&copy; Copyright 2015-2016, University of Antwerp and others
+&copy; Copyright 2015-2021, University of Antwerp, Aloxy NV and others
