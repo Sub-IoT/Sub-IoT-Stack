@@ -52,7 +52,7 @@ typedef struct spi_slave_handle spi_slave_handle_t;
 
 // create handle from basic & minimal parameters
 __LINK_C spi_handle_t*       spi_init(uint8_t spi_port_number, uint32_t baudrate,
-                                      uint8_t databits, bool msbf, bool half_duplex);
+                                      uint8_t databits, bool msbf, bool half_duplex, bool cpol, bool cpha);
 // manual power mgmt
 __LINK_C void                spi_enable(spi_handle_t* spi);
 __LINK_C void                spi_disable(spi_handle_t* spi);

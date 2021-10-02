@@ -33,6 +33,7 @@
 #include "hwgpio.h"
 #include "errors.h"
 #include "hwatomic.h"
+#include "hwsystem.h"
 
 
 #define MAX_SPI_SLAVE_HANDLES 5        // TODO expose this in chip configuration
@@ -85,11 +86,14 @@ static void init_pins(spi_handle_t* spi) {
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].alternate;
-
+  GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].sck_alternate;
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
+  
+  GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].miso_alternate;
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
+  GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].mosi_alternate;
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
+  hw_busy_wait(200); //TDOD remove and figure out why this is needed
 }
 
 void spi_enable(spi_handle_t* spi) {
@@ -120,6 +124,7 @@ void spi_enable(spi_handle_t* spi) {
   }
 
   spi->active = true;
+
 }
 
 void spi_disable(spi_handle_t* spi) {
@@ -147,7 +152,7 @@ void spi_disable(spi_handle_t* spi) {
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex, bool cpol, bool cpha) {
   // assert what is supported by HW
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
@@ -172,8 +177,18 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
     handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_2LINES;
 
   handle[spi_number].hspi.Init.DataSize = SPI_DATASIZE_8BIT;
-  handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
   handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
+
+  if(cpol)
+    handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  else
+    handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
+
+  if(cpha)
+    handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_2EDGE;
+  else
+    handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
+
   handle[spi_number].hspi.Init.NSS = SPI_NSS_SOFT;
 
   // TODO take pheripal clock freq into account ...
