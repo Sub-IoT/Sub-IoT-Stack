@@ -247,6 +247,7 @@ flash-lorawan:
   - testsuite
   dependencies: 
   - build-lorawan
+  when: manual
   stage: flash lorawan
   script:
   - cd build/apps/sensor_push_lorawan
@@ -282,11 +283,11 @@ erase-current-lorawan-scheduled:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
 
-flash-lorawan-build-scheduled:
+build-lorawan-scheduled:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
-  - testsuite
-  stage: flash lorawan build
+  - docker
+  stage: build lorawan
   only:
   - schedules
   before_script:  
@@ -300,11 +301,25 @@ flash-lorawan-build-scheduled:
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
-  - cd apps/sensor_push_lorawan
-  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
+  - cd ..
+  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
   artifacts:
     paths:
     - build/apps/sensor_push_lorawan/*
+
+flash-lorawan-scheduled:
+  tags:
+  - testsuite
+  dependencies: 
+  - build-lorawan-scheduled
+  only:
+  - schedules
+  stage: flash lorawan
+  script:
+  - cd build/apps/sensor_push_lorawan
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
+  - cat flashOutput.txt
+  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
 
 lorawan_test_runner:
   tags:
