@@ -23,7 +23,8 @@ stages:
   - run tests
   - erase current lorawan
   - set up lorawan gateway
-  - flash lorawan build
+  - build lorawan
+  - flash lorawan
   - run lorawan tests
 variables:
   GIT_STRATEGY: none
@@ -218,11 +219,11 @@ set-up-lorawan-gateway:
   - ./add_one_test.sh $gateway_addr
   #- ./add_tests.sh $gateway_addr
 
-flash-lorawan-build:
+build-lorawan:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags:
   - docker
-  stage: flash lorawan build
+  stage: build lorawan
   when: manual
   before_script:  
     - cd $DOCKER_BUILD_LOCATION
@@ -237,11 +238,21 @@ flash-lorawan-build:
   - make -j
   - cd ..
   - mv build /builds/aloxy/$CI_PROJECT_NAME/build
-  - cd /builds/aloxy/$CI_PROJECT_NAME/build/apps/sensor_push_lorawan
-  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   artifacts:
     paths:
     - build/apps/sensor_push_lorawan/*
+
+flash-lorawan:
+  tags:
+  - testsuite
+  dependencies: 
+  - build-lorawan
+  stage: flash lorawan
+  script:
+  - cd build/apps/sensor_push_lorawan
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
+  - cat flashOutput.txt
+  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
 
 set-up-lorawan-gateway-scheduled:
   tags:
