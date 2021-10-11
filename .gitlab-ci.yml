@@ -23,7 +23,6 @@ stages:
   - run tests
   - erase current lorawan
   - set up lorawan gateway
-  - build lorawan
   - flash lorawan
   - run lorawan tests
 variables:
@@ -67,7 +66,7 @@ job 1:
   script: 
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
-  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y -DAPP_MODEM_FORWARD_ALP_OVER_SERIAL=y
+  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DAPP_SENSOR_PUSH_LORAWAN=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y -DAPP_MODEM_FORWARD_ALP_OVER_SERIAL=y
   - make -j
   - cd ..
   - mv build /builds/aloxy/$CI_PROJECT_NAME/build
@@ -219,43 +218,13 @@ set-up-lorawan-gateway:
   - ./add_one_test.sh $gateway_addr
   #- ./add_tests.sh $gateway_addr
 
-build-lorawan:
-  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
-  tags:
-  - docker
-  stage: build lorawan
-  when: manual
-  before_script:  
-    - cd $DOCKER_BUILD_LOCATION
-    - git remote set-url origin $CI_REPOSITORY_URL
-    - git submodule sync --recursive
-    - git fetch --all
-    - git reset --hard origin/$CI_COMMIT_REF_NAME
-  script:
-  - mkdir build && cd build
-  - platform="B_L072Z_LRWAN1"
-  - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
-  - make -j
-  - cd ..
-  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
-  artifacts:
-    paths:
-    - build/apps/sensor_push_lorawan/*
-
 flash-lorawan:
   tags:
   - testsuite
-  dependencies: 
-  - build-lorawan
   when: manual
   stage: flash lorawan
   script:
-  - ls
-  - cd build
-  - ls
-  - cd apps
-  - ls
-  - cd sensor_push_lorawan
+  - cd build/apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cat flashOutput.txt
   - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
@@ -288,35 +257,9 @@ erase-current-lorawan-scheduled:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
 
-build-lorawan-scheduled:
-  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
-  tags:
-  - docker
-  stage: build lorawan
-  only:
-  - schedules
-  before_script:  
-    - cd $DOCKER_BUILD_LOCATION
-    - git remote set-url origin $CI_REPOSITORY_URL
-    - git submodule sync --recursive
-    - git fetch --all
-    - git reset --hard origin/$CI_COMMIT_REF_NAME
-  script:
-  - mkdir build && cd build
-  - platform="B_L072Z_LRWAN1"
-  - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
-  - make -j
-  - cd ..
-  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
-  artifacts:
-    paths:
-    - build/apps/sensor_push_lorawan/*
-
 flash-lorawan-scheduled:
   tags:
   - testsuite
-  dependencies: 
-  - build-lorawan-scheduled
   only:
   - schedules
   stage: flash lorawan
