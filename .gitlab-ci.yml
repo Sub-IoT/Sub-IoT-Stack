@@ -250,6 +250,9 @@ flash-lorawan:
   when: manual
   stage: flash lorawan
   script:
+  - ls
+  - cd /builds/aloxy/$CI_PROJECT_NAME
+  - ls
   - cd build/apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cat flashOutput.txt
