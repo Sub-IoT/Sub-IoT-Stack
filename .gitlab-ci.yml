@@ -251,9 +251,11 @@ flash-lorawan:
   stage: flash lorawan
   script:
   - ls
-  - cd /builds/aloxy/$CI_PROJECT_NAME
+  - cd build
   - ls
-  - cd build/apps/sensor_push_lorawan
+  - cd apps
+  - ls
+  - cd sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cat flashOutput.txt
   - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
