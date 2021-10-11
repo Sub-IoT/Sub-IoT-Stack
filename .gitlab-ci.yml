@@ -198,6 +198,7 @@ erase-current-lorawan:
   stage: erase current lorawan
   when: manual
   script:
+  - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
@@ -209,6 +210,7 @@ set-up-lorawan-gateway:
   when: manual
   script:
   - gateway_addr="192.168.1.84"
+  - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $gateway_addr
@@ -247,6 +249,7 @@ set-up-lorawan-gateway-scheduled:
   - schedules
   script:
   - gateway_addr="192.168.1.84"
+  - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $gateway_addr
@@ -261,6 +264,7 @@ erase-current-lorawan-scheduled:
   only:
   - schedules
   script:
+  - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
@@ -295,6 +299,7 @@ lorawan_test_runner:
   stage: run lorawan tests
   script:
   - gateway_addr="192.168.1.84"
+  - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   #  scrape web interface to check test progression
   - cd Sub-IoT-testsuite/lorawan-test-scripts
