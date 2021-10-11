@@ -235,7 +235,9 @@ flash-lorawan-build:
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_SENSOR_PUSH_LORAWAN=y -DMODULE_LORAWAN=y -DPLATFORM=$platform 
   - make -j
-  - cd apps/sensor_push_lorawan
+  - cd ..
+  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
+  - cd /builds/aloxy/$CI_PROJECT_NAME/build/apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   artifacts:
     paths:
