@@ -85,8 +85,8 @@ job 2:
   - JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
   - cat flashOutput1.txt
   - cat flashOutput2.txt
-  - if grep -q FAILED "flashOutput1.txt"; then exit 1; fi
-  - if grep -q FAILED "flashOutput2.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput1.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput2.txt"; then exit 1; fi
 job 3:
   tags:
   - testsuite

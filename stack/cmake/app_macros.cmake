@@ -151,6 +151,7 @@ MACRO(__APP_BUILD_ON_LOCATION app_name flash_origin flash_length version_locatio
 	
 	# generate target for flashing application using jlink
 	# TODO optional depending on platform?
+	SET(BIN ${app_name}-app.bin)
 	SET(HEX ${app_name}-full.hex)
 	CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script)
 	ADD_CUSTOM_TARGET(

@@ -3,6 +3,6 @@ if SWD
 speed 10000
 h
 loadfile ${HEX}, 0x0
-verifybin ${HEX}, 0x0
+verifybin ${BIN}, 0x08000000
 r
 qc
