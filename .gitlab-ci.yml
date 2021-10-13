@@ -211,14 +211,12 @@ set-up-lorawan-gateway:
   stage: set up lorawan gateway
   when: manual
   script:
-  - gateway_addr="192.168.1.84"
   - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - ./clear_tests_and_devices.sh $gateway_addr
-  - ./add_device.sh $gateway_addr
-  - ./add_one_test.sh $gateway_addr
-  #- ./add_tests.sh $gateway_addr
+  - ./clear_tests_and_devices.sh ${LORAWAN_GW_IP_ADDR}
+  - ./add_device.sh ${LORAWAN_DUT_DEV_EUI} ${LORAWAN_DUT_APP_KEY} ${LORAWAN_GW_IP_ADDR}
+  - ./add_one_test.sh ${LORAWAN_DUT_DEV_EUI} ${LORAWAN_GW_IP_ADDR}
 
 flash-lorawan:
   tags:
@@ -238,14 +236,12 @@ set-up-lorawan-gateway-scheduled:
   only:
   - schedules
   script:
-  - gateway_addr="192.168.1.84"
   - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  - ./clear_tests_and_devices.sh $gateway_addr
-  - ./add_device.sh $gateway_addr
-    #- ./add_one_test.sh $gateway_addr
-  - ./add_tests.sh $gateway_addr
+  - ./clear_tests_and_devices.sh ${LORAWAN_GW_IP_ADDR}
+  - ./add_device.sh ${LORAWAN_DUT_DEV_EUI} ${LORAWAN_DUT_APP_KEY} ${LORAWAN_GW_IP_ADDR}
+  - ./add_tests.sh ${LORAWAN_DUT_DEV_EUI} ${LORAWAN_GW_IP_ADDR}
 
 erase-current-lorawan-scheduled:
   tags:
@@ -276,16 +272,13 @@ lorawan_test_runner:
   - testsuite
   stage: run lorawan tests
   script:
-  - gateway_addr="192.168.1.84"
   - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
-  #  scrape web interface to check test progression
   - cd Sub-IoT-testsuite/lorawan-test-scripts
-  #- python3 check_if_finished.py -g $gateway_addr
   #  generate a report based on the outcome of the scripts
-  - wget -r -k -K  -l4 html-extension http://$gateway_addr/ || true
-  - mv $gateway_addr full_results
-  - python3 pull_results.py -g $gateway_addr
+  - wget -r -k -K  -l4 html-extension http://${LORAWAN_GW_IP_ADDR}/ || true
+  - mv ${LORAWAN_GW_IP_ADDR} full_results
+  - python3 pull_results.py -g ${LORAWAN_GW_IP_ADDR}
   # there is a bug on the gateway sw related to decoding the codr which can typically occur after a few days
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
