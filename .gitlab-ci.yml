@@ -283,6 +283,7 @@ lorawan_test_runner:
   # and also there are no rotating logs, so after grabbing all results, clear the logs and reset the gateway
   - python3 reset_gw_client.py
   - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN}
+  - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   artifacts:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
