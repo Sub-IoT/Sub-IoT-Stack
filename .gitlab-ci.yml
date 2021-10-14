@@ -204,6 +204,8 @@ erase-current-lorawan:
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
+  - cat flashOutput.txt
+  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
 
 set-up-lorawan-gateway:
   tags:
@@ -254,6 +256,8 @@ erase-current-lorawan-scheduled:
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
+  - cat flashOutput.txt
+  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
 
 flash-lorawan-scheduled:
   tags:
@@ -284,6 +288,8 @@ lorawan_test_runner:
   - python3 reset_gw_client.py
   - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN}
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
+  - cat flashOutput.txt
+  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
   artifacts:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
