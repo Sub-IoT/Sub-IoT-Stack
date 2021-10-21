@@ -38,7 +38,7 @@
 #include "errors.h"
 #include "timer.h"
 #include "hwwatchdog.h"
-#include "power_profile_file.h"
+#include "power_tracking_file.h"
 
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
@@ -380,7 +380,7 @@ __LINK_C void scheduler_run()
 		uint8_t executed_tasks = 0;
 		watchdog_wakeup = false;
 #endif
-#if defined FRAMEWORK_USE_POWER_PROFILE
+#if defined FRAMEWORK_USE_POWER_TRACKING
 		timer_tick_t wakeup_time = timer_get_counter_value();
 #endif
 		while(NG(current_priority) < NUM_PRIORITIES)
@@ -422,7 +422,7 @@ __LINK_C void scheduler_run()
 			timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 
 		hw_watchdog_feed();
-#if defined FRAMEWORK_USE_POWER_PROFILE
+#if defined FRAMEWORK_USE_POWER_TRACKING
 		//we don't want to register wake-ups that only trigger the watchdog
 		//we also need to check that the watchdog task was the only task that was executed as there is a small chance that
 		//the watchdog task is triggered when also other tasks are executing. In that case we want to track the time as active.
@@ -430,11 +430,11 @@ __LINK_C void scheduler_run()
 		{
 #endif
 #endif
-#if defined FRAMEWORK_USE_POWER_PROFILE
+#if defined FRAMEWORK_USE_POWER_TRACKING
 			timer_tick_t current_time = timer_get_counter_value();
-			power_profile_register_run_time(timer_calculate_difference(wakeup_time, current_time));
+			power_tracking_register_run_time(timer_calculate_difference(wakeup_time, current_time));
 #endif			
-#if defined FRAMEWORK_USE_WATCHDOG && defined FRAMEWORK_USE_POWER_PROFILE
+#if defined FRAMEWORK_USE_WATCHDOG && defined FRAMEWORK_USE_POWER_TRACKING
 		}
 #endif
 

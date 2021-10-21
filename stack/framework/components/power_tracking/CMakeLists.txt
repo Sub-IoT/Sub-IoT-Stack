@@ -19,4 +19,4 @@ limitations under the License.
 
 #Each Framework component must generate a single OBJECT library named
 #'${COMPONENT_LIBRARY_NAME}'
-ADD_LIBRARY(${COMPONENT_LIBRARY_NAME} OBJECT power_profile_file.c)
+ADD_LIBRARY(${COMPONENT_LIBRARY_NAME} OBJECT power_tracking_file.c)

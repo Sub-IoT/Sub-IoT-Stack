@@ -38,7 +38,7 @@
 #include "hwspi.h"
 #include "platform.h"
 #include "errors.h"
-#include "power_profile_file.h"
+#include "power_tracking_file.h"
 #include "timer.h"
 
 #include "sx1276Regs-Fsk.h"
@@ -129,11 +129,11 @@ static uint8_t rx_bw_khz = 0;
 static uint8_t rssi_smoothing_full = 0;
 static int8_t current_tx_power;
 
-#ifdef FRAMEWORK_POWER_PROFILE_RF
+#ifdef FRAMEWORK_POWER_TRACKING_RF
 static timer_tick_t tx_start_time = 0;
 static timer_tick_t rx_start_time = 0;
 static timer_tick_t standby_start_time = 0;
-#endif //FRAMEWORK_POWER_PROFILE_RF
+#endif //FRAMEWORK_POWER_TRACKING_RF
 
 static volatile bool fifo_level_irq_triggered = false;
 
@@ -995,17 +995,17 @@ void set_state_rx() {
 
 static void update_active_times(hw_radio_state_t opmode)
 {    
-#ifdef FRAMEWORK_POWER_PROFILE_RF
+#ifdef FRAMEWORK_POWER_TRACKING_RF
     timer_tick_t current_time = timer_get_counter_value();
 
-    uint8_t curr_mode = lora_mode ? POWER_PROFILE_LORA : POWER_PROFILE_D7;
+    uint8_t curr_mode = lora_mode ? POWER_TRACKING_LORA : POWER_TRACKING_D7;
 
     // Check all 3 tracked modes to stop and start timers
     if(opmode != HW_STATE_STANDBY)
     {
         if(standby_start_time) {
             DPRINT("registering standby, going into: %u", opmode);
-            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_STANDBY, timer_calculate_difference(standby_start_time, current_time), NULL);
+            power_tracking_register_radio_action(curr_mode, POWER_TRACKING_RADIO_STANDBY, timer_calculate_difference(standby_start_time, current_time), NULL);
         }
             
         standby_start_time = 0;
@@ -1017,7 +1017,7 @@ static void update_active_times(hw_radio_state_t opmode)
     {
         if(tx_start_time) {
             DPRINT("registering tx, going into: %u", opmode);
-            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_TX, timer_calculate_difference(tx_start_time, current_time), (void*)&current_tx_power);
+            power_tracking_register_radio_action(curr_mode, POWER_TRACKING_RADIO_TX, timer_calculate_difference(tx_start_time, current_time), (void*)&current_tx_power);
         }
             
         tx_start_time = 0;
@@ -1029,14 +1029,14 @@ static void update_active_times(hw_radio_state_t opmode)
     {
         if(rx_start_time) {
             DPRINT("registering rx, going into: %u", opmode);
-            power_profile_register_radio_action(curr_mode, POWER_PROFILE_RADIO_RX, timer_calculate_difference(rx_start_time, current_time), NULL);
+            power_tracking_register_radio_action(curr_mode, POWER_TRACKING_RADIO_RX, timer_calculate_difference(rx_start_time, current_time), NULL);
         }
             
         rx_start_time = 0;
     }
     else
         rx_start_time = rx_start_time ? rx_start_time : current_time;
-#endif //FRAMEWORK_POWER_PROFILE_RF
+#endif //FRAMEWORK_POWER_TRACKING_RF
 }
 
 void hw_radio_set_opmode(hw_radio_state_t opmode) {

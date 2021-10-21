@@ -29,8 +29,8 @@
 #include "framework_defs.h"
 #include "platform.h"
 
-#ifdef FRAMEWORK_USE_POWER_PROFILE
-	#error "This example can't be used in combination with use_power_profile as the filesystem is not initialized here"
+#ifdef FRAMEWORK_USE_POWER_TRACKING
+	#error "This example can't be used in combination with use_power_tracking as the filesystem is not initialized here"
 #endif
 
 #define LED0_PERIOD TIMER_TICKS_PER_SEC

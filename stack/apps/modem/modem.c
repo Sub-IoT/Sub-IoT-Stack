@@ -29,7 +29,7 @@
 #include "d7ap_fs.h"
 #include "log.h"
 #include "platform.h"
-#include "power_profile_file.h"
+#include "power_tracking_file.h"
 
 static bool forward_over_serial = false;
 
@@ -43,7 +43,7 @@ void bootstrap()
 
     alp_layer_init(NULL, forward_over_serial);
 
-    power_profile_file_initialize();
+    power_tracking_file_initialize();
 
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
