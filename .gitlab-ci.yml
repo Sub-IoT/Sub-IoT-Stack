@@ -205,7 +205,7 @@ erase-current-lorawan:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   - cat flashOutput.txt
-  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput.txt"; then exit 1; fi
 
 set-up-lorawan-gateway:
   tags:
@@ -229,7 +229,7 @@ flash-lorawan:
   - cd build/apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cat flashOutput.txt
-  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput.txt"; then exit 1; fi
 
 set-up-lorawan-gateway-scheduled:
   tags:
@@ -257,7 +257,7 @@ erase-current-lorawan-scheduled:
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   - cat flashOutput.txt
-  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput.txt"; then exit 1; fi
 
 flash-lorawan-scheduled:
   tags:
@@ -269,7 +269,7 @@ flash-lorawan-scheduled:
   - cd build/apps/sensor_push_lorawan
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-flash-full.script > flashOutput.txt
   - cat flashOutput.txt
-  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput.txt"; then exit 1; fi
 
 lorawan_test_runner:
   tags:
@@ -289,7 +289,7 @@ lorawan_test_runner:
   - python3 analyse_results.py --access_token ${LORAWAN_CI_ACCESS_TOKEN}
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   - cat flashOutput.txt
-  - if grep -q FAILED "flashOutput.txt"; then exit 1; fi
+  - if grep -q 'FAILED\|ERROR' "flashOutput.txt"; then exit 1; fi
   artifacts:
       paths: 
       - Sub-IoT-testsuite/lorawan-test-scripts/test_results.txt
