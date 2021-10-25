@@ -30,7 +30,7 @@
 #include "platform.h"
 
 #ifdef FRAMEWORK_USE_POWER_TRACKING
-	#error "This example can't be used in combination with use_power_tracking as the filesystem is not initialized here"
+	#error "This example can't be used in combination with FRAMEWORK_USE_POWER_TRACKING as the filesystem is not initialized here"
 #endif
 
 #define LED0_PERIOD TIMER_TICKS_PER_SEC
