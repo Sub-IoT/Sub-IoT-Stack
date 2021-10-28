@@ -33,7 +33,9 @@ static const spi_port_t spi_ports[SPI_COUNT] = {
     .miso_pin = PIN(GPIO_PORTA, 6),
     .mosi_pin = PIN(GPIO_PORTA, 7),
     .sck_pin = PIN(GPIO_PORTB, 3),
-    .alternate = GPIO_AF0_SPI1,
+    .sck_alternate = GPIO_AF0_SPI1,
+    .miso_alternate = GPIO_AF0_SPI1,
+    .mosi_alternate = GPIO_AF0_SPI1,
   }
 };
 
@@ -62,8 +64,8 @@ static const i2c_port_t i2c_ports[I2C_COUNT] = {
   {
     .i2c = I2C1,
     .scl_pin = PIN(GPIO_PORTB, 8),
-    .sda_pin = PIN(GPIO_PORTB, 9),
-    .alternate = GPIO_AF4_I2C1,
+    .scl_alternate = PIN(GPIO_PORTB, 9),
+    .sda_alternate = GPIO_AF4_I2C1,
   }
 };
 
