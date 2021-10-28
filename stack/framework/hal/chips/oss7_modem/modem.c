@@ -56,7 +56,7 @@ static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
         DPRINT("Command %i failed, no ack received\n", tag_id);
 
     DPRINT("command with tag %i completed @ %i", tag_id, timer_get_counter_value());
-    if (callbacks->command_completed_callback)
+    if (callbacks && callbacks->command_completed_callback)
         callbacks->command_completed_callback(!success, tag_id);
 }
 
@@ -81,7 +81,7 @@ static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__un
                 DPRINT("itf status for itf id %i len %i", action.interface_status.itf_id, action.interface_status.len);
             }
 
-            if (callbacks->modem_interface_status_callback) {
+            if (callbacks && callbacks->modem_interface_status_callback) {
                 callbacks->modem_interface_status_callback(
                     action.interface_status.itf_id, action.interface_status.len, action.interface_status.itf_status);
             }
@@ -90,13 +90,13 @@ static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__un
             // skip, ALP layer will call on_alp_command_completed_cb()
             break;
         case ALP_OP_WRITE_FILE_DATA:
-            if (callbacks->write_file_data_callback)
+            if (callbacks && callbacks->write_file_data_callback)
                 callbacks->write_file_data_callback(action.file_data_operand.file_offset.file_id,
                     action.file_data_operand.file_offset.offset, action.file_data_operand.provided_data_length,
                     action.file_data_operand.data);
             break;
         case ALP_OP_RETURN_FILE_DATA:
-            if (callbacks->return_file_data_callback)
+            if (callbacks && callbacks->return_file_data_callback)
                 callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,
                     action.file_data_operand.file_offset.offset, action.file_data_operand.provided_data_length,
                     action.file_data_operand.data);
