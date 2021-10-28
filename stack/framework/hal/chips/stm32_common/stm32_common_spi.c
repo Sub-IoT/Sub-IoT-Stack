@@ -93,7 +93,6 @@ static void init_pins(spi_handle_t* spi) {
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
   GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].mosi_alternate;
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
-  hw_busy_wait(200); //TDOD remove and figure out why this is needed
 }
 
 void spi_enable(spi_handle_t* spi) {
