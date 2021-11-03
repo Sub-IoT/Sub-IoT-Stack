@@ -208,7 +208,7 @@ __LINK_C uint8_t get_task_id(task_t task)
 
 __LINK_C error_t sched_register_task(task_t task)
 {
-  assert(NG(num_registered_tasks) <= NUM_TASKS);
+  assert(NG(num_registered_tasks) < NUM_TASKS);
   if(get_task_id(task) != NO_TASK)
     return -EALREADY;
 
