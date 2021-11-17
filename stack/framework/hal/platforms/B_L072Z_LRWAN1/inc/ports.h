@@ -26,7 +26,7 @@
 #include "hwgpio.h"
 
 
-#define SPI_COUNT 1
+#define SPI_COUNT 2
 static const spi_port_t spi_ports[SPI_COUNT] = {
   {
     .spi = SPI1,
@@ -34,6 +34,13 @@ static const spi_port_t spi_ports[SPI_COUNT] = {
     .mosi_pin = PIN(GPIO_PORTA, 7),
     .sck_pin = PIN(GPIO_PORTB, 3),
     .alternate = GPIO_AF0_SPI1,
+  },
+  {
+    .spi = SPI2,
+    .miso_pin = PIN(GPIO_PORTB, 14),
+    .mosi_pin = PIN(GPIO_PORTB, 15),
+    .sck_pin = PIN(GPIO_PORTB, 13),
+    .alternate = GPIO_AF0_SPI2
   }
 };
 
