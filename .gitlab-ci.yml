@@ -201,7 +201,7 @@ erase-current-lorawan:
   when: manual
   script:
   - rm -rf Sub-IoT-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   - cat flashOutput.txt
@@ -214,7 +214,7 @@ set-up-lorawan-gateway:
   when: manual
   script:
   - rm -rf Sub-IoT-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $LORAWAN_GW_IP_ADDR
   - ./add_device.sh $LORAWAN_DUT_DEV_EUI $LORAWAN_DUT_APP_KEY $LORAWAN_GW_IP_ADDR
@@ -239,7 +239,7 @@ set-up-lorawan-gateway-scheduled:
   - schedules
   script:
   - rm -rf Sub-IoT-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - ./clear_tests_and_devices.sh $LORAWAN_GW_IP_ADDR
   - ./add_device.sh $LORAWAN_DUT_DEV_EUI $LORAWAN_DUT_APP_KEY $LORAWAN_GW_IP_ADDR
@@ -253,7 +253,7 @@ erase-current-lorawan-scheduled:
   - schedules
   script:
   - rm -rf Sub-IoT-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   - JLinkExe -SelectEmuBySN 774174868 -CommandFile jlink-erase-full.script > flashOutput.txt
   - cat flashOutput.txt
@@ -277,7 +277,7 @@ lorawan_test_runner:
   stage: run lorawan tests
   script:
   - rm -rf Sub-IoT-testsuite
-  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git -b AL-1471-add-lorawan-tests-to-testsuite #temp
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite/lorawan-test-scripts
   #  generate a report based on the outcome of the scripts
   - wget -r -k -K  -l4 html-extension -R "current" http://$LORAWAN_GW_IP_ADDR || true
