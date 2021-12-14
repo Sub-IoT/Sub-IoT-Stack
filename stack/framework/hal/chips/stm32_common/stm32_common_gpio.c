@@ -198,7 +198,6 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 
 static void gpio_int_callback(uint8_t pin)
 {
-  start_atomic();
   assert(interrupts[pin].isr_ctx.cb != NULL);
   // when interrupting on both edges and when using low power mode where GPIO clocks are disabled we don't know which edge triggered the interrupt.
   // We could enable the clocks to read in the current GPIO level but most drivers and apps do not need to know this or can determine this based on state.
@@ -207,7 +206,6 @@ static void gpio_int_callback(uint8_t pin)
   // For this reason we pass 0 to the event_mask param of the callback.
   // TODO when only one interrupt edge is configured we _can_ reliably determine the edge so this can be improved
   interrupts[pin].isr_ctx.cb(interrupts[pin].isr_ctx.arg);
-  end_atomic();
 }
 
 __LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
