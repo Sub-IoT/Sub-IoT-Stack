@@ -42,3 +42,8 @@ void end_atomic()
   if(nests == 0)
     __enable_irq();
 }
+
+_Bool in_atomic()
+{
+  return (nests > 0);
+}

@@ -117,9 +117,6 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 
 static void gpio_int_callback(uint8_t pin)
 {
-    //we use emlib's GPIO interrupt handler which does NOT
-    //disable the interrupts by default --> disable them here to get the same behavior !!
-    start_atomic();
 	assert(interrupts[pin].callback != 0x0);
 	pin_id_t id = {interrupts[pin].interrupt_port, pin};
 	//report an event_mask of '0' since the only way to check which event occurred
@@ -127,7 +124,6 @@ static void gpio_int_callback(uint8_t pin)
     //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
     // TODO find out if there is no way to do this reliable on efm32gg
     interrupts[pin].callback(id,0);
-    end_atomic();
 }
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
