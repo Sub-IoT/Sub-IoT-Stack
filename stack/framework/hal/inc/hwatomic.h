@@ -77,6 +77,12 @@ __LINK_C void start_atomic(void);
  */
 __LINK_C void end_atomic(void);
 
+/*! \brief Check if currently in atomic section
+ *
+ * Indicates whether we are currently in an atomic section
+ */
+__LINK_C _Bool in_atomic(void);
+
 #endif //__HW_ATOMIC_H_
 
 /** @}*/

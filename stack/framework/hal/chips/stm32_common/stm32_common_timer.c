@@ -183,6 +183,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return EOFF;
   //don't enable the interrupt while waiting to write a new compare value
   ready_for_trigger = false;
+  assert(!in_atomic()); // if we currently are in atomic context it is possible to have an infinite loop on the instruction below.
   while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
   ready_for_trigger = true;
   start_atomic();
