@@ -46,6 +46,8 @@
 #include "modem_interface.h"
 #include "platform.h"
 
+#define QUERY_FILE_ID 0x43
+
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
 
@@ -66,9 +68,30 @@
   static alp_init_args_t alp_init_args;
 #endif
 
+static const d7ap_fs_file_header_t file_header = { 
+    .allocated_length = 1,
+    .length = 1,
+    .file_permissions
+    = (file_permission_t) { .guest_read = true, .guest_write = true, .user_read = true, .user_write = true },
+    .file_properties.storage_class = FS_STORAGE_PERMANENT };
+
+static bool itf_enabled = false;
+
+void toggle_itf() {
+    log_print_string("setting the interface to %s", itf_enabled ? "enabled" : "disabled");
+    alp_command_t* cmd = alp_layer_command_alloc(false, false);
+    if (itf_enabled)
+        alp_append_stop_itf_action(cmd);
+    else
+        alp_append_start_itf_action(cmd);
+    alp_layer_process(cmd);
+    itf_enabled = !itf_enabled;
+    timer_post_task_delay(&toggle_itf, TIMER_TICKS_PER_MINUTE);
+}
 
 void bootstrap()
 {
+  log_print_string("booted");
   alp_layer_init(&alp_init_args, true);
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
@@ -80,5 +103,10 @@ void bootstrap()
 #if PLATFORM_NUM_LEDS > 0
   sched_register_task(&led_blink_off);
 #endif
-}
 
+  uint8_t initial_data[1] = {11};
+  int result = d7ap_fs_init_file(QUERY_FILE_ID, &file_header, initial_data);
+
+  sched_register_task(&toggle_itf);
+  sched_post_task(&toggle_itf);
+}

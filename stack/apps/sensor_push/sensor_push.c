@@ -47,7 +47,7 @@
   #include "hwi2c.h"
 #endif
 
-#define SENSOR_FILE_ID           0x40
+#define SENSOR_FILE_ID           0x42
 #define SENSOR_FILE_SIZE         2
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
@@ -57,11 +57,13 @@
 
 // Define the D7 interface configuration used for sending the ALP command on
 
+#define QUERY_FILE_ID 0x43
+
 static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
   .itf_id = ALP_ITF_ID_D7ASP,
   .d7ap_session_config = {
     .qos = {
-        .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
+        .qos_resp_mode = SESSION_RESP_MODE_ALL,
         .qos_retry_mode = SESSION_RETRY_MODE_NO
     },
     .dormant_timeout = 0,
@@ -74,6 +76,15 @@ static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
         .id = { 0 }
     }
   }
+};
+
+static alp_operand_query_t query = (alp_operand_query_t) { 
+    .code = { 
+        .type = QUERY_CODE_TYPE_ARITHM_COMP_WITH_VALUE_IN_QUERY,
+        .mask = false,
+        .param = ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO 
+    },
+    .compare_operand_length = 1
 };
 
 void execute_sensor_measurement()
@@ -98,6 +109,8 @@ void execute_sensor_measurement()
   
   // forward to the D7 interface
   alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
+
+  alp_append_break_query_action(command, QUERY_FILE_ID, 0, &query);
 
   // add the return file data action
   alp_append_return_file_data_action(command, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
@@ -140,6 +153,8 @@ void bootstrap()
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
     alp_layer_init(&alp_init_args, false);
+
+    memset(query.compare_body, 10, 1);
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000, true);
