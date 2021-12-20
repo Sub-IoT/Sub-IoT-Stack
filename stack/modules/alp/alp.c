@@ -324,8 +324,9 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     
     // parse the file offset operand(s), using a temp fifo
     fifo_t temp_fifo;
-    fifo_init_subview(&temp_fifo, cmd_fifo, 0, sizeof(alp_operand_file_offset_t));
-    
+    uint16_t subset_size = sizeof(alp_operand_file_offset_t) > fifo_get_size(cmd_fifo) ? fifo_get_size(cmd_fifo) : sizeof(alp_operand_file_offset_t);
+    fifo_init_subview(&temp_fifo, cmd_fifo, 0, subset_size);
+
     alp_operand_file_offset_t temp_offset;
     if(!alp_parse_file_offset_operand(&temp_fifo, &temp_offset)) // TODO assuming only 1 file offset operant. Why does this get discarded?
         return false;
