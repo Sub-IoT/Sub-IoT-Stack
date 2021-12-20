@@ -284,6 +284,17 @@ static bool parse_operand_file_header(alp_command_t* command, alp_action_t* acti
     return true;
 }
 
+bool alp_append_break_query_action(alp_command_t* command, uint8_t file_id, uint32_t offset, alp_operand_query_t* query) {
+    fifo_t* cmd_fifo = &command->alp_command_fifo;
+    int rc;
+    rc = fifo_put_byte(cmd_fifo, ALP_OP_BREAK_QUERY);
+    rc += fifo_put_byte(cmd_fifo, query->code.raw);
+    rc += !alp_append_length_operand(command, query->compare_operand_length);
+    rc += fifo_put(cmd_fifo, query->compare_body, query->compare_operand_length);
+    rc += !alp_append_file_offset_operand(command, file_id, offset);
+    return rc == SUCCESS;
+}
+
 static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
 {
     fifo_t* cmd_fifo = &command->alp_command_fifo;
@@ -313,12 +324,14 @@ static bool parse_operand_query(alp_command_t* command, alp_action_t* action)
     
     // parse the file offset operand(s), using a temp fifo
     fifo_t temp_fifo;
-    fifo_init_filled(&temp_fifo, action->query_operand.compare_body + action->query_operand.compare_operand_length,
-        2 * sizeof(alp_operand_file_offset_t), 2 * sizeof(alp_operand_file_offset_t));
+    uint16_t subset_size = sizeof(alp_operand_file_offset_t) > fifo_get_size(cmd_fifo) ? fifo_get_size(cmd_fifo) : sizeof(alp_operand_file_offset_t);
+    fifo_init_subview(&temp_fifo, cmd_fifo, 0, subset_size);
+
     alp_operand_file_offset_t temp_offset;
     if(!alp_parse_file_offset_operand(&temp_fifo, &temp_offset)) // TODO assuming only 1 file offset operant. Why does this get discarded?
         return false;
-    if(fifo_pop(cmd_fifo, action->query_operand.compare_body + action->query_operand.compare_operand_length, temp_fifo.head_idx) != SUCCESS)
+    if (fifo_pop(cmd_fifo, action->query_operand.compare_body + action->query_operand.compare_operand_length,
+        temp_fifo.head_idx - cmd_fifo->head_idx) != SUCCESS)
         return false;
 
     return true;

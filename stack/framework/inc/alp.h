@@ -345,6 +345,7 @@ bool alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id,
 bool alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);
 bool alp_append_start_itf_action(alp_command_t* command);
 bool alp_append_stop_itf_action(alp_command_t* command);
+bool alp_append_break_query_action(alp_command_t* command, uint8_t file_id, uint32_t offset, alp_operand_query_t* query);
 
 bool alp_parse_action(alp_command_t* command, alp_action_t* action);
 bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length);
