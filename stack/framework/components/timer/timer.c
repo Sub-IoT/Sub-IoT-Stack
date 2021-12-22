@@ -415,14 +415,12 @@ static void timer_fired()
 #endif
     sched_post_task_prio(
         NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
-    if(NG(timers)[NG(next_event)].period > 0) {
-        task_t recursive_task = NG(timers)[NG(next_event)].f;
+
+    if(NG(timers)[NG(next_event)].period > 0)
+        NG(timers)[NG(next_event)].next_event = current_time + NG(timers)[NG(next_event)].period;
+    else
         NG(timers)[NG(next_event)].f = 0x0;
-        timer_post_task_prio(recursive_task, current_time + NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].arg);
-        fired_by_interrupt = true;
-        return;
-    }
-    NG(timers)[NG(next_event)].f = 0x0;
+
     if(fired_by_interrupt)
         configure_next_event();
     else
