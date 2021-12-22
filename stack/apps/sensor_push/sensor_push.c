@@ -51,6 +51,8 @@
 #define SENSOR_FILE_SIZE         2
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
+#define APPLICATION_FILE_ID      0x43
+
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
 #endif
@@ -142,6 +144,20 @@ void on_alp_command_result_cb(alp_command_t *alp_command, alp_interface_status_t
   fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
 }
 
+static uint8_t application_file_content[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+static alp_status_codes_t on_unhandled_read_cb(const alp_interface_status_t* origin_itf_status, alp_operand_file_data_request_t operand, uint8_t* alp_response) {
+    log_print_string("gotten read file of file %d", operand.file_offset.file_id);
+    if (operand.file_offset.file_id == APPLICATION_FILE_ID) {
+        assert(sizeof(application_file_content) <= (operand.file_offset.offset + operand.requested_data_length));
+        log_print_string(
+            "gotten read file with offset %i and length %i", operand.file_offset.offset, operand.requested_data_length);
+        memcpy(alp_response, application_file_content + operand.file_offset.offset, operand.requested_data_length);
+        return SUCCESS;
+    }
+    return -ENOENT;
+}
+
 static alp_init_args_t alp_init_args;
 
 void bootstrap()
@@ -152,6 +168,7 @@ void bootstrap()
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
+    alp_init_args.alp_unhandled_read_action_cb = &on_unhandled_read_cb;
     alp_layer_init(&alp_init_args, false);
 
     memset(query.compare_body, 10, 1);
