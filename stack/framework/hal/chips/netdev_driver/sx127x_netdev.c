@@ -36,14 +36,14 @@
 #include "hwsystem.h"
 #include "debug.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
+//#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
 #include "log.h"
     #define DEBUG(...) log_print_string(__VA_ARGS__)
     #define DEBUG_DATA(...) log_print_data(__VA_ARGS__)
-#else
+/*#else
     #define DEBUG(...)
     #define DEBUG_DATA(...)
-#endif
+#endif*/
 
 /* Internal helper functions */
 static int _set_state(sx127x_t *dev, netopt_state_t state);
@@ -119,6 +119,7 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
         }
     }
 
+
     /* FIFO operations can not take place in Sleep mode
      * So wake up the chip */
     if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
@@ -153,8 +154,18 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
                 dev->packet.pos = size;
                 if (dev->options & SX127X_OPT_TELL_TX_REFILL) // we expect to refill the FIFO with subsequent data
                 {
-                    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x81); // FIFO level interrupt if under 2 bytes
-                    dev->packet.fifothresh = 2;
+                	// Setting the fifo threshold to half the packet length
+                	if ((dev->packet.length % 2) == 1)
+                	{
+                		dev->packet.fifothresh = ((dev->packet.length+1)/2);
+                		sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, (0x80 | (dev->packet.fifothresh-1)));
+                	}
+                	else
+                	{
+                		dev->packet.fifothresh = ((dev->packet.length/2)+1);
+                		sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, (0x80 | (dev->packet.fifothresh-1)));
+                	}
+
                     sx127x_write_fifo(dev, iolist->iol_base, size);
                     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
                     hw_gpio_enable_interrupt(dev->params.dio1_pin);
@@ -220,9 +231,16 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
             timer_add_event(&dev->_internal.tx_timeout_timer);
         }
 
-        /* Put chip into transfer mode */
-        sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
-        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+        if (sx127x_get_state(dev) & SX127X_RF_TX_RUNNING) {}
+        else {
+        	/* Put chip into Standby mode */
+            sx127x_set_state(dev, SX127X_RF_IDLE);
+            sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
+
+        	/* Put chip into transfer mode */
+        	sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
+        	sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+        }
     }
 
     return 0;
@@ -352,6 +370,7 @@ static int _init(netdev_t *netdev)
 
     sx127x->irq = 0;
     sx127x_radio_settings_t settings;
+    memset((uint8_t*)&settings, 0, sizeof(sx127x_radio_settings_t));
     settings.channel = SX127X_CHANNEL_DEFAULT;
     settings.modem = SX127X_MODEM_DEFAULT;
     settings.state = SX127X_RF_IDLE;
@@ -369,6 +388,9 @@ static int _init(netdev_t *netdev)
     sx127x_init_radio_settings(sx127x);
     /* Put chip into sleep */
     sx127x_set_sleep(sx127x);
+
+    /* Put chip into standby mode*/
+    sx127x_set_standby(sx127x);
 
     DEBUG("[sx127x] init_radio: sx127x initialization done\n");
     init_done = true;
@@ -474,8 +496,8 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             return sizeof(netopt_enable_t);
 
         case NETOPT_TX_POWER:
-            assert(max_len >= sizeof(int16_t));
-            *((int16_t*) val) = (int16_t)sx127x_get_tx_power(dev);
+            assert(max_len >= sizeof(int8_t));
+            *((int8_t*) val) = sx127x_get_tx_power(dev);
             return sizeof(int16_t);
 
         case NETOPT_IQ_INVERT:
@@ -685,8 +707,8 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
                 res = -EINVAL;
                 break;
             }
-            sx127x_set_tx_power(dev, (int8_t)power);
-            return sizeof(int16_t);
+            sx127x_set_tx_power(dev, power);
+            return sizeof(int8_t);
 
         case NETOPT_FIXED_HEADER:
             assert(len <= sizeof(netopt_enable_t));
@@ -985,6 +1007,27 @@ void _on_dio1_irq(void *arg)
                 case SX127X_MODEM_FSK:
                     hw_gpio_disable_interrupt(dev->params.dio1_pin);
                     timer_cancel_event(&dev->_internal.rx_timeout_timer);
+
+                    uint8_t byte = 0;
+/*                    if (!(dev->options & SX127X_OPT_TELL_RX_END))
+                    {
+                        while(!sx127x_is_fifo_empty(dev))
+                        {
+                            byte = sx127x_reg_read(dev, SX127X_REG_FIFO);
+                            //log_print_data(&byte, 1);
+                            //DEBUG("%02X", byte);
+                            printf("%02X\r\n", byte);
+                        }
+
+                    	//sx127x_read_fifo(dev, &dev->packet.buf[dev->packet.pos], dev->packet.fifothresh);
+                    	//DEBUG_DATA(dev->packet.buf, dev->packet.fifothresh);
+
+                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (60 - 1));
+                        dev->packet.fifothresh = 60;
+                        hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+                        hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                        return;
+                    }*/
 
                     if (dev->packet.length == 0 && dev->packet.pos == 0)
                     {

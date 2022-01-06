@@ -189,12 +189,12 @@ char at_parse_line(string_t line, char *ret)
             {
                 ms_array_slice_to_string(line, index_write_start, line_len - 1, ret);
                 result = at_execute_command(temp, ret, state);
-                ret[0] = 0;
+                //ret[0] = 0;
             }
             else
             {
                 result = at_execute_command(temp, ret, state);
-                ret[0] = 0;
+                //ret[0] = 0;
             }
             break;
 
@@ -204,7 +204,6 @@ char at_parse_line(string_t line, char *ret)
 
     return result;
 }
-
 
 char at_parse_extract_number(string_t parameter, uint32_t *number)
 {
@@ -221,6 +220,56 @@ char at_parse_extract_number(string_t parameter, uint32_t *number)
 
     if (number)
         *number = value;
+
+    return AT_OK;
+}
+
+char at_parse_extract_signed_number(string_t parameter, int32_t *number)
+{
+    int pos = 0;
+    int32_t value = 0;
+    int sign = 1;
+
+    if ((uint8_t)parameter[pos]=='-')
+    {
+        sign = -1;
+        pos += 1;
+    }
+
+    while (parameter[pos] >= '0' && parameter[pos] <= '9') {
+        value = value * 10 + (int32_t)(parameter[pos] - '0');
+        pos += 1;
+    }
+
+    if (pos == 0)
+        return AT_ERROR;
+
+    if (number)
+        *number = (value * sign);
+
+    return AT_OK;
+}
+
+char at_parse_extract_string(string_t parameter, char *string, uint8_t *string_len)
+{
+    int pos = 0;
+    int len = strlen((const char *)parameter);
+
+    // check if the size of the string is compatible with the size of the expected number
+    if (*string_len < len)
+        return AT_ERROR;
+
+    while ((pos < len) && (parameter[pos] != ','))
+    {
+        pos += 1;
+    }
+
+    if (pos == 0)
+        return AT_ERROR;
+
+    strncpy(string, parameter, pos);
+    string[pos] = '\0';
+    *string_len = pos;
 
     return AT_OK;
 }
@@ -252,15 +301,42 @@ char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *byt
         unsigned byte ;
         sscanf( &parameter[i * 2], "%02X", &byte ) ;
 
-        DPRINT("byte <%x>", byte);
+        //DPRINT("byte <%x>", byte);
 
         //DPRINT("parameter + pos %s ", &parameter[pos]);
         //sscanf(&parameter[pos], "%02hhx", buf);
 
         bytes[i] = byte;
-        DPRINT("byte[%d]=0x%X", i, bytes[i]);
+        //DPRINT("byte[%d]=0x%X", i, bytes[i]);
     }
 
     return AT_OK;
 }
 
+
+int skip_to_next_field(char *line, int len)
+{
+    int pos = 0;
+
+    while (pos < len && line[pos] != ',')
+        pos += 1;
+
+    if (pos < len && line[pos] == ',')
+        pos += 1;
+
+    line += pos;
+    return pos;
+}
+
+int extract_field_number(char *line)
+{
+    int ret = 1;
+
+    for(int i=0; i < strlen(line); i++)
+    {
+        if(line[i] == ',')
+            ret++;
+    }
+
+    return ret;
+}

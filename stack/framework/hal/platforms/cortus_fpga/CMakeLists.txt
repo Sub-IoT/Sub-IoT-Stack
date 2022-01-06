@@ -57,12 +57,13 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 #Set platform specific compile options
 #INSERT_C_FLAGS(AFTER "-c -Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
-INSERT_C_FLAGS(AFTER "-Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
+INSERT_C_FLAGS(AFTER "-v -Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")
-#INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-nostartfiles")
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fno-lto -Os -g3 -Wl,-q -Wl,--noinhibit-exec -Wl,-Map,cortus.map -fno-exceptions")
+INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-nostartfiles")
+#INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fuse-clib=newlib")
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fno-lto -Os -g3 -Wl,-q -Wl,--noinhibit-exec -Wl,-Map,cortus.map -nostartfiles -fno-exceptions")
 #INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lc -L. -fno-lto -Os -g3 -Wl,-q -Wl,--noinhibit-exec -Wl,-Map,cortus.map -fno-exceptions")
 
 #MESSAGE(STATUS "CMAKE_C_COMPILER ${CMAKE_C_COMPILER}")
@@ -74,6 +75,7 @@ ADD_LIBRARY(PLATFORM OBJECT
         cortus_leds.c
         cortus_userbutton.c
         libc_overrides.c
+        crt0.c
         inc/button.h
 )
 

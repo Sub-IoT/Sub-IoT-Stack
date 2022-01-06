@@ -53,7 +53,8 @@
 #include "fec.h"
 
 
-#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A && !defined PLATFORM_CORTUS_FPGA)
+#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A && \
+     !defined PLATFORM_CORTUS_FPGA && !defined PLATFORM_B_L072Z_LRWAN1)
     #error Mismatch between the configured platform and the actual platform.
 #endif
 
@@ -79,7 +80,7 @@
 // Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 19.2 + 17.36 kHz => > 36.5 kHZ.
-#define RXBW_L    36500 //Hz
+#define RXBW_L    10468 //Hz
 
 // normal rate
 #define BITRATE_N 55555 // bps
@@ -87,7 +88,7 @@
 // Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 155.555 + 17.36 => 172.91 KHz
-#define RXBW_N   172910 //Hz
+#define RXBW_N   78646 //Hz
 
 // high rate
 #define BITRATE_H 166667 // bps
@@ -95,13 +96,16 @@
 // Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 250 + 17.36 kHz => > 267.36 kHZ.
-#define RXBW_H    267360 //Hz
+#define RXBW_H    125868 //Hz
 
 typedef struct
 {
     hw_radio_packet_t hw_radio_packet;
     uint8_t __data[255];
 } frame_t;
+
+static uint8_t raw_tx_frame[255];
+static uint8_t raw_tx_frame_length;
 
 static netdev_t *netdev;
 
@@ -135,8 +139,18 @@ static hwradio_init_args_t init_args;
 
 static state_t state = STATE_IDLE;
 
+typedef enum
+{
+    CODING_RFU = 0x00,
+    CODING_PN9 = 0x01,
+    CODING_FEC = 0x02,
+    CODING_FEC_PN9 = 0x04
+} coding_t;
+
+static uint8_t current_encoding = 0;
+
 static channel_id_t default_channel_id = {
-  .channel_header.ch_coding = PHY_CODING_PN9,
+  .channel_header.ch_coding = PHY_CODING_RFU,
   .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
   .channel_header.ch_freq_band = PHY_BAND_868,
   .center_freq_index = 0
@@ -156,8 +170,10 @@ static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
 
 static uint64_t id;
+static uint32_t time = 0;
 
-bool refill_flag = 0;
+bool refill_flag = false;
+bool infinite_rx = false;
 
 static char cmd_tx_continuously(char *value);
 static char cmd_tx(char *value);
@@ -180,7 +196,7 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
         case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
     }
 
-    snprintf(str, len, "%.3s%c%i", band, rate, channel->center_freq_index);
+    snprintf(str, len, "%.3s-%c-%i", band, rate, channel->center_freq_index);
 }
 
 static uint16_t encode_packet(uint8_t *data, uint16_t nbytes)
@@ -188,12 +204,14 @@ static uint16_t encode_packet(uint8_t *data, uint16_t nbytes)
     uint16_t encoded_len = nbytes;
 
 #ifndef HAL_RADIO_USE_HW_FEC
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_encoding == CODING_FEC)
         encoded_len = fec_encode(data, nbytes);
 #endif
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(data, encoded_len);
+    if ((current_encoding == CODING_PN9) ||
+        (current_encoding == CODING_FEC_PN9))
+        pn9_encode(data, encoded_len);
 #endif
 
     return encoded_len;
@@ -213,15 +231,20 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(hw_radio_packet->data, hw_radio_packet->length);
+    if ((current_encoding == CODING_PN9) ||
+        (current_encoding == CODING_FEC_PN9))
+        pn9_encode(hw_radio_packet->data, hw_radio_packet->length);
 #endif
 #ifndef HAL_RADIO_USE_HW_FEC
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_encoding == CODING_FEC)
         fec_decode_packet(hw_radio_packet->data, hw_radio_packet->length, hw_radio_packet->length);
 #endif
 
-    hw_radio_packet->length = hw_radio_packet->data[0] + 1;
+    DPRINT("len %i", hw_radio_packet->length);
     DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
+
+    if (infinite_rx)
+        return;
 
     if (hw_radio_packet->rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
@@ -231,33 +254,46 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         if(memcmp(&crc, hw_radio_packet->data + hw_radio_packet->length - 2, 2) != 0)
         {
             DPRINT("CRC invalid");
+            //DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
             missed_packets_counter++;
             return;
         }
     }
     else if (hw_radio_packet->rx_meta.crc_status == HW_CRC_INVALID)
     {
-        DPRINT("CRC invalid");
+        DPRINT("CRC invalid %i", hw_radio_packet->length);
+//      DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
         missed_packets_counter++;
         return;
     }
 
+    if (hw_radio_packet->length < (1 + sizeof(uint64_t) + sizeof(uint16_t) + 2))
+        return;
+
 #if PLATFORM_NUM_LEDS > 0
     led_toggle(0);
 #endif
+
+    // if frame not formatted according the convention, return
+    if (hw_radio_packet->length < (1 + sizeof(uint64_t) + sizeof(uint16_t) + 2))
+        return;
+
     uint16_t msg_counter = 0;
     uint64_t msg_id;
-    uint16_t data_len = hw_radio_packet->length - sizeof(msg_id) - sizeof(msg_counter) - 2;
+    uint16_t data_len = hw_radio_packet->length - 1 - sizeof(msg_id) - sizeof(msg_counter) - 2;
 
-    char rx_data[PACKET_MAX_SIZE + 1];
+    char rx_data[data_len + 1];
     memcpy(&msg_id, hw_radio_packet->data + 1, sizeof(msg_id));
     memcpy(&msg_counter, hw_radio_packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
     memcpy(rx_data, hw_radio_packet->data + 1 + sizeof(msg_id) + sizeof(msg_counter), data_len);
     rx_data[data_len] = '\0';
-    char chan[8];
+    char chan[32];
     channel_id_to_string(&default_channel_id, chan, sizeof(chan));
     DPRINT("DATA received: %s", rx_data);
-    DPRINT("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>", chan, msg_counter, hw_radio_packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, hw_radio_packet->rx_meta.timestamp);
+    DPRINT("%s, counter <%i>, rssi <%idBm>, timestamp <%lu>", chan, msg_counter, hw_radio_packet->rx_meta.rssi, hw_radio_packet->rx_meta.timestamp);
+
+    DPRINT("Packet emitted by node ID:");
+    DPRINT_DATA(&msg_id, sizeof(msg_id));
 
     if(counter == 0)
     {
@@ -271,11 +307,13 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     {
         received_packets_counter++;
         counter++;
+        DPRINT("received_packets_counter: %d counter %d", received_packets_counter, counter);
     }
     else if(msg_counter > expected_counter)
     {
         missed_packets_counter += msg_counter - expected_counter;
         counter = msg_counter;
+        DPRINT("missed_packets_counter: %d counter %d", missed_packets_counter, counter);
     }
 
     double per = 0;
@@ -287,17 +325,25 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
 static void packet_header_received(uint8_t *data, uint8_t len)
 {
-    uint8_t packet_len;
+    uint16_t packet_len;
     DPRINT("Packet Header received %i\n", len);
     DPRINT_DATA(data, len);
+
+    if (infinite_rx)
+    {
+        hw_radio_set_payload_length(0xFF);
+        return;
+    }
 
     assert(len == 4);
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(data, len);
+    if ((current_encoding == CODING_PN9) ||
+        (current_encoding == CODING_FEC_PN9))
+        pn9_encode(data, len);
 #endif
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_encoding == CODING_FEC)
     {
 #ifndef HAL_RADIO_USE_HW_FEC
         fec_decode_packet(data, len, len);
@@ -308,8 +354,46 @@ static void packet_header_received(uint8_t *data, uint8_t len)
         packet_len = data[0] + 1 ;
 
     DPRINT("RX Packet Length: %i ", packet_len);
+
+    if (packet_len <= 4)
+    {
+        DPRINT("No more data expected");
+
+        // restart RX
+        hw_radio_stop();
+        hw_radio_set_opmode(HW_STATE_RX);
+        return;
+    }
+
     // set PayloadLength to the length of the expected foreground frame
     hw_radio_set_payload_length(packet_len);
+}
+
+static void cmd_tx_repeat()
+{
+    state = STATE_TX;
+
+    counter++;
+    memcpy(tx_frame.hw_radio_packet.data, raw_tx_frame, raw_tx_frame_length);
+    tx_frame.hw_radio_packet.length = raw_tx_frame_length;
+
+    // update only the counter and the resulting CRC
+    memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
+
+#ifndef HAL_RADIO_USE_HW_CRC
+    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+    uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length - 2));
+    memcpy(tx_frame.hw_radio_packet.data + tx_frame.hw_radio_packet.length - 2, &crc, 2);
+#endif
+
+    DPRINT("Frame <%i>", counter);
+    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+
+    // Encode the packet if not supported by xcvr
+    tx_frame.hw_radio_packet.length = encode_packet(tx_frame.hw_radio_packet.data,
+                                                    tx_frame.hw_radio_packet.length);
+
+    hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 }
 
 static void stop() {
@@ -318,11 +402,12 @@ static void stop() {
     netdev->driver->set(netdev, NETOPT_STATE, &opmode, sizeof(netopt_state_t));
 
     // make sure to cancel tasks which might me pending already
-    /*if(state == STATE_TX)
+    if(state == STATE_TX)
     {
         timer_cancel_task(&cmd_tx_repeat);
         sched_cancel_task(&cmd_tx_repeat);
-    }*/
+        time = 0;
+    }
 }
 
 static void packet_transmitted(timer_tick_t timestamp)
@@ -330,22 +415,29 @@ static void packet_transmitted(timer_tick_t timestamp)
     assert(state == STATE_TX);
     DPRINT("Transmitted packet @ %i with length = %i", timestamp, tx_frame.hw_radio_packet.length);
 
-    state = STATE_IDLE;
-
-    /* TODO Repeat ?
-    timer_tick_t delay;
-    if(tx_packet_delay_s == 0)
-        delay = TIMER_TICKS_PER_SEC * 5;
-    else
-        delay = TIMER_TICKS_PER_SEC * tx_packet_delay_s;
-
-    timer_post_task_delay(&cmd_tx_repeat, delay);
-    */
+    //state = STATE_IDLE;
+    if(time != 0)
+    {
+        DPRINT("Next TX in %u ms", time);
+        timer_post_task_delay(&cmd_tx_repeat, /*TIMER_TICKS_PER_SEC **/ time);
+    }
+    else {
+        stop();
+        // Setting refill_flag to false
+        refill_flag = false;
+        // Unlimited Length packet format to set the Receive packet of arbitrary length
+        hw_radio_set_payload_length(0x00); // unlimited length mode
+        DPRINT("START FG scan @ %i", timer_get_counter_value());
+        state = STATE_RX;
+        hw_radio_set_opmode(HW_STATE_RX);
+        DPRINT("Listen mode set\n");
+    }
 }
 
 static void fill_in_fifo(uint8_t remaining_bytes_len)
 {
     //Refill the fifo with the same packet
+    //DPRINT("TX");
     hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 }
 
@@ -503,16 +595,16 @@ static char cmd_set_preamble_size(char *value)
 
     ret = at_parse_extract_number(value, &size);
     if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint16_t));
+        netdev->driver->set(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint8_t));
 
     return ret;
 }
 
 static char cmd_get_preamble_size(char *value)
 {
-    uint16_t size;
+    uint8_t size;
 
-    netdev->driver->get(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint16_t));
+    netdev->driver->get(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint8_t));
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+PRES: %d\r\n", size);
     return AT_OK;
 }
@@ -533,7 +625,7 @@ static char cmd_get_preamble_polarity(char *value)
 {
     uint32_t polarity;
 
-    netdev->driver->set(netdev, NETOPT_PREAMBLE_POLARITY, &polarity, sizeof(uint8_t));
+    netdev->driver->get(netdev, NETOPT_PREAMBLE_POLARITY, &polarity, sizeof(uint8_t));
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+PREP: %d\r\n", (uint8_t)polarity);
     return AT_OK;
 }
@@ -634,6 +726,34 @@ static char cmd_get_bandwidth(char *value)
 
     netdev->driver->get(netdev, NETOPT_BANDWIDTH, &bwdth, sizeof(uint32_t));
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+RXBW: %luHz\r\n", bwdth);
+    return AT_OK;
+}
+
+static char cmd_set_eirp(char *value)
+{
+    char ret;
+    int32_t eirp;
+
+    ret = at_parse_extract_signed_number(value, &eirp);
+    if (ret == AT_OK)
+    {
+        if (eirp < -128 || eirp > 127)
+             return AT_ERROR;
+
+    	netdev->driver->set(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+        netdev->driver->get(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+EIRP: %d\r\n", (int8_t)eirp);
+    }
+
+    return ret;
+}
+
+static char cmd_get_eirp(char *value)
+{
+    int8_t eirp;
+
+    netdev->driver->get(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+EIRP: %d\r\n", eirp);
     return AT_OK;
 }
 
@@ -773,7 +893,7 @@ static char cmd_get_mod_shaping(char *value)
     uint8_t BT;
 
     netdev->driver->get(netdev, NETOPT_MOD_SHAPING, &BT, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+MODS: %d\r\n", BT);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+BT: %d\r\n", BT);
     return AT_OK;
 }
 
@@ -825,18 +945,36 @@ static char cmd_set_fec_on(char *value)
     uint32_t enable;
 
     ret = at_parse_extract_number(value, &enable);
-    if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
+    if(ret == AT_ERROR)
+        return AT_ERROR;
 
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: %d\r\n", (uint8_t)enable);
+
+#ifdef HAL_RADIO_USE_HW_FEC
+    netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
+#else
+    if(enable == 0)
+        current_encoding &= ~CODING_FEC;
+    else
+        current_encoding |= CODING_FEC;
+#endif
     return AT_OK;
 }
 
 static char cmd_get_fec_on(char *value)
 {
+#ifdef HAL_RADIO_USE_HW_FEC
     uint8_t enable;
 
     netdev->driver->get(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: %d\r\n", enable);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "+FEC: %d\r\n", enable);
+#else
+    if((current_encoding & CODING_FEC) == CODING_FEC)
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: 1\r\n");
+    else
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: 0\r\n");
+#endif
+
     return AT_OK;
 }
 
@@ -899,18 +1037,37 @@ static char cmd_set_dc_free_scheme(char *value)
     uint32_t scheme;
 
     ret = at_parse_extract_number(value, &scheme);
-    if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
+    if(ret == AT_ERROR)
+        return AT_ERROR;
+
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: %d\r\n", (uint8_t)scheme);
+
+#ifdef HAL_RADIO_USE_HW_FEC
+    netdev->driver->set(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
+#else
+    if(scheme == 0)
+        current_encoding &= ~CODING_PN9;
+    else
+        current_encoding |= CODING_PN9;
+#endif
 
     return AT_OK;
 }
 
 static char cmd_get_dc_free_scheme(char *value)
 {
+#ifdef HAL_RADIO_USE_HW_FEC
     uint8_t scheme;
 
     netdev->driver->get(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: %d\r\n", scheme);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "+DCFREE: %d\r\n", scheme);
+#else
+    if((current_encoding&CODING_PN9) == CODING_PN9)
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: 1\r\n");
+    else
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: 0\r\n");
+#endif
+
     return AT_OK;
 }
 
@@ -921,6 +1078,12 @@ static char cmd_start_rx(char *value)
 
     // Setting refill_flag to false
     refill_flag = false;
+
+    if (infinite_rx == false)
+    {
+        netopt_enable_t netopt_enable = NETOPT_ENABLE;
+        netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+    }
 
     // Unlimited Length packet format to set the Receive packet of arbitrary length
     hw_radio_set_payload_length(0x00); // unlimited length mode
@@ -935,39 +1098,128 @@ static char cmd_start_rx(char *value)
     return AT_OK;
 }
 
+
+void atoh(char *ascii_ptr, char *hex_ptr, int len)
+{
+    int i;
+
+    for(i = 0; i < (len / 2); i++)
+    {
+
+        *(hex_ptr+i)   = (*(ascii_ptr+(2*i)) <= '9') ? ((*(ascii_ptr+(2*i)) - '0') * 16 ) :  (((*(ascii_ptr+(2*i)) - 'A') + 10) << 4);
+        *(hex_ptr+i)  |= (*(ascii_ptr+(2*i)+1) <= '9') ? (*(ascii_ptr+(2*i)+1) - '0') :  (*(ascii_ptr+(2*i)+1) - 'A' + 10);
+    }
+}
+
+
 static char cmd_tx(char *value)
 {
-    DPRINT("Sending \"%s\" payload (%d bytes)\n", value, strlen(value));
+    char data[strlen(value) + 1];
+    uint8_t len = strlen(value);
+
+    if(extract_field_number(value) > 2)
+        return AT_ERROR;
+
+    if(at_parse_extract_string(value, data, &len) == AT_ERROR)
+        return AT_ERROR;
+
+    // Check if a time interval is given.
+    // Otherwise cmd_tx was called from cmd_tx_continuously()
+    if(extract_field_number(value) == 2)
+    {
+        char *time_field = value + skip_to_next_field(value, strlen(value));
+        if (at_parse_extract_number(time_field, &time) == AT_ERROR)
+            return AT_ERROR;
+    }
+    else {
+        time = 0;
+    }
+
+    DPRINT("Sending \"%s\" payload (%d bytes)\n", data, len);
 
     state = STATE_TX;
 
-    tx_frame.hw_radio_packet.length = sizeof(id) + sizeof(counter) + strlen(value);
-    memcpy(tx_frame.hw_radio_packet.data + 1, &id, sizeof(id));
-    memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
-    memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), value, strlen(value));
-
-#ifndef HAL_RADIO_USE_HW_CRC
-    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
-    uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length + 1 - 2));
-    memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter) + strlen(value), &crc, 2);
-    tx_frame.hw_radio_packet.length += sizeof(uint16_t); /* CRC is an uint16_t */
-#endif
-
-    tx_frame.hw_radio_packet.data[0] = tx_frame.hw_radio_packet.length;
-    tx_frame.hw_radio_packet.length +=1;
-
-    DPRINT("Frame <%i>", counter);
-    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
-
-    // Encode the packet if not supported by xcvr
-    tx_frame.hw_radio_packet.length = encode_packet(tx_frame.hw_radio_packet.data,
-                                                    tx_frame.hw_radio_packet.length);
-
-    DPRINT("Encoded frame len<%i>", tx_frame.hw_radio_packet.length);
-    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+    // ensure state is standby before switching to TX mode
+    hw_radio_set_opmode(HW_STATE_STANDBY);
+    infinite_rx = false;
 
     if(refill_flag)
+    {
+        if (len > 235) // 256 bytes -16 bytes preamble + 2 bytes sync + 1 bytes length + 2 bytes CRC
+            return AT_ERROR;
+
         hw_radio_enable_refill(true);
+
+        uint8_t i = 0;
+
+        if (len == 2) //fill the byte stream with this character
+        {
+            uint8_t hex_byte;
+            atoh(data, &hex_byte, 2);
+            for (i = 0; i < 32; i++)
+                tx_frame.hw_radio_packet.data[i] = hex_byte;
+
+            tx_frame.hw_radio_packet.length = 32;
+        }
+        else
+        {
+            //fill the byte stream with the preamble
+            for (i = 0; i < 16; i++)
+                tx_frame.hw_radio_packet.data[i] = 0xAA;
+
+            // insert the sync word (sync word = 0x192F 
+            // Since all data in D7A  is send MSB first, this means, the 0x19 is sent first, 
+            tx_frame.hw_radio_packet.data[i++] = 0x19;
+            tx_frame.hw_radio_packet.data[i++] = 0x2F;
+        
+            // insert the byte length
+            tx_frame.hw_radio_packet.data[i++] = len + 2;
+
+            memcpy(tx_frame.hw_radio_packet.data + i, data, len);
+
+            uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data + 18, len + 1));
+            memcpy(tx_frame.hw_radio_packet.data + i + len, &crc, 2);
+
+            tx_frame.hw_radio_packet.length = 16 + 2 + 1 + len + 2;
+        }
+
+        DPRINT("Frame <%d>", tx_frame.hw_radio_packet.length);
+        DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+
+        hw_radio_set_payload_length(tx_frame.hw_radio_packet.length);
+    }
+    else
+    {
+        hw_radio_enable_refill(false);
+        counter++;
+        tx_frame.hw_radio_packet.length = 1 + sizeof(id) + sizeof(counter) + len;
+        memcpy(tx_frame.hw_radio_packet.data + 1, &id, sizeof(id));
+        memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
+        memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), data, len);
+        tx_frame.hw_radio_packet.data[0] = tx_frame.hw_radio_packet.length -1 + sizeof(uint16_t); /* CRC is an uint16_t */;
+
+#ifndef HAL_RADIO_USE_HW_CRC
+        /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+        uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length));
+        memcpy(tx_frame.hw_radio_packet.data + tx_frame.hw_radio_packet.length, &crc, 2);
+        tx_frame.hw_radio_packet.length += sizeof(uint16_t); /* CRC is an uint16_t */
+#endif
+
+        DPRINT("Frame <%i>", counter);
+        DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+
+        //backup the initial frame
+        memcpy(raw_tx_frame, tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+        raw_tx_frame_length = tx_frame.hw_radio_packet.length;
+
+        // Encode the packet if not supported by xcvr
+        tx_frame.hw_radio_packet.length = encode_packet(tx_frame.hw_radio_packet.data,
+                                                        tx_frame.hw_radio_packet.length);
+        //    DPRINT("Encoded frame len<%i>", tx_frame.hw_radio_packet.length);
+        //    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+
+        hw_radio_set_payload_length(tx_frame.hw_radio_packet.length + sizeof(uint16_t));
+    }
 
     if (hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length) == -ENOTSUP) {
         DPRINT("Cannot send: radio is still transmitting");
@@ -983,6 +1235,16 @@ static char cmd_tx_continuously(char *value)
     refill_flag = true;
     return (cmd_tx(value));
 }
+
+static char cmd_start_rx_continuously(char *value)
+{
+    // If you need traces, increase the baudrate to 576000
+    infinite_rx = true;
+    netopt_enable_t netopt_enable = NETOPT_DISABLE;
+    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+    return (cmd_start_rx(value));
+}
+
 
 static uint32_t get_parameter(netopt_t opt, size_t maxlen)
 {
@@ -1119,20 +1381,22 @@ static char cmd_print_help(char *value);
     { "+SYNCW", cmd_set_syncword, cmd_get_sync_word, "<hex bytes>", "get/set syncword"},
     { "+SYNC", cmd_set_sync_on, cmd_get_sync_on, "", "toggle SyncOn"},
 
-    { "+CHANNEL",  cmd_set_center_freq, cmd_get_center_freq, "<Hz>","get/set RF center frequency"},
+    { "+CFREQ",  cmd_set_center_freq, cmd_get_center_freq, "<Hz>","get/set RF center frequency"},
     { "+RXBW", cmd_set_bandwidth, cmd_get_bandwidth, "<Hz>","get/set bandwith"},
     { "+FDEV", cmd_set_fdev, cmd_get_fdev, "<Hz>","get/set fdev"},
     { "+BR", cmd_set_bitrate, cmd_get_bitrate, "<bps>","get/set bitrate"},
 
     { "+BT", cmd_set_mod_shaping, cmd_get_mod_shaping, "", "get/set modulation shaping"},
-    { "+DCFREE", cmd_set_dc_free_scheme, cmd_get_dc_free_scheme, "%d", "get/set the DC free coding scheme"},
-    { "+FEC", cmd_set_fec_on, cmd_get_fec_on, "%d", "get/set the FEC encoder"},
+    { "+DCFREE", cmd_set_dc_free_scheme, cmd_get_dc_free_scheme, "<%d>", "get/set the DC free coding scheme"},
+    { "+FEC", cmd_set_fec_on, cmd_get_fec_on, "<%d>", "get/set the FEC encoder"},
 
     { "+MODE", cmd_set_opmode, cmd_get_opmode, "<%d>", "get/set operation mode"},
     { "+PAYLEN", cmd_set_payload_length, NULL, "<%d>", "set payload length"},
-    { "+TX", cmd_tx, NULL, "<%d or string>","transmit packet over phy"},
+    { "+TX", cmd_tx, NULL, "<%d or string>,[time (ms)]","transmit packet over phy [every X msec]"},
     { "+TXC", cmd_tx_continuously, NULL, "<%d or string>", "transmit continuously same packet over phy"},
     { "+RX", cmd_start_rx, NULL, "","start RX"},
+    { "+RXC", cmd_start_rx_continuously, NULL, "","start RX in continuous mode"},
+    { "+EIRP", cmd_set_eirp, cmd_get_eirp, "%d", "get/set the TX power"},
 
     { "+STATUS", cmd_print_status, cmd_print_status, "","print status"},
     { "+HELP", cmd_print_help, cmd_print_help, "","this list of commands"},
@@ -1144,12 +1408,12 @@ static char cmd_print_help(char *value)
     int i;
     char help_item[MAX_AT_RESPONSE_SIZE];
 
-    snprintf(help_item, MAX_AT_RESPONSE_SIZE, "%-10s %-14s %s\r\n", "Command", "Arg", "Description");
+    snprintf(help_item, MAX_AT_RESPONSE_SIZE, "%-10s %-25s %s\r\n", "Command", "Arg", "Description");
     console_print(help_item);
     console_print("------------------------------------------------------\r\n");
 
     for (i = 0; cmd_items[i].cmd != NULL ; i++) {
-        snprintf(help_item, MAX_AT_RESPONSE_SIZE, "%-10s %-14s %s\r\n",
+        snprintf(help_item, MAX_AT_RESPONSE_SIZE, "%-10s %-25s %s\r\n",
                  cmd_items[i].cmd, cmd_items[i].arg_descr, cmd_items[i].description);
         console_print(help_item);
     }
@@ -1227,7 +1491,10 @@ void bootstrap() {
 #endif
 
 #ifdef HAL_RADIO_USE_HW_DC_FREE
-    hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
+    if (default_channel_id.channel_header.ch_coding == PHY_CODING_RFU)
+    	hw_radio_set_dc_free(HW_DC_FREE_NONE);
+    else
+    	hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
 #else
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
 #endif
@@ -1245,6 +1512,7 @@ void bootstrap() {
     console_set_rx_interrupt_callback(&uart_rx_cb);
 
     sched_register_task(&process_uart_rx_fifo);
+    sched_register_task(&cmd_tx_repeat);
 
     // put in RX mode by default
     cmd_start_rx(NULL);

@@ -209,7 +209,7 @@ typedef struct {
 typedef struct {
     uint16_t preamble_len;             /**< Length of preamble header */
     uint8_t sync_len;                  /**< Length of sync word */
-    uint8_t power;                     /**< Signal power */
+    int8_t power;                      /**< Signal power */
     uint8_t bandwidth;                 /**< Signal bandwidth */
     uint8_t datarate;                  /**< bitrate in bps */
 
@@ -662,7 +662,7 @@ void sx127x_set_payload_length(sx127x_t *dev, uint16_t len);
  *
  * @return the radio power
  */
-uint8_t sx127x_get_tx_power(const sx127x_t *dev);
+int8_t sx127x_get_tx_power(const sx127x_t *dev);
 
 /**
  * @brief   Sets the SX127X transmission power

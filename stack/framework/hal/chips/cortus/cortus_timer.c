@@ -170,6 +170,8 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
       timer1_cmpb->enable = 1;
       timer1_cmpb->mask = 1;
    end_atomic();
+
+   return SUCCESS;
 }
 
 
@@ -185,6 +187,8 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
       timer1_cmpb->status = 0;
       timer1_cmpb->enable = 0;
    end_atomic();
+
+   return SUCCESS;
 }
 
 
@@ -207,6 +211,8 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
       timer1_cmpa->enable = 1;
       timer1_cmpa->mask = 1;
    end_atomic();
+
+   return SUCCESS;
 }
 
 

@@ -58,6 +58,10 @@ typedef struct _at_command
 void at_register_command(string_t command, at_callback getter, at_callback setter/*, at_callback test, at_callback execute*/);
 char at_parse_line(string_t line, char *ret);
 char at_parse_extract_number(string_t parameter, uint32_t *number);
+char at_parse_extract_signed_number(string_t parameter, int32_t *number);
 char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *bytes_len);
+char at_parse_extract_string(string_t parameter, char *string, uint8_t *string_len);
+int skip_to_next_field(char *line, int len);
+int extract_field_number(char *line);
 
 #endif //__AT_PARSER_H
