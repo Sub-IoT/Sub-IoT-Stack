@@ -25,6 +25,7 @@
 #include "power_tracking_file.h"
 
 // oss7
+#include "debug.h"
 #include "framework_defs.h"
 #include "log.h"
 #include "modules_defs.h"
@@ -33,7 +34,6 @@
 #include "errors.h"
 #include "stdint.h"
 #include "string.h"
-#include <assert.h>
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_POWER_TRACKING_LOG_ENABLED)
 #define DPRINT(...) log_print_string(__VA_ARGS__)

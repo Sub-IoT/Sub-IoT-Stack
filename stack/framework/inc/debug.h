@@ -51,7 +51,6 @@ void __assert_func(const char *, int, const char *, const char *);
 # define assert(__e) \
   do { \
     if(!(__e)) { \
-      printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n", #__e, __FILE__, __LINE__, ", function: ", __ASSERT_FUNC); \
       hw_reset(); \
     } \
   } while(0)
