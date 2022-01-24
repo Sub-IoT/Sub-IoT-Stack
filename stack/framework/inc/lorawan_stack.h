@@ -95,5 +95,9 @@ static uint8_t* lorawan_get_deveui( void );
 static uint8_t* lorawan_get_appeui( void );
 
 static void lorawan_set_antenna_gain(uint8_t file_id);
+
+static uint16_t lorawan_read_devnonce();
+static void lorawan_write_devnonce(uint16_t successful_devnonce);
+
 #endif //LORAWAN_STACK_H
 

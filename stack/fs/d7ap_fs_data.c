@@ -102,6 +102,9 @@ lorawan_antenna_gain_in_db = 1 #dBm #in EU868 the MAX_EIRP is 16dBm so this corr
 lorawan_antenna_gain = [int(bytes(lorawan_antenna_gain_in_db & 0xff))] #dBm
 lorawan_antenna_gain_file_size = 1
 
+# devnonce is 2 bytes long
+LoRaWAN_devnonce = [0x00, 0x00]
+
 ctrl_stack_file_size = 2
 ctrl_stack_file = [0x00, 0xd7]
 ctrl_stack_file.extend([0] * (ctrl_stack_file_size - len(ctrl_stack_file)))
@@ -177,6 +180,7 @@ system_files = [
   (NotImplementedFile(0x40, ctrl_stack_file_size, data=ctrl_stack_file),        sys_file_prop_perm, sys_file_permission_read_only),
   (NotImplementedFile(0x41, len(LoRaWAN_OTAA_Keys), data=LoRaWAN_OTAA_Keys),    sys_file_prop_perm, sys_file_permission_locked),
   (NotImplementedFile(0x46, lorawan_antenna_gain_file_size, data=lorawan_antenna_gain), sys_file_prop_perm, sys_file_permission_all_write),
+  (NotImplementedFile(0x47, len(LoRaWAN_devnonce), data=LoRaWAN_devnonce),      sys_file_prop_perm, sys_file_permission_all_write),
 ]
 
 def output_file(file):
@@ -271,7 +275,7 @@ __attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (256 * 9)] LINKER_SECTION
   output_number_of_files()
   output_fs_file_headers()
   ]]] */
-  0x0, 0x0, 0x0, 0x33, // number of files (51)
+  0x0, 0x0, 0x0, 0x34, // number of files (52)
   // UID - 0 (length 20)
   0x01, 0x0, 0x0, 0x0, 0x14, 0x0, 0x0, 0x0, 0x0, 
   // FACTORY_SETTINGS - 1 (length 68)
@@ -414,8 +418,8 @@ __attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (256 * 9)] LINKER_SECTION
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   // User File - 70 (length 13)
   0x01, 0x0, 0x0, 0x0, 0xd, 0x0, 0x0, 0x8, 0x46, 
-  //	RFU - 71
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  // User File - 71 (length 14)
+  0x01, 0x0, 0x0, 0x0, 0xe, 0x0, 0x0, 0x8, 0x53, 
   //	RFU - 72
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   //	RFU - 73
@@ -784,7 +788,7 @@ __attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (256 * 9)] LINKER_SECTION
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   //	RFU - 255
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  //[[[end]]] (checksum: c75d6280031a5e95d95ddcffd0dd7775)
+  //[[[end]]] (checksum: daf0d315a38f1644a03271c38b5c4ef3)
 };
 
 __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE] LINKER_SECTION_FS_PERMANENT_FILES = {
@@ -945,7 +949,10 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // User File - 70 (length 1)
       0x36, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 
       0x1, 
-      //[[[end]]] (checksum: 27081de40e95a8a0082534042846d7b1)
+      // User File - 71 (length 2)
+      0x36, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x2, 
+      0x0, 0x0, 
+      //[[[end]]] (checksum: 32eb1fd80b2c0492ac265a5d046b7e87)
   };
 
 #endif
