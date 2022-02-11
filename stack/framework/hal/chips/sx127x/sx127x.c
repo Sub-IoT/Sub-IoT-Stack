@@ -1384,7 +1384,6 @@ uint32_t hw_lora_random( void ) {
   uint32_t rnd = 0;
 
   hw_radio_switch_longRangeMode( true ); // Set LoRa modem ON  
-  hw_radio_set_opmode(HW_STATE_RX); // Set radio in rx mode
 
   // Disable LoRa modem interrupts
   write_reg( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
@@ -1395,6 +1394,14 @@ uint32_t hw_lora_random( void ) {
               RFLR_IRQFLAGS_CADDONE |
               RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
               RFLR_IRQFLAGS_CADDETECTED );
+
+  //from errata
+  write_reg( REG_LR_TEST30, 0x00 ); 
+  write_reg(REG_LR_TEST2F, 0x40 );   
+
+  write_reg(REG_LR_FIFORXBASEADDR, 0);
+  write_reg(REG_LR_FIFOADDRPTR, 0);
+  set_opmode(OPMODE_RX);
 
   for( i = 0; i < 32; i++ )
   {
