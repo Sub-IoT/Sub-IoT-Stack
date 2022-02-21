@@ -415,6 +415,8 @@ void modem_interface_clear_handler() {
 #endif
     request_pending = false;
     fifo_clear(&modem_interface_tx_fifo);
+    //AL-2305 be sure to clear request pin
+    hw_gpio_clr(uart_state_pin);
     SWITCH_STATE(STATE_IDLE);
 }
 
