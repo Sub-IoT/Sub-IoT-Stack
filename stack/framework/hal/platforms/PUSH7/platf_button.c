@@ -55,12 +55,11 @@ __LINK_C void __ubutton_init()
 
 		GPIO_InitTypeDef GPIO_InitStruct;
         GPIO_InitStruct.Mode  = GPIO_MODE_IT_RISING_FALLING;
-        GPIO_InitStruct.Pull  = GPIO_NOPULL;
+        GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         hw_gpio_configure_pin_stm(buttons[i].button_id, &GPIO_InitStruct);
-
         err = hw_gpio_configure_interrupt(buttons[i].button_id, GPIO_FALLING_EDGE | GPIO_RISING_EDGE, &button_callback, &buttons[i].button_id);
-		err = hw_gpio_enable_interrupt(buttons[i].button_id); assert(err == SUCCESS);
+		assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);
 }
@@ -68,13 +67,27 @@ __LINK_C void __ubutton_init()
 
 __LINK_C error_t ubutton_register_callback(ubutton_callback_t desired_callback)
 {
+	error_t err;
 	button_state_changed_callback = desired_callback;
+	for(int i = 0; i < PLATFORM_NUM_BUTTONS; i++)
+    {
+		err = hw_gpio_enable_interrupt(buttons[i].button_id);
+		assert(err == SUCCESS);
+		buttons[i].number_of_calls = 0;
+	}
 	return SUCCESS;
 }
 
 __LINK_C error_t ubutton_deregister_callback()
 {
+	error_t err;
 	button_state_changed_callback = NULL;
+	for(int i = 0; i < PLATFORM_NUM_BUTTONS; i++)
+    {
+		err = hw_gpio_disable_interrupt(buttons[i].button_id);
+		assert(err == SUCCESS);
+		buttons[i].number_of_calls = 0;
+	}
 	return SUCCESS;
 }
 
@@ -100,7 +113,7 @@ void button_task()
 			uint8_t calls = buttons[i].number_of_calls;	
 			buttons[i].number_of_calls = 0;	
 			if(button_state_changed_callback)
-				button_state_changed_callback(buttons[i].button_id, hw_gpio_get_in(buttons[i].button_id), calls);
+				button_state_changed_callback(i, hw_gpio_get_in(buttons[i].button_id), calls);
 			sched_post_task(&button_task);
 			return;
 		}

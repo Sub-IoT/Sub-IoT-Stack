@@ -37,15 +37,15 @@
  * LED DEFINITIONS *
  *******************/
 
-#define LED1 PIN(0, 4)
-#define LED_GREEN 0
+#define LED1 PIN(0, 3)
+#define LED_WHITE 0
 
 
 /**************************
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define BUTTON1           PIN(7, 1)
+#define BUTTON1           PIN(7, 0)
 #define BUTTON2           PIN(0, 11)
 #define BUTTON3           PIN(1, 2)
 

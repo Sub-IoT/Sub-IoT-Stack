@@ -38,24 +38,23 @@
 #include "platform.h"
 
 #include "button.h"
+#include "led.h"
 
 // debug
 // cmake ../stack/ -DPLATFORM=PUSH7  -DAPP_PUSH7_BUTTON=y -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
 // -DFRAMEWORK_POWER_TRACKING_RF=n -DFRAMEWORK_USE_POWER_TRACKING=n -DMODULE_ALP_LOCK_KEY_FILES=n
 // -DMODULE_D7AP_NLS_ENABLED=y -DFRAMEWORK_SCHEDULER_LP_MODE=1 -DFRAMEWORK_LOG_ENABLED=y  -DFRAMEWORK_DEBUG_ENABLE_SWD=y
 // release
-// cmake ../stack/ -DPLATFORM=PUSH7  -DAPP_SENSOR_PUSH=y -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
+// cmake ../stack/ -DPLATFORM=PUSH7  -DAPP_PUSH7_BUTTON=y -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
 // -DFRAMEWORK_POWER_TRACKING_RF=n -DFRAMEWORK_USE_POWER_TRACKING=n -DMODULE_ALP_LOCK_KEY_FILES=n
 // -DMODULE_D7AP_NLS_ENABLED=y -DFRAMEWORK_SCHEDULER_LP_MODE=1 -DFRAMEWORK_LOG_ENABLED=n -DFRAMEWORK_DEBUG_ENABLE_SWD=n
 
-#define BUTTON_FILE_ID 0x40
+#define BUTTON_FILE_ID 50
 #define BUTTON_FILE_SIZE 1
-#define MODEM_ACCESS_PROFILE_0_FILE_SIZE 65
-#define MODEM_ACCESS_PROFILE_0_FILE_ID 0X20
 #define CHANNEL_ID 100
+#define USE_PUSH7_CHANNEL_SETTINGS false
 
 static alp_init_args_t alp_init_args;
-static uint8_t push7_access_profile_buffer[MODEM_ACCESS_PROFILE_0_FILE_SIZE];
 static uint8_t key[]
     = { 0X00, 0X01, 0X02, 0X03, 0X02, 0X01, 0X00, 0X01, 0X02, 0X03, 0X02, 0X01, 0X00, 0X01, 0X02, 0X03 };
 
@@ -72,10 +71,10 @@ static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
     .addressee = {
         .ctrl = {
             .nls_method = AES_CTR,
-            .id_type = ID_TYPE_NOID,
+            .id_type = ID_TYPE_NBID,
         },
         .access_class = 0x01, // use access profile 0 and select the first subprofile
-        .id = { 0 }
+        .id = { 3 }
     }
   }
 };
@@ -87,20 +86,24 @@ void transmit_button_pressed_message(uint8_t pressed_button)
     // This is an unsolicited message, where we push the sensor data to the gateway(s).
 
     uint8_t button_id = pressed_button;
-    alp_command_t* command = alp_layer_command_alloc(false, false); // alloc command. This will be freed when the command completes
-    
-    alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config)); // forward to the D7 interface
+    alp_command_t* command
+        = alp_layer_command_alloc(true, true); // alloc command. This will be freed when the command completes
 
-    alp_append_return_file_data_action(command, BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, (uint8_t*)&button_id); // add the return file data action
+    alp_append_forward_action(
+        command, (alp_interface_config_t*)&itf_config, sizeof(itf_config)); // forward to the D7 interface
+
+    alp_append_return_file_data_action(
+        command, BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, (uint8_t*)&button_id); // add the return file data action
 
     alp_layer_process(command); // and finally execute this
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
-    if (success)
+    if (success) {
         log_print_string("Command (%i) completed successfully", tag_id);
-    else
+        led_flash_green();
+    } else
         log_print_string("Command failed, no ack received");
 }
 
@@ -119,7 +122,13 @@ void on_alp_command_result_cb(alp_command_t* alp_command, alp_interface_status_t
 static void userbutton_callback(button_id_t button_id, uint8_t mask, uint8_t number_of_calls)
 {
     // transmit_button_pressed_message(button_id);
-     log_print_string("Button callback - id: %d, mask: %d, calls: %d", button_id, mask, number_of_calls);
+    log_print_string("Button callback - id: %d, mask: %d, calls: %d", button_id, mask, number_of_calls);
+}
+
+void send_heartbeat()
+{
+    transmit_button_pressed_message(1);
+    timer_post_task_delay(&send_heartbeat, TIMER_TICKS_PER_SEC * 10);
 }
 
 void bootstrap()
@@ -128,29 +137,30 @@ void bootstrap()
     d7ap_fs_init();
     d7ap_init();
 
+    if (USE_PUSH7_CHANNEL_SETTINGS) {
+        dae_access_profile_t push7_access_profile;
+        d7ap_fs_read_access_class(0, &push7_access_profile);
+
+        push7_access_profile.subbands[0].channel_index_start = CHANNEL_ID;
+        push7_access_profile.subbands[0].channel_index_end = CHANNEL_ID;
+        push7_access_profile.subbands[0].eirp = 5;
+        push7_access_profile.subbands[1].channel_index_start = CHANNEL_ID;
+        push7_access_profile.subbands[1].channel_index_end = CHANNEL_ID;
+        push7_access_profile.subbands[1].eirp = 0;
+
+        d7ap_fs_write_access_class(0, &push7_access_profile);
+
+        uint32_t length = D7A_FILE_NWL_SECURITY_KEY_SIZE;
+        d7ap_fs_write_file(D7A_FILE_NWL_SECURITY_KEY, 0, key, length, ROOT_AUTH);
+    }
+    led_flash_green();
+
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
     alp_layer_init(&alp_init_args, false);
 
-    uint32_t file_length = MODEM_ACCESS_PROFILE_0_FILE_SIZE;
-    d7ap_fs_read_file(MODEM_ACCESS_PROFILE_0_FILE_ID, 0, push7_access_profile_buffer, &file_length, ROOT_AUTH);
-
-    dae_access_profile_t* push7_access_profile = (dae_access_profile_t*)&push7_access_profile_buffer;
-
-    push7_access_profile->subbands[0].channel_index_start = __builtin_bswap16(CHANNEL_ID);
-    push7_access_profile->subbands[0].channel_index_end = __builtin_bswap16(CHANNEL_ID);
-    push7_access_profile->subbands[0].eirp = 17;
-    push7_access_profile->subbands[1].channel_index_start = __builtin_bswap16(CHANNEL_ID);
-    push7_access_profile->subbands[1].channel_index_end = __builtin_bswap16(CHANNEL_ID);
-    push7_access_profile->subbands[1].eirp = 0;
-
-    d7ap_fs_write_file(MODEM_ACCESS_PROFILE_0_FILE_ID, 0, push7_access_profile_buffer, file_length, ROOT_AUTH);
-
-    uint32_t length = D7A_FILE_NWL_SECURITY_KEY_SIZE;
-    d7ap_fs_write_file(D7A_FILE_NWL_SECURITY_KEY, 0, key, length, ROOT_AUTH);
-
-    sched_register_task(&execute_sensor_measurement);
-    sched_post_task(&execute_sensor_measurement);
+    sched_register_task(&send_heartbeat);
+    timer_post_task_delay(&send_heartbeat, TIMER_TICKS_PER_SEC * 6);
 
     ubutton_register_callback(&userbutton_callback);
 }

@@ -73,10 +73,10 @@ void led_toggle(unsigned char led_nr)
 
 // flashing support
 
-static void end_flash_green()  { led_off(LED_GREEN);  }
+static void end_flash_green()  { led_off(LED_WHITE);  }
 
 void led_flash_green() {
-  led_on(LED_GREEN);
+  led_on(LED_WHITE);
   timer_post_task_delay(&end_flash_green, FLASH_DURATION);
 }
 
