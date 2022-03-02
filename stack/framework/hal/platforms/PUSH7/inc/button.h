@@ -32,8 +32,19 @@
 #define __PLATFORM_USERBUTTON_H_
 
 #include "link_c.h"
-#include "types.h"
 #include "platform.h"
+#include "types.h"
+
+typedef enum {
+    NO_BUTTON_PRESSED = 0,
+    BUTTON1_PRESSED = 1,
+    BUTTON2_PRESSED = 2,
+    BUTTON1_2_PRESSED = 3,
+    BUTTON3_PRESSED = 4,
+    BUTTON1_3_PRESSED = 5,
+    BUTTON2_3_PRESSED = 6,
+    ALL_BUTTONS_PRESSED = 7
+} buttons_state_t;
 
 /* \brief The identifiers for the buttons
  */
@@ -43,7 +54,7 @@ typedef uint8_t button_id_t;
  *
  * \param button_id		The id of the button that was pressed
  * **/
-typedef void (*ubutton_callback_t)(button_id_t button_id, uint8_t mask, uint8_t number_of_calls);
+typedef void (*ubutton_callback_t)(button_id_t button_id, uint8_t mask, uint8_t elapsed_seconds, buttons_state_t buttons_state);
 
 /* \brief Check whether a button is currently pressed or not.
  *
@@ -81,7 +92,7 @@ __LINK_C error_t ubutton_register_callback(ubutton_callback_t callback);
  */
 __LINK_C error_t ubutton_deregister_callback();
 
-//not a user function
+// not a user function
 void __ubutton_init();
 
 #endif

@@ -73,15 +73,15 @@ void led_toggle(unsigned char led_nr)
 
 // flashing support
 
-static void end_flash_green()  { led_off(LED_WHITE);  }
+static void end_flash_white()  { led_off(LED_WHITE);  }
 
-void led_flash_green() {
+void led_flash_white() {
   led_on(LED_WHITE);
-  timer_post_task_delay(&end_flash_green, FLASH_DURATION);
+  timer_post_task_delay(&end_flash_white, FLASH_DURATION);
 }
 
 bool led_init() {
 	__led_init();
-	sched_register_task(&end_flash_green);
+	sched_register_task(&end_flash_white);
 	return true;
 }

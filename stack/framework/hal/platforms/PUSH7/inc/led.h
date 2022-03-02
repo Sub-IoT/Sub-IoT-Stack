@@ -27,8 +27,6 @@
 
 bool led_init(void);
 
-void led_flash_green(void);
-void led_flash_orange(void);
-void led_flash_red(void);
+void led_flash_white(void);
 
 #endif
