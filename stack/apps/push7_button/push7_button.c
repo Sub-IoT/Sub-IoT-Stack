@@ -43,6 +43,18 @@
 #include "file_definitions.h"
 #include "little_queue.h"
 
+//#define FRAMEWORK_APP_LOG 1
+#define MAX_RETRY_ATTEMPTS 5
+
+#ifdef FRAMEWORK_APP_LOG
+#include "log.h"
+    #define DPRINT(...)      log_print_string(__VA_ARGS__)
+    #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
+    #define DPRINT(...)
+    #define DPRINT_DATA(...)
+#endif
+
 // debug
 // cmake ../stack/ -DPLATFORM=PUSH7  -DAPP_PUSH7_BUTTON=y -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
 // -DFRAMEWORK_POWER_TRACKING_RF=n -DFRAMEWORK_USE_POWER_TRACKING=n -DMODULE_ALP_LOCK_KEY_FILES=n
@@ -63,8 +75,8 @@ static void userbutton_callback(button_id_t button_id, uint8_t mask, uint8_t ela
         .buttons_state=buttons_state,
     };
 
-    queue_add_file(&button_file);
-    log_print_string("Button callback - id: %d, mask: %d, elapsed time: %d, all_button_state %d \n", button_id, mask, elapsed_deciseconds, buttons_state);
+    queue_add_file(button_file.bytes, BUTTON_FILE_SIZE, BUTTON_FILE_ID);
+    DPRINT("Button callback - id: %d, mask: %d, elapsed time: %d, all_button_state %d \n", button_id, mask, elapsed_deciseconds, buttons_state);
 }
 
 void send_heartbeat()

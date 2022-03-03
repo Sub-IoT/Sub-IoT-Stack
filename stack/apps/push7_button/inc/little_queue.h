@@ -15,6 +15,6 @@ typedef enum {
 
 
 void little_queue_init();
-void queue_add_file(button_file_t* button_file_content);
+void queue_add_file(uint8_t* file_content, uint8_t file_size, uint8_t file_id);
 
 #endif //__LITTLE_QUEUE_H

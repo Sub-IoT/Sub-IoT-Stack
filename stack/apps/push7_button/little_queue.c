@@ -25,6 +25,7 @@
 #include "little_queue.h"
 
 //#define FRAMEWORK_LITTLE_QUEUE_LOG 1
+#define MAX_RETRY_ATTEMPTS 5
 
 #ifdef FRAMEWORK_LITTLE_QUEUE_LOG
 #include "log.h"
@@ -35,26 +36,36 @@
     #define DPRINT_DATA(...)
 #endif
 
-uint8_t button_fifo_buffer[MAX_QUEUE_ELEMENTS * BUTTON_FILE_SIZE];
-fifo_t button_file_fifo;
+static uint8_t file_fifo_buffer[MAX_QUEUE_ELEMENTS * BUTTON_FILE_SIZE];
+static uint8_t file_size_and_id_fifo_buffer[MAX_QUEUE_ELEMENTS * 2];
+
+static fifo_t file_fifo;
+static fifo_t file_size_and_id_fifo;
+static uint8_t retry_counter=0;
 
 static uint8_t transmitted_file_id = 0;
-
 static void queue_transmit_files();
 
 static void queue_transmit_completed(bool success)
 {
-    switch(transmitted_file_id)
+    if(success || retry_counter >= MAX_RETRY_ATTEMPTS)
     {
-        case BUTTON_FILE_ID:
-            if(success)
-                fifo_skip(&button_file_fifo,BUTTON_FILE_SIZE);
-            DPRINT("button transmit completed");
-            break;
+        uint8_t file_id;
+        uint8_t file_size;
+        fifo_peek(&file_size_and_id_fifo, &file_size, 0, 1);
+        fifo_peek(&file_size_and_id_fifo, &file_id, 1, 1);
+        fifo_skip(&file_fifo, file_size);
+        fifo_skip(&file_size_and_id_fifo, 2);
+        retry_counter = 0;
+        if(!success)
+            log_print_error_string("file %d discarded, to many tries", file_id);
     }
-    //TODO add backoff if !success based on #transmits + add max number of retry
-    if(fifo_get_size(&button_file_fifo) > 0)
-        timer_post_task_delay(&queue_transmit_files, 500);
+    else
+        retry_counter++;
+
+    //TODO add backoff if !success based on #transmits 
+    if(fifo_get_size(&file_fifo) > 0)
+        timer_post_task_delay(&queue_transmit_files, 50);
     else 
         led_flash_white();
 }
@@ -62,30 +73,35 @@ static void queue_transmit_completed(bool success)
 static void queue_transmit_files()
 {
     error_t ret;
-    if(fifo_get_size(&button_file_fifo) > 0)
-    {
-        DPRINT("sending button file to network manager.");
-        uint8_t button_file_buffer[BUTTON_FILE_SIZE];
-        fifo_peek(&button_file_fifo, button_file_buffer,0,BUTTON_FILE_SIZE);
-        ret = transmit_file(BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, button_file_buffer);
-        if(ret == SUCCESS)
-            transmitted_file_id = BUTTON_FILE_ID;
-        else
-            log_print_string("could not send button file to network manager");
+    if((fifo_get_size(&file_fifo) <= 0) || (get_network_manager_state() != NETWORK_MANAGER_READY))
         return;
-    }
+
+    uint8_t file_buffer[BUTTON_FILE_SIZE];
+    uint8_t file_size;
+    uint8_t file_id;
+    fifo_peek(&file_size_and_id_fifo, &file_size, 0, 1);
+    fifo_peek(&file_size_and_id_fifo, &file_id, 1, 1);
+    fifo_peek(&file_fifo, file_buffer, 0, BUTTON_FILE_SIZE);
+    DPRINT("transmitting file %d, size %d", file_id, file_size);
+    ret = transmit_file(file_id, 0, file_size, file_buffer);
+    if(ret != SUCCESS)
+        log_print_string("could not send button file to network manager");
    
 }
 
-void queue_add_file(button_file_t* button_file_content)
+void queue_add_file(uint8_t* file_content, uint8_t file_size, uint8_t file_id)
 {
-    if(button_file_content)
-    {
-        error_t ret = fifo_put(&button_file_fifo, button_file_content->bytes, BUTTON_FILE_SIZE);
+        error_t ret = fifo_put(&file_fifo, file_content, file_size);
+
         if(ret!=SUCCESS)
             log_print_error_string("queue was full. Message not added"); //TODO replace last element with this one
+        else
+        {
+            ret = fifo_put(&file_size_and_id_fifo, &file_size, 1);
+            ret = fifo_put(&file_size_and_id_fifo, &file_id, 1);
+        }
         DPRINT("added button file to the queue.");
-    }
+
     if(get_network_manager_state() == NETWORK_MANAGER_READY && !timer_is_task_scheduled(&queue_transmit_files))
         sched_post_task(&queue_transmit_files);
 }
@@ -94,5 +110,6 @@ void little_queue_init()
 {
     network_manager_init(&queue_transmit_completed);
     sched_register_task(&queue_transmit_files);
-    fifo_init(&button_file_fifo, button_fifo_buffer, sizeof(button_fifo_buffer));
+    fifo_init(&file_fifo, file_fifo_buffer, sizeof(file_fifo_buffer));
+    fifo_init(&file_size_and_id_fifo, file_size_and_id_fifo_buffer, sizeof(file_size_and_id_fifo_buffer));
 }

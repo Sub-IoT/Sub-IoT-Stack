@@ -34,6 +34,7 @@
 
 #define CHANNEL_ID 100
 #define USE_PUSH7_CHANNEL_SETTINGS false
+#define NETWORK_TIMEOUT 10000
 
 
 static network_state_t network_state = NETWORK_MANAGER_IDLE;
@@ -68,10 +69,18 @@ static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
   }
 };
 
+static void network_timeout()
+{
+    alp_layer_free_commands();
+    if(transmit_completed_cb)
+        transmit_completed_cb(false);
+}
+
 static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
     if(active_tag_id != tag_id)
         return;
+    timer_cancel_task(&network_timeout);
     if (success) {
         DPRINT("Command (%i) completed successfully", tag_id);
     } else
@@ -108,6 +117,7 @@ error_t transmit_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t
     active_tag_id = command->tag_id;
     alp_layer_process(command); 
     network_state = NETWORK_MANAGER_TRANSMITTING;
+    timer_post_task_delay(&network_timeout, NETWORK_TIMEOUT);
 }
 
 void get_network_quality(uint8_t* acks, uint8_t* nacks)
@@ -129,6 +139,7 @@ void network_manager_init(last_transmit_completed_callback last_transmit_complet
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
     alp_layer_init(&alp_init_args, false);
     transmit_completed_cb = last_transmit_completed_cb;
+    sched_register_task(&network_timeout);
 
     if (USE_PUSH7_CHANNEL_SETTINGS) {
         dae_access_profile_t push7_access_profile;
