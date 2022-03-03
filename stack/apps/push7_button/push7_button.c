@@ -63,21 +63,12 @@ static void userbutton_callback(button_id_t button_id, uint8_t mask, uint8_t ela
         .buttons_state=buttons_state,
     };
 
-    queue_add_file(&button_file, NULL, NULL);
+    queue_add_file(&button_file);
     log_print_string("Button callback - id: %d, mask: %d, elapsed time: %d, all_button_state %d \n", button_id, mask, elapsed_deciseconds, buttons_state);
 }
 
 void send_heartbeat()
 {
-    heartbeat_file_t heartbeat_file = 
-    {
-        .acks = 0,
-        .nacks = 0,
-        .battery_voltage =  get_battery_voltage(),
-        .counter = 0,
-    };
-
-    queue_add_file(NULL, &heartbeat_file, NULL);
     // uint64_t button_id = get_battery_voltage();
     // transmit_file(BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, (uint8_t*)&button_id);
     // timer_post_task_delay(&send_heartbeat, TIMER_TICKS_PER_SEC * 10);

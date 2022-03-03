@@ -85,11 +85,8 @@ static void on_alp_command_result_cb(alp_command_t* alp_command, alp_interface_s
     if (origin_itf_status && (origin_itf_status->itf_id == ALP_ITF_ID_D7ASP) && (origin_itf_status->len > 0)) {
         d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)origin_itf_status->itf_status);
         DPRINT("recv response @ %i dB link budget from:", d7_result->rx_level);
-        DPRINT(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
     }
-    // DPRINT("response payload:");
-    // DPRINT(alp_command->alp_command, fifo_get_size(&alp_command->alp_command_fifo));
-    // DPRINT(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
+    network_state = NETWORK_MANAGER_READY;
 }
 
 error_t transmit_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t *data)
@@ -110,6 +107,7 @@ error_t transmit_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t
     // and finally execute this
     active_tag_id = command->tag_id;
     alp_layer_process(command); 
+    network_state = NETWORK_MANAGER_TRANSMITTING;
 }
 
 void get_network_quality(uint8_t* acks, uint8_t* nacks)

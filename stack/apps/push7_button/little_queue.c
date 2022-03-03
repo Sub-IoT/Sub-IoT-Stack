@@ -35,28 +35,12 @@
     #define DPRINT_DATA(...)
 #endif
 
-button_file_queue_t button_file_queue;
-heartbeat_file_queue_t heartbeat_file_queue;
-version_file_queue_t version_file_queue;
+uint8_t button_fifo_buffer[MAX_QUEUE_ELEMENTS * BUTTON_FILE_SIZE];
+fifo_t button_file_fifo;
 
 static uint8_t transmitted_file_id = 0;
 
-uint8_t* test[] = {(uint8_t*)&version_file_queue, (uint8_t*)&heartbeat_file_queue, (uint8_t*)&button_file_queue};
-
 static void queue_transmit_files();
-static void increase_rotate(uint8_t* number);
-static void queue_transmit_completed(bool success);
-
-static void increase_rotate(uint8_t* number)
-{
-    *number = (*number + 1) >= MAX_QUEUE_ELEMENTS ? 0 : *number + 1;
-}
-
-static bool overwriting_queue(uint8_t lower, uint8_t higher)
-{
-    lower = (lower + 1) >= MAX_QUEUE_ELEMENTS ? 0 : lower + 1;
-    return lower == higher;
-}
 
 static void queue_transmit_completed(bool success)
 {
@@ -64,106 +48,51 @@ static void queue_transmit_completed(bool success)
     {
         case BUTTON_FILE_ID:
             if(success)
-                increase_rotate(&button_file_queue.active_index);
-            //TODO Difference between active index and store index mustn't increase more than 1 when active index increases
-            DPRINT("button transmit completed: store index: %d, active index: %d ",button_file_queue.store_index,button_file_queue.active_index );
-            break;
-        case HEARTBEAT_FILE_ID:
-            if(success)
-                increase_rotate(&heartbeat_file_queue.active_index);
-            DPRINT("heartbeat transmit completed: store index: %d, active index: %d ",heartbeat_file_queue.store_index,heartbeat_file_queue.active_index );
-            break;
-        case VERSION_FILE_ID:
-            if(success)
-                increase_rotate(&version_file_queue.active_index);
-            DPRINT("version transmit completed. store index: %d, active index: %d ",version_file_queue.store_index, version_file_queue.active_index );
+                fifo_skip(&button_file_fifo,BUTTON_FILE_SIZE);
+            DPRINT("button transmit completed");
             break;
     }
-    //TODO add backoff if !success based on #transmits
-    //sched_post_task(&queue_transmit_files);
-    timer_post_task_delay(&queue_transmit_files,200); //check first if something has been added to the queue since last transmit
+    //TODO add backoff if !success based on #transmits + add max number of retry
+    if(fifo_get_size(&button_file_fifo) > 0)
+        timer_post_task_delay(&queue_transmit_files, 500);
+    else 
+        led_flash_white();
 }
 
 static void queue_transmit_files()
 {
     error_t ret;
-
-    if(version_file_queue.store_index != version_file_queue.active_index)
+    if(fifo_get_size(&button_file_fifo) > 0)
     {
-        DPRINT("sending version file to network manager. store index: %d, active index: %d ",version_file_queue.store_index, version_file_queue.active_index );
-        ret = transmit_file(VERSION_FILE_ID, 0, VERSION_FILE_SIZE, (uint8_t*)&version_file_queue.version_file[version_file_queue.store_index]);
-        if(ret == SUCCESS)
-            transmitted_file_id = VERSION_FILE_ID;
-        else
-            log_print_string("could not send version file to network manager");
-        return;
-    }
-    else if(button_file_queue.store_index != button_file_queue.active_index)
-    {
-        DPRINT("sending button file to network manager. store index: %d, active index: %d ",button_file_queue.store_index,button_file_queue.active_index );
-        ret = transmit_file(BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, (uint8_t*)&button_file_queue.button_file[button_file_queue.store_index]);
+        DPRINT("sending button file to network manager.");
+        uint8_t button_file_buffer[BUTTON_FILE_SIZE];
+        fifo_peek(&button_file_fifo, button_file_buffer,0,BUTTON_FILE_SIZE);
+        ret = transmit_file(BUTTON_FILE_ID, 0, BUTTON_FILE_SIZE, button_file_buffer);
         if(ret == SUCCESS)
             transmitted_file_id = BUTTON_FILE_ID;
         else
             log_print_string("could not send button file to network manager");
         return;
     }
-    else if(heartbeat_file_queue.store_index != heartbeat_file_queue.active_index)
-    {
-        DPRINT("sending heartbeat file to network manager. store index: %d, active index: %d ",heartbeat_file_queue.store_index,heartbeat_file_queue.active_index );
-        ret = transmit_file(HEARTBEAT_FILE_ID, 0, HEARTBEAT_FILE_SIZE, (uint8_t*)&heartbeat_file_queue.heartbeat_file[heartbeat_file_queue.store_index]);
-        if(ret == SUCCESS)
-            transmitted_file_id = HEARTBEAT_FILE_ID;
-        else
-            log_print_string("could not send heartbeat file to network manager");
-        return;
-    }
-    else
-        led_flash_white();
+   
 }
 
-void queue_add_file(button_file_t* button_file_content, heartbeat_file_t* heartbeat_file_content, version_file_t* version_file_content)
+void queue_add_file(button_file_t* button_file_content)
 {
     if(button_file_content)
     {
-        button_file_queue.button_file[button_file_queue.store_index] = *button_file_content;
-        //TODO ensure we don't overwrite by checking active index
-        if(!overwriting_queue(button_file_queue.store_index,button_file_queue.active_index))
-            increase_rotate(&button_file_queue.store_index);
-        DPRINT("added button file to the queue. New store index: %d, active index: %d ",button_file_queue.store_index,button_file_queue.active_index );
+        error_t ret = fifo_put(&button_file_fifo, button_file_content->bytes, BUTTON_FILE_SIZE);
+        if(ret!=SUCCESS)
+            log_print_error_string("queue was full. Message not added"); //TODO replace last element with this one
+        DPRINT("added button file to the queue.");
     }
-    if(heartbeat_file_content)
-    {
-        heartbeat_file_queue.heartbeat_file[heartbeat_file_queue.store_index] = *heartbeat_file_content;
-        if(!overwriting_queue(heartbeat_file_queue.store_index,heartbeat_file_queue.active_index))
-            increase_rotate(&heartbeat_file_queue.store_index);
-        DPRINT("added heartbeat file to the queue. New store index: %d, active index: %d ",heartbeat_file_queue.store_index,heartbeat_file_queue.active_index );
-    }
-    if(version_file_content)
-    {
-        version_file_queue.version_file[version_file_queue.store_index] = *version_file_content;
-        if(!overwriting_queue(version_file_queue.store_index,version_file_queue.active_index))
-            increase_rotate(&version_file_queue.store_index);
-        DPRINT("added version file to the queue. New store index: %d, active index: %d ",version_file_queue.store_index, version_file_queue.active_index );
-    }
-    if(get_network_manager_state() == NETWORK_MANAGER_READY)
+    if(get_network_manager_state() == NETWORK_MANAGER_READY && !timer_is_task_scheduled(&queue_transmit_files))
         sched_post_task(&queue_transmit_files);
 }
 
 void little_queue_init()
 {
-    button_file_queue.store_index=0;
-    button_file_queue.active_index=0;
-    button_file_queue.priority=NORMAL_PRIORITY;
-
-    heartbeat_file_queue.store_index=0;
-    heartbeat_file_queue.active_index=0;
-    heartbeat_file_queue.priority=LOW_PRIORITY;
-
-    version_file_queue.store_index=0;
-    version_file_queue.active_index=0;
-    version_file_queue.priority=TOP_PRIORITY;
-
     network_manager_init(&queue_transmit_completed);
     sched_register_task(&queue_transmit_files);
+    fifo_init(&button_file_fifo, button_fifo_buffer, sizeof(button_fifo_buffer));
 }
