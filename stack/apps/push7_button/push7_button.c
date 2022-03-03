@@ -44,8 +44,6 @@
 #include "little_queue.h"
 
 //#define FRAMEWORK_APP_LOG 1
-#define MAX_RETRY_ATTEMPTS 5
-
 #ifdef FRAMEWORK_APP_LOG
 #include "log.h"
     #define DPRINT(...)      log_print_string(__VA_ARGS__)
@@ -94,9 +92,14 @@ void bootstrap()
     adc_stuff_init();
 
     led_flash_white();
-
-    //sched_register_task(&send_heartbeat);
-    //timer_post_task_delay(&send_heartbeat, TIMER_TICKS_PER_SEC * 6);
-
     ubutton_register_callback(&userbutton_callback);
+
+#ifndef FRAMEWORK_DEBUG_ENABLE_SWD
+    GPIO_InitTypeDef GPIO_InitStruct= { 0 };
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Pin = GPIO_PIN_13 | GPIO_PIN_14;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+#endif
+
 }
