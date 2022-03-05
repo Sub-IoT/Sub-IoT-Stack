@@ -43,6 +43,12 @@
 #include "file_definitions.h"
 #include "little_queue.h"
 
+#include "hwgpio.h"
+#include "platform.h"
+#include "scheduler.h"
+#include "stm32_common_gpio.h"
+
+#define ENABLE_PIR_MESSAGE false
 //#define FRAMEWORK_APP_LOG 1
 #ifdef FRAMEWORK_APP_LOG
 #include "log.h"
@@ -84,6 +90,18 @@ void send_heartbeat()
     // timer_post_task_delay(&send_heartbeat, TIMER_TICKS_PER_SEC * 10);
 }
 
+void pir_callback(void *arg)
+{
+    if(hw_gpio_get_in(PIR_PIN))
+    {
+        pir_file_t pir_file = 
+        {
+            .battery_voltage=get_battery_voltage(), //TODO get stored value to avoid delays
+        };
+        queue_add_file(pir_file.bytes, PIR_FILE_SIZE, PIR_FILE_ID);
+    }
+}
+
 void bootstrap()
 {
     log_print_string("Device booted\n");
@@ -101,5 +119,24 @@ void bootstrap()
     GPIO_InitStruct.Pin = GPIO_PIN_13 | GPIO_PIN_14;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 #endif
+
+    if(ENABLE_PIR_MESSAGE)
+    {
+        GPIO_InitTypeDef pir_supply;
+        pir_supply.Mode  = GPIO_MODE_OUTPUT_PP;
+        pir_supply.Pull  = GPIO_NOPULL;
+        pir_supply.Speed = GPIO_SPEED_FREQ_LOW;
+        hw_gpio_configure_pin_stm(PIR_SUPPLY_PIN, &pir_supply);
+        hw_gpio_set(PIR_SUPPLY_PIN);
+        error_t err;
+        GPIO_InitTypeDef PIR_input;
+        PIR_input.Mode = GPIO_MODE_IT_RISING_FALLING;
+        PIR_input.Pull = GPIO_NOPULL;
+        PIR_input.Speed = GPIO_SPEED_FREQ_LOW;
+        hw_gpio_configure_pin_stm(PIR_PIN, &PIR_input);
+        err = hw_gpio_configure_interrupt(PIR_PIN, GPIO_FALLING_EDGE | GPIO_RISING_EDGE, &pir_callback, NULL);
+        hw_gpio_enable_interrupt(PIR_PIN);
+    }
+
 
 }

@@ -49,6 +49,9 @@
 #define BUTTON2           PIN(0, 11)
 #define BUTTON3           PIN(1, 2)
 
+#define PIR_PIN           PIN(0, 10)
+#define PIR_SUPPLY_PIN    PIN(0,9)
+
 #if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
   // TODO tmp
   #define SX127x_SPI_INDEX  0

@@ -63,4 +63,23 @@ typedef struct
     };
 } version_file_t;
 
+
+
+#define PIR_FILE_ID 54
+#define PIR_FILE_SIZE sizeof(button_file_t)
+
+#define RAW_BUTTON_FILE_SIZE 4
+
+typedef struct
+{
+    union
+    {
+        uint8_t bytes[RAW_BUTTON_FILE_SIZE];
+        struct
+        {
+            uint32_t battery_voltage;
+        } __attribute__((__packed__));
+    };
+} pir_file_t;
+
 #endif //__FILE_DEFINITION_H
