@@ -7,5 +7,6 @@
 
 void adc_stuff_init();
 uint16_t get_battery_voltage();
+void update_battery_voltage();
 
 #endif //__ADC_STUFF_H

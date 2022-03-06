@@ -23,6 +23,7 @@
 #include "network_manager.h"
 #include "file_definitions.h"
 #include "little_queue.h"
+#include "adc_stuff.h"
 
 //#define FRAMEWORK_LITTLE_QUEUE_LOG 1
 #define MAX_RETRY_ATTEMPTS 5
@@ -57,6 +58,9 @@ static void queue_transmit_completed(bool success)
         fifo_skip(&file_fifo, file_size);
         fifo_skip(&file_size_and_id_fifo, 2);
         retry_counter = 0;
+
+        // readout the battery voltage when done processing
+        update_battery_voltage();
         if(!success)
             log_print_error_string("file %d discarded, to many tries", file_id);
     }

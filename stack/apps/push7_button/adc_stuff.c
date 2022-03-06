@@ -12,6 +12,8 @@
 
 ADC_HandleTypeDef hadc;
 
+uint16_t current_voltage = 0;
+
 static void MX_ADC_Init(void)
 {
     ADC_ChannelConfTypeDef sConfig = { 0 };
@@ -66,9 +68,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 void adc_stuff_init()
 {
     MX_ADC_Init();
+    update_battery_voltage();
 }
 
-uint16_t get_battery_voltage()
+void update_battery_voltage()
 {
     float battery_voltage;
     HAL_ADC_Start(&hadc);
@@ -84,5 +87,7 @@ uint16_t get_battery_voltage()
     battery_voltage = (float) HAL_ADC_GetValue(&hadc) * 1.05732421876; 
 
     HAL_ADC_Stop(&hadc);
-    return (uint16_t)(round(battery_voltage));
+    current_voltage = (uint16_t)(round(battery_voltage));
 }
+
+uint16_t get_battery_voltage() { return current_voltage; }

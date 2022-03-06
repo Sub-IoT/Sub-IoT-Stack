@@ -22,8 +22,6 @@
 #include "led.h"
 #include "network_manager.h"
 
-//#define FRAMEWORK_NETWORK_MANAGER_LOG 1
-
 #ifdef FRAMEWORK_NETWORK_MANAGER_LOG
     #define DPRINT(...)      log_print_string(__VA_ARGS__)
     #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
