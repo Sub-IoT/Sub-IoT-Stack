@@ -641,8 +641,9 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
 #endif
 }
 
-void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
+error_t modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
 {
+  error_t result;
   uint8_t header[SERIAL_FRAME_HEADER_SIZE];
   uint16_t crc=crc_calculate(bytes,length);
 
@@ -662,20 +663,29 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
   DPRINT_DATA(bytes, length);
    
   start_atomic();
-  request_pending = true;
-  fifo_put(&modem_interface_tx_fifo, header, SERIAL_FRAME_HEADER_SIZE);
-  fifo_put(&modem_interface_tx_fifo, bytes, length);
-  end_atomic();
+  if((sizeof(modem_interface_tx_buffer) - fifo_get_size(&modem_interface_tx_fifo)) >= (SERIAL_FRAME_HEADER_SIZE + length))
+  {
+    request_pending = true;
+    fifo_put(&modem_interface_tx_fifo, (uint8_t*) &header, SERIAL_FRAME_HEADER_SIZE);
+    fifo_put(&modem_interface_tx_fifo, bytes, length);
 
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
-  sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+    sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
 #else
-  sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // state machine is not used when not using interrupt lines
-#endif  
+    sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // state machine is not used when not using interrupt lines
+#endif 
+    result = SUCCESS;
+  }
+  else
+  {
+    result = -ENOMEM;
+  }
+  end_atomic();
+  return result;
 }
 
-void modem_interface_transfer(char* string) {
-  modem_interface_transfer_bytes((uint8_t*) string, strnlen(string, 100), SERIAL_MESSAGE_TYPE_LOGGING); 
+error_t modem_interface_transfer(char* string) {
+  return modem_interface_transfer_bytes((uint8_t*) string, strnlen(string, 100), SERIAL_MESSAGE_TYPE_LOGGING); 
 }
 
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type)

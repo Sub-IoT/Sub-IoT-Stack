@@ -19,6 +19,7 @@
 #ifndef MODEM_INTERFACE_H
 #define MODEM_INTERFACE_H
 
+#include "types.h"
 #include "fifo.h"
 #include "hwuart.h"
 #include "hwgpio.h"
@@ -59,16 +60,18 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
  *  @param type type of message (SERIAL_MESSAGE_TYPE_ALP, SERIAL_MESSAGE_TYPE_PING_REQUEST, SERIAL_MESSAGE_TYPE_LOGGING, ...)
  *  @return Void.
  */
-void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
+error_t modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
 /** @brief Transmits a string by adding a header and putting it in the UART fifo
  *  @param string Bytes that need to be transmitted
- *  @return Void.
+ *  @return error_t 	SUCCESS if the data is put into the Tx buffer.
+ *                      ENOMEM if the data doesn't fit in the Tx buffer.
  */
-void modem_interface_transfer(char* string);
+error_t modem_interface_transfer(char* string);
 /** @brief Registers callback to process a certain type of received UART data
  *  @param cmd_handler Pointer to function that processes the data
  *  @param type The type of data that needs to be processed by the given callback function
- *  @return Void.
+ *  @return error_t 	SUCCESS if the data is put into the Tx buffer.
+ *                      ENOMEM if the data doesn't fit in the Tx buffer.
  */
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type);
 

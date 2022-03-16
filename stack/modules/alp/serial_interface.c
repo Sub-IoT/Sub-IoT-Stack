@@ -105,8 +105,6 @@ static error_t serial_interface_send(uint8_t* payload, uint8_t payload_length,
 {
     DPRINT("sending payload to serial interface");
     DPRINT_DATA(payload, payload_length);
-    modem_interface_transfer_bytes(payload, payload_length, SERIAL_MESSAGE_TYPE_ALP_DATA);
-
-    return SUCCESS;
+    return modem_interface_transfer_bytes(payload, payload_length, SERIAL_MESSAGE_TYPE_ALP_DATA);
 }
 
