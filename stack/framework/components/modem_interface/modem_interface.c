@@ -54,6 +54,10 @@ static dma_handle_t* dma_rx;
 static dma_handle_t* dma_tx;
 static uint16_t tx_size;
 static bool tx_dma_busy = false;
+
+#define RX_FIFO_PROCESSING_TIMEOUT TIMER_TICKS_PER_SEC
+static bool rx_fifo_processing_timeout_active;
+static timer_tick_t rx_fifo_processing_timeout_start_time;
 #ifndef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
 _Static_assert(false, "FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES should be defined if FRAMEWORK_MODEM_INTERFACE_USE_DMA is used.");
 #endif
@@ -300,7 +304,24 @@ static void execute_state_machine()
         else
         {
           // We are still processing previous data, wait until fifo is empty
-          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+          if(rx_fifo_processing_timeout_active)
+          {
+            timer_tick_t diff = timer_calculate_difference(rx_fifo_processing_timeout_start_time, timer_get_counter_value());
+            if(diff > RX_FIFO_PROCESSING_TIMEOUT)
+            {
+              modem_interface_clear_handler();
+            }
+            else
+            {
+              sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+            }
+          }
+          else
+          {
+            rx_fifo_processing_timeout_start_time = timer_get_counter_value();
+            rx_fifo_processing_timeout_active = true;
+            sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+          }
         }
 #endif
         break;
@@ -419,12 +440,14 @@ void modem_interface_clear_handler() {
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
     tx_dma_busy = false;
     tx_size = 0;
+    rx_fifo_processing_timeout_active = false;
 #endif
     target_uart_state_isr_count = 0;
     request_pending = false;
     fifo_clear(&modem_interface_tx_fifo);
     //AL-2305 be sure to clear request pin
     hw_gpio_clr(uart_state_pin);
+    sched_post_task(&execute_state_machine); 
     SWITCH_STATE(STATE_IDLE);
 }
 
