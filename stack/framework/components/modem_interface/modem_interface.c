@@ -296,6 +296,7 @@ static void execute_state_machine()
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
         if(fifo_get_size(&rx_fifo) == 0)
         {
+          rx_fifo_processing_timeout_active = false;
 #endif
           SWITCH_STATE(STATE_REC);
           modem_listen(NULL);
@@ -309,6 +310,7 @@ static void execute_state_machine()
             timer_tick_t diff = timer_calculate_difference(rx_fifo_processing_timeout_start_time, timer_get_counter_value());
             if(diff > RX_FIFO_PROCESSING_TIMEOUT)
             {
+              log_print_error_string("modem interface timeout in state %d", state);
               modem_interface_clear_handler();
             }
             else
