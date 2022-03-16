@@ -117,6 +117,11 @@
 #define LORA_MAC_PUBLIC_SYNCWORD                    0x34 // Sync word for Public LoRa networks
 #define RF_MID_BAND_THRESH                          525000000
 
+// bits[4-0]: Imax = 45+5*OcpTrim [mA] if OcpTrim <= 15 (120 mA),bit[5]=OcpOn 
+#define OCP_TRIM_OFF                                0x00 //=OcpOff
+#define OCP_TRIM_PA_BOOST_ON                        0x2F //=OcpOn, 120mA 
+#define OCP_TRIM_PA_BOOST_OFF                       0x21 //=0cpOn, 50mA
+
 static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 151, 177, 226, 277, 329, 
   427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
 
@@ -336,7 +341,6 @@ static void init_regs() {
   }
 
   // RX
-  //  write_reg(REG_OCP, 0); // TODO default for now
   write_reg(REG_LNA, RF_LNA_GAIN_G1 | RF_LNA_BOOST_ON); // highest gain for now, for 868 // TODO LnaBoostHf consumes 150% current compared to default LNA
 
   // TODO validate:
@@ -1302,6 +1306,14 @@ void hw_radio_set_tx_power(int8_t eirp) {
     write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
 #endif
 
+#ifdef PLATFORM_SX127X_OCP_ENABLED
+  if(eirp > 15) 
+    write_reg(REG_OCP, OCP_TRIM_PA_BOOST_ON); 
+  else
+    write_reg(REG_OCP, OCP_TRIM_PA_BOOST_OFF);
+#else
+  write_reg(REG_OCP, OCP_TRIM_OFF);
+#endif
 }
 
 void hw_radio_switch_longRangeMode(bool use_lora) {
