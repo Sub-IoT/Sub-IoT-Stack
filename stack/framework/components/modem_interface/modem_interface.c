@@ -91,6 +91,7 @@ static uint8_t packet_up_counter = 0;
 static uint8_t packet_down_counter = 0;
 static pin_id_t uart_state_pin;
 static pin_id_t target_uart_state_pin;
+static volatile uint8_t target_uart_state_isr_count;
 
 static bool modem_listen_uart_inited = false;
 static bool parsed_header = false;
@@ -262,6 +263,7 @@ static void execute_state_machine()
     case STATE_REC:
       if(hw_gpio_get_in(target_uart_state_pin))
           break;
+      target_uart_state_isr_count = 0;
       SWITCH_STATE(STATE_RESP);
       //Intentional fall through
     case STATE_RESP:
@@ -286,6 +288,7 @@ static void execute_state_machine()
     case STATE_IDLE:
       if(hw_gpio_get_in(target_uart_state_pin)) {
         // wake-up requested
+        target_uart_state_isr_count = 0;
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
         if(fifo_get_size(&rx_fifo) == 0)
         {
@@ -319,6 +322,7 @@ static void execute_state_machine()
       break;
     case STATE_REQ_WAIT:
       if(hw_gpio_get_in(target_uart_state_pin)) {
+        target_uart_state_isr_count = 0;
         // receiver active
         SWITCH_STATE(STATE_REQ_BUSY);
         // fall-through to STATE_REQ_BUSY!
@@ -341,7 +345,10 @@ static void execute_state_machine()
           modem_interface_enable();
           sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
         }
-      } else if (!hw_gpio_get_in(target_uart_state_pin) || !uart_get_rx_port_state(uart)){
+      } else if ((!hw_gpio_get_in(target_uart_state_pin) || !uart_get_rx_port_state(uart))
+                 || (hw_gpio_get_in(target_uart_state_pin) && target_uart_state_isr_count > 1)) // AL-2405: We have missed going down of target_uart_state_pin
+      {
+        target_uart_state_isr_count = 0;
         SWITCH_STATE(STATE_IDLE);
         sched_post_task(&execute_state_machine);
       } else{
@@ -413,6 +420,7 @@ void modem_interface_clear_handler() {
     tx_dma_busy = false;
     tx_size = 0;
 #endif
+    target_uart_state_isr_count = 0;
     request_pending = false;
     fifo_clear(&modem_interface_tx_fifo);
     //AL-2305 be sure to clear request pin
@@ -545,6 +553,7 @@ static void uart_rx_cb(uint8_t data)
  */
 static void uart_int_cb(void *arg)
 {
+  target_uart_state_isr_count++;
   // do not read GPIO level here in interrupt context (GPIO clock might not be enabled yet), execute state machine instead
   sched_post_task(&execute_state_machine);
 }
