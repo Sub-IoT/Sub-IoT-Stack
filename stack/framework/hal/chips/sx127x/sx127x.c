@@ -119,8 +119,8 @@
 
 // bits[4-0]: Imax = 45+5*OcpTrim [mA] if OcpTrim <= 15 (120 mA),bit[5]=OcpOn 
 #define OCP_TRIM_OFF                                0x00 //=OcpOff
-#define OCP_TRIM_PA_BOOST_ON                        0x2F //=OcpOn, 120mA 
-#define OCP_TRIM_PA_BOOST_OFF                       0x21 //=0cpOn, 50mA
+#define OCP_TRIM_PA_BOOST_ON                        0x2A //=OcpOn, 95mA (including other components delivers a max current of 120mA) 
+#define OCP_TRIM_PA_BOOST_OFF                       0x20 //=0cpOn, 45mA (lowest possible value, delivers current consumption of ~68mA)
 
 static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 151, 177, 226, 277, 329, 
   427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
