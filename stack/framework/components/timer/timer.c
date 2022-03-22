@@ -244,12 +244,18 @@ __LINK_C timer_tick_t timer_get_counter_value()
 {
 	timer_tick_t counter;
     start_atomic();
-	counter = NG(timer_offset) + hw_timer_getvalue(HW_TIMER_ID);
+    timer_tick_t hw_timer_value = hw_timer_getvalue(HW_TIMER_ID);
+	counter = NG(timer_offset) + hw_timer_value;
 	//increase the counter with COUNTER_OVERFLOW_INCREASE
 	//if an overflow is pending. (This is to compensate for the 
 	//fact that NG(timer_offset) is not updated until the overflow
 	//interrupt is actually fired
-	if(hw_timer_is_overflow_pending(HW_TIMER_ID))
+    //the overflow can occur between reading out the timer here above
+    //and checking the overflow pending bit. If this occurs, hw_timer_value
+    //contains the max value before overflow and we will add COUNTER_OVERFLOW_INCREASE
+    //bellow as well which mean that the returned time is off by COUNTER_OVERFLOW_INCREASE.
+    //So only add COUNTER_OVERFLOW_INCREASE if hw_timer_value is not to large.
+	if(hw_timer_is_overflow_pending(HW_TIMER_ID) && (hw_timer_value < (COUNTER_OVERFLOW_INCREASE - 10)))
 	    counter += COUNTER_OVERFLOW_INCREASE;
     end_atomic();
     return counter;
