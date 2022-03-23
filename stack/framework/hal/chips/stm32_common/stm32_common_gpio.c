@@ -120,12 +120,26 @@ __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* in
 {
   RCC_GPIO_CLK_ENABLE((uint32_t)PORT_BASE(pin_id));
   init_options->Pin = 1 << GPIO_PIN(pin_id);
+  if(interrupts[GPIO_PIN(pin_id)].interrupt_port != GPIO_PORT(pin_id) && (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING))
+  {
+    assert(!LL_EXTI_IsEnabledIT_0_31(init_options->Pin));
+    assert(interrupts[GPIO_PIN(pin_id)].interrupt_port == 0xFF);
+  }
+  start_atomic();
   HAL_GPIO_Init(PORT_BASE(pin_id), init_options);
 
   if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
   {
     interrupts[GPIO_PIN(pin_id)].interrupt_port = GPIO_PORT(pin_id);
+    // AL-2306 be sure that GPIO interrupt is not yet enabled
+    hw_gpio_disable_interrupt(pin_id);
   }
+  else if(interrupts[GPIO_PIN(pin_id)].interrupt_port == GPIO_PORT(pin_id))
+  {
+    // Pin was previously configured as interrupt but now not anymore
+    interrupts[GPIO_PIN(pin_id)].interrupt_port = 0xFF;
+  }
+  end_atomic();
 
   //RCC_GPIO_CLK_DISABLE((uint32_t)PORT_BASE(pin_id));
   // TODO for now keep the clock for all configured ports as enabled. We might disable them if the pin configuration allows this
