@@ -54,13 +54,15 @@ static dma_handle_t* dma_rx;
 static dma_handle_t* dma_tx;
 static uint16_t tx_size;
 static bool tx_dma_busy = false;
-
-#define RX_FIFO_PROCESSING_TIMEOUT TIMER_TICKS_PER_SEC
-static bool rx_fifo_processing_timeout_active;
-static timer_tick_t rx_fifo_processing_timeout_start_time;
 #ifndef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
 _Static_assert(false, "FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES should be defined if FRAMEWORK_MODEM_INTERFACE_USE_DMA is used.");
 #endif
+#endif
+
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
+#define MODEM_INTERFACE_TIMEOUT (5 * TIMER_TICKS_PER_SEC)
+static bool modem_interface_timeout_active;
+static timer_tick_t modem_interface_timeout_start_time;
 #endif
 
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
@@ -250,12 +252,38 @@ static void modem_listen(void* arg)
     modem_interface_enable();
     hw_gpio_set(uart_state_pin); //set interrupt gpio to indicate ready for data
   }
-
-  // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
-  // to keep UART RX enabled
-  sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
 }
 
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
+static bool modem_interface_timeout()
+{
+  if(modem_interface_timeout_active)
+  {
+    timer_tick_t diff = timer_calculate_difference(modem_interface_timeout_start_time, timer_get_counter_value());
+    if(diff > MODEM_INTERFACE_TIMEOUT)
+    {
+      log_print_error_string("modem_interface timeout occurred in state %d", state);
+#ifdef FRAMEWORK_DEBUG_ASSERT_REBOOT
+      modem_interface_clear_handler();
+      return true;
+#else
+      assert(false);
+#endif
+    }
+  }
+  else
+  {
+    modem_interface_timeout_start_time = timer_get_counter_value();
+    modem_interface_timeout_active = true;
+  }
+  return false;
+}
+
+static inline void clear_modem_interface_timeout()
+{
+  modem_interface_timeout_active = false;
+}
+#endif
 
 /** @Brief Handles the different states of the modem interrupt line handshake mechanism
  *  @return void
@@ -265,11 +293,24 @@ static void execute_state_machine()
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
     switch (state) {
     case STATE_REC:
+    {
       if(hw_gpio_get_in(target_uart_state_pin))
-          break;
+      {
+        if(!modem_interface_timeout())
+        {
+          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+        }
+        else
+        {
+          return;
+        }
+        break;
+      }
+      clear_modem_interface_timeout();
       target_uart_state_isr_count = 0;
       SWITCH_STATE(STATE_RESP);
       //Intentional fall through
+    }
     case STATE_RESP:
     {
       // response period completed, process the request
@@ -296,32 +337,18 @@ static void execute_state_machine()
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
         if(fifo_get_size(&rx_fifo) == 0)
         {
-          rx_fifo_processing_timeout_active = false;
+          clear_modem_interface_timeout();
 #endif
           SWITCH_STATE(STATE_REC);
           modem_listen(NULL);
+          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
         }
         else
         {
           // We are still processing previous data, wait until fifo is empty
-          if(rx_fifo_processing_timeout_active)
+          if(!modem_interface_timeout())
           {
-            timer_tick_t diff = timer_calculate_difference(rx_fifo_processing_timeout_start_time, timer_get_counter_value());
-            if(diff > RX_FIFO_PROCESSING_TIMEOUT)
-            {
-              log_print_error_string("modem interface timeout in state %d", state);
-              modem_interface_clear_handler();
-            }
-            else
-            {
-              sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
-            }
-          }
-          else
-          {
-            rx_fifo_processing_timeout_start_time = timer_get_counter_value();
-            rx_fifo_processing_timeout_active = true;
             sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
           }
         }
@@ -335,7 +362,6 @@ static void execute_state_machine()
         break;
       }
     case STATE_REQ_START:
-      // TODO timeout
       sched_cancel_task(&modem_listen);
       SWITCH_STATE(STATE_REQ_WAIT);
       hw_gpio_set(uart_state_pin); // wake-up receiver
@@ -346,12 +372,15 @@ static void execute_state_machine()
     case STATE_REQ_WAIT:
       if(hw_gpio_get_in(target_uart_state_pin)) {
         target_uart_state_isr_count = 0;
+        clear_modem_interface_timeout();
         // receiver active
         SWITCH_STATE(STATE_REQ_BUSY);
         // fall-through to STATE_REQ_BUSY!
       } else {
-        // TODO timeout
-        sched_post_task(&execute_state_machine); // reschedule again to prevent sleeoping
+        if(!modem_interface_timeout())
+        {
+          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+        }
         // in principle we could go to sleep but this will cause pin to float, this can be improved later
         break;
       }
@@ -365,17 +394,22 @@ static void execute_state_machine()
 #endif
         )
         {
+          clear_modem_interface_timeout();
           modem_interface_enable();
           sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
         }
       } else if ((!hw_gpio_get_in(target_uart_state_pin) || !uart_get_rx_port_state(uart))
                  || (hw_gpio_get_in(target_uart_state_pin) && target_uart_state_isr_count > 1)) // AL-2405: We have missed going down of target_uart_state_pin
       {
+          clear_modem_interface_timeout();
         target_uart_state_isr_count = 0;
         SWITCH_STATE(STATE_IDLE);
         sched_post_task(&execute_state_machine);
       } else{
-        sched_post_task(&execute_state_machine); 
+        if(!modem_interface_timeout())
+        {
+          sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
+        }
         //keep active until target reacts
       }
       break;
@@ -433,6 +467,8 @@ static bool verify_payload(fifo_t* bytes, uint8_t* header)
  * 
  */
 void modem_interface_clear_handler() {
+    modem_interface_disable();
+
     //clear RX
     parsed_header = false;
     payload_len = 0;
@@ -442,14 +478,15 @@ void modem_interface_clear_handler() {
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_DMA
     tx_dma_busy = false;
     tx_size = 0;
-    rx_fifo_processing_timeout_active = false;
 #endif
     target_uart_state_isr_count = 0;
     request_pending = false;
     fifo_clear(&modem_interface_tx_fifo);
     //AL-2305 be sure to clear request pin
     hw_gpio_clr(uart_state_pin);
-    sched_post_task(&execute_state_machine); 
+#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
+    modem_interface_timeout_active = false;
+#endif
     SWITCH_STATE(STATE_IDLE);
 }
 
