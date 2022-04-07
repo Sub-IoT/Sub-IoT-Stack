@@ -367,6 +367,10 @@ static bool configure_next_event()
     return called_atomic;
 }
 
+timer_tick_t timer_get_current_time_difference(timer_tick_t start_time) {
+    return timer_calculate_difference(start_time, timer_get_counter_value());
+}
+
 timer_tick_t timer_calculate_difference(timer_tick_t start_time, timer_tick_t stop_time)
 {
     if(start_time <= stop_time)
@@ -419,10 +423,15 @@ static void timer_fired()
         log_print_error_string("timer fired too late with current time %i > next event %i + 5: function 0x%X",
             current_time, timer_info->min_delay_ticks, NG(timers)[NG(next_event)].next_event, NG(timers)[NG(next_event)].f);
 #endif
+    // check if the current task is the watchdog bump task and if we're not nearly reaching the reset
+    timer_tick_t repost_time_diff = sched_check_software_watchdog(NG(timers)[NG(next_event)].f, current_time);
+
     sched_post_task_prio(
         NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
 
-    if(NG(timers)[NG(next_event)].period > 0)
+    if(repost_time_diff)
+        NG(timers)[NG(next_event)].next_event = current_time + repost_time_diff;
+    else if(NG(timers)[NG(next_event)].period > 0)
         NG(timers)[NG(next_event)].next_event = current_time + NG(timers)[NG(next_event)].period;
     else
         NG(timers)[NG(next_event)].f = 0x0;

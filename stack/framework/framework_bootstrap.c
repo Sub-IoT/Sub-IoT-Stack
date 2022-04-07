@@ -31,8 +31,8 @@ void bootstrap(void *arg);
 void __framework_bootstrap()
 {
     //initialise the scheduler & timers
-    scheduler_init();
     timer_init();
+    scheduler_init();
     //initialise libc RNG with the unique device id
     set_rng_seed((unsigned int)hw_get_unique_id());
     //reset the log counter

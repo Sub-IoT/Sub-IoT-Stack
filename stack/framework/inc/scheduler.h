@@ -130,6 +130,15 @@ __LINK_C bool sched_is_scheduled(task_t task);
 __LINK_C uint8_t sched_get_low_power_mode(void);
 __LINK_C void    sched_set_low_power_mode(uint8_t mode);
 
+/*! \brief Check whether a task is the watchdog task and if we're nearing a watchdog reset
+ *
+ * \param task          The task to be checked
+ * \param current_time  The current time in ticks
+ *
+ * \return uint32_t		0 if the given task doesn't need to be posted to the timer. Otherwise the function will return the delay on which the task needs to be reposted.
+ */
+__LINK_C uint32_t sched_check_software_watchdog(task_t task, uint32_t current_time);
+
 #endif /* SCHEDULER_H_ */
 
 /** @}*/

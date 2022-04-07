@@ -87,7 +87,10 @@ uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
 volatile uint8_t NGDEF(current_priority);
 unsigned int NGDEF(num_registered_tasks);
 #if defined FRAMEWORK_USE_WATCHDOG
+#define WATCHDOG_WARNING_TIMEOUT TIMER_TICKS_PER_SEC * 17
 bool watchdog_wakeup;
+static timer_tick_t last_task_start_time = 0;
+static bool scheduler_active = false;
 #endif
 
 volatile bool task_scheduled_after_sched_loop = false;
@@ -178,6 +181,7 @@ __LINK_C void scheduler_init()
 #if defined FRAMEWORK_USE_WATCHDOG
 	__watchdog_init();
 	sched_register_task(&__feed_watchdog_task);
+	timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 #endif
 }
 
@@ -371,6 +375,25 @@ void sched_set_low_power_mode(uint8_t mode) {
   low_power_mode = mode;
 }
 
+// This is in interrupt context
+__LINK_C timer_tick_t sched_check_software_watchdog(task_t task, timer_tick_t current_time) {
+#ifdef FRAMEWORK_USE_WATCHDOG
+	if(task == &__feed_watchdog_task) {
+		if(scheduler_active) {
+			timer_tick_t difference = timer_calculate_difference(last_task_start_time, current_time);
+			if(difference > WATCHDOG_WARNING_TIMEOUT) {
+				// PANIC
+				return hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC;
+			}
+			return (hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC - difference);
+		} else {
+			return hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC;
+		}
+	}
+	return 0;
+#endif
+}
+
 __LINK_C void scheduler_run()
 {
 	while(1)
@@ -392,6 +415,8 @@ __LINK_C void scheduler_run()
 				executed_tasks++;
 				task_list_empty = false;
 				hw_watchdog_feed();
+				last_task_start_time = timer_get_counter_value();
+				scheduler_active = true;
 #endif
 				check_structs_are_valid();
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
@@ -418,9 +443,7 @@ __LINK_C void scheduler_run()
 			end_atomic();	
 		}		
 #if defined FRAMEWORK_USE_WATCHDOG
-		if(!task_list_empty) //avoid rescheduling watchdog tasks when we didn't execute any tasks
-			timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
-
+		scheduler_active = false;
 		hw_watchdog_feed();
 #if defined FRAMEWORK_USE_POWER_TRACKING
 		//we don't want to register wake-ups that only trigger the watchdog
@@ -431,8 +454,7 @@ __LINK_C void scheduler_run()
 #endif
 #endif
 #if defined FRAMEWORK_USE_POWER_TRACKING
-			timer_tick_t current_time = timer_get_counter_value();
-			power_tracking_register_run_time(timer_calculate_difference(wakeup_time, current_time));
+			power_tracking_register_run_time(timer_get_current_time_difference(wakeup_time));
 #endif			
 #if defined FRAMEWORK_USE_WATCHDOG && defined FRAMEWORK_USE_POWER_TRACKING
 		}

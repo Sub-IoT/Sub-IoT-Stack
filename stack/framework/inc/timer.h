@@ -260,6 +260,15 @@ void timer_cancel_event(timer_event* event);
  */
 timer_tick_t timer_calculate_difference(timer_tick_t start_time, timer_tick_t stop_time);
 
+/**
+ * \brief Get the time difference between a timer tick and the current time
+ * 
+ * \param start_time the start of the time difference
+ * 
+ * \return timer_tick_t the difference in ticks between the current time and start, taking into account a rollover
+ */
+timer_tick_t timer_get_current_time_difference(timer_tick_t start_time);
+
 #endif /* TIMER_H_ */
 
 /** @}*/
