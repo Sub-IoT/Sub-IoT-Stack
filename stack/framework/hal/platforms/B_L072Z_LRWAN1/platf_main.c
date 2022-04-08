@@ -29,6 +29,7 @@
 #include "hwdebug.h"
 #include "hwradio.h"
 #include "errors.h"
+#include "error_event_file.h"
 
 
 // defined in linker script
@@ -103,6 +104,16 @@ void __platform_post_framework_init()
 {
     __ubutton_init();
     led_init();
+}
+
+error_t low_level_read_cb(uint32_t address, uint8_t *data, uint8_t size)
+{
+    return blockdevice_driver_stm32_eeprom.read(persistent_files_blockdevice, data, address, size);
+}
+
+error_t low_level_write_cb(uint32_t address, const uint8_t *data, uint8_t size)
+{
+    return blockdevice_driver_stm32_eeprom.program(persistent_files_blockdevice, data, address, size);
 }
 
 int main()
