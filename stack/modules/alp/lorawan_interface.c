@@ -42,6 +42,7 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
 
 static alp_interface_t interface_lorawan_otaa;
 static uint16_t lorawan_trans_id;
+static alp_interface_config_lorawan_otaa_t lorawan_itf_cfg;
 
 void lorawan_rx(lorawan_AppData_t *AppData)
 {
@@ -56,7 +57,9 @@ void lorawan_rx(lorawan_AppData_t *AppData)
 
     fifo_put(&command->alp_command_fifo, AppData->Buff, AppData->BuffSize);
     //alp_layer_process(command->alp_command, sizeof (&command->alp_command_fifo));
-    alp_layer_process(command);
+    if(alp_layer_process(command)) {
+        lorawan_itf_cfg.lorawan_session_config_otaa.application_port = AppData->Port; //if there will be a response, send it on the port the downlink arrived on
+    }
 }
 
 void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_stack_status_t status) {
@@ -93,12 +96,15 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
 static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
 {
     (void)expected_response_length; // suppress unused warning
-    alp_interface_config_lorawan_otaa_t* lorawan_itf_cfg = (alp_interface_config_lorawan_otaa_t*)itf_cfg;
+    
+    if(itf_cfg != NULL) { //if NULL, this is a response, use previous cfg
+        lorawan_itf_cfg = *(alp_interface_config_lorawan_otaa_t*)itf_cfg;
+    }
     (*trans_id) = ++lorawan_trans_id;
-    lorawan_stack_status_t status = lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa);
+    lorawan_stack_status_t status = lorawan_otaa_is_joined(&lorawan_itf_cfg.lorawan_session_config_otaa);
     if(status == LORAWAN_STACK_ERROR_OK) {
         DPRINT("sending otaa payload");
-        status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_otaa.application_port, lorawan_itf_cfg->lorawan_session_config_otaa.request_ack);
+        status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg.lorawan_session_config_otaa.application_port, lorawan_itf_cfg.lorawan_session_config_otaa.request_ack);
         if(status != LORAWAN_STACK_ERROR_OK)
             lorawan_trans_id--; // we don't need to keep track of this new transid as it is completed immediately
     } else { 
