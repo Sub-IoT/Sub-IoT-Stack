@@ -505,6 +505,9 @@ int alp_get_expected_response_length(alp_command_t* command)
             e += fifo_skip(command_copy_fifo, 1); //skip file ID
             break;
         case ALP_OP_REQUEST_TAG:
+            e += fifo_skip(command_copy_fifo, 1); // skip tag ID operand
+            expected_response_length += 2;
+            break;
         case ALP_OP_RESPONSE_TAG:
             e += fifo_skip(command_copy_fifo, 1); // skip tag ID operand
             break;
