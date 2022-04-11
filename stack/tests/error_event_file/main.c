@@ -19,11 +19,33 @@
 const char _APP_NAME[] = "error_event_file_test";
 const char _GIT_SHA1[] = "";
 
+
 typedef struct __attribute__((__packed__))
 {
-    uint8_t start_event_idx;
-    uint8_t stop_event_idx;
-    uint16_t RFU;
+    union
+    {
+        uint16_t raw;
+        struct
+        {
+            uint8_t index_0 : 4;
+            uint8_t index_1 : 4;
+            uint8_t index_2 : 4;
+            uint8_t index_3 : 4;
+        };
+    };
+} indexes_t;
+
+typedef struct __attribute__((__packed__))
+{
+    union
+    {
+        uint8_t bytes[4];
+        struct
+        {
+            indexes_t indexes;
+            uint16_t RFU;
+        };
+    };
 } error_event_file_header_t;
 
 typedef struct
@@ -37,16 +59,24 @@ typedef struct
 
 void run_test()
 {
+    uint8_t data[150];
+    uint32_t length;
+    error_t rc;
+
     // Init error event file
     log_print_string("Test initialization of error event file...");
-    error_t rc = error_event_file_init(&low_level_read_cb, &low_level_write_cb);
+    rc = error_event_get_file_with_latest_event_only(data, &length);
+    assert(rc == ERROR);
+    rc = error_event_file_init(&low_level_read_cb, &low_level_write_cb);
     assert(rc == SUCCESS);
     assert(error_event_file_has_event() == false);
-    uint32_t length = sizeof(error_event_file_header_t);
+    length = sizeof(error_event_file_header_t);
     error_event_file_header_t header;
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0xFF && header.stop_event_idx == 0xFF);
+    assert(header.indexes.index_0 == 0xF && header.indexes.index_3 == 0xF);
+    rc = error_event_get_file_with_latest_event_only(data, &length);
+    assert(rc == ERROR);
     log_print_string("Test initialization of error event file successful.");
 
     // Add first event
@@ -58,7 +88,12 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x0);
+    assert(header.indexes.index_0 == 0x0 && header.indexes.index_1 == 0xF);
+    rc = error_event_get_file_with_latest_event_only(data, &length);
+    assert(rc==SUCCESS);
+    assert(!memcmp(data, &header, sizeof(error_event_file_header_t)));
+    assert(!memcmp(data + sizeof(error_event_file_header_t) + 2, event_1_data, sizeof(event_1_data)));
+    assert(length == ERROR_EVENT_SIZE + ERROR_HEADER_SIZE);
     log_print_string("Test adding a first event successful.");
 
     // Add a second event
@@ -70,7 +105,12 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x1);
+    assert(header.indexes.index_0 == 0x1 && header.indexes.index_1 == 0x0);
+    rc = error_event_get_file_with_latest_event_only(data, &length);
+    assert(rc==SUCCESS);
+    assert(!memcmp(data, &header, sizeof(error_event_file_header_t)));
+    assert(!memcmp(data + sizeof(error_event_file_header_t) + 2, event_2_data, sizeof(event_2_data)));
+    assert(length == ERROR_EVENT_SIZE + ERROR_HEADER_SIZE);
     log_print_string("Test adding a second event successful.");
 
     // Add a third event
@@ -82,7 +122,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x2);
+    assert(header.indexes.index_0 == 0x2 && header.indexes.index_2 == 0x0);
     log_print_string("Test adding a third event successful.");
 
     // Adding first event again, no new event should be created
@@ -93,7 +133,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x2);
+    assert(header.indexes.index_0 == 0x0 && header.indexes.index_2 == 0x1);
     log_print_string("Test adding a first event again successful.");
 
     log_print_string("Test adding a 2nd count of the third event...");
@@ -103,7 +143,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x2);
+    assert(header.indexes.index_0 == 0x2 && header.indexes.index_2 == 0x1);
     uint8_t counter;
     length = 1;
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, sizeof(error_event_file_header_t) + 2 * (ERROR_EVENT_DATA_SIZE + 2) + 1, &counter, &length, ROOT_AUTH);
@@ -120,8 +160,19 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x3);
+    assert(header.indexes.index_0 == 0x3 && header.indexes.index_3 == 0x1);
     log_print_string("Test adding a fourth event similar as the third event successful.");
+
+    // reinitialize file again to mimic reboot
+    log_print_string("Test reinitializing file to mimic reboot...");
+    rc = error_event_file_init(&low_level_read_cb, &low_level_write_cb);
+    assert(rc == SUCCESS);
+    assert(error_event_file_has_event() == true);
+    length = sizeof(error_event_file_header_t);
+    rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
+    assert(rc == SUCCESS);
+    assert(header.indexes.index_0 == 0x3 && header.indexes.index_3 == 0x1);
+    log_print_string("Test reinitializing file to mimic reboot successful.");
 
     // Add a fifth event that overwrites the first event
     log_print_string("Test adding a fifth event that overwrites the first event...");
@@ -132,7 +183,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x1 && header.stop_event_idx == 0x0);
+    assert(header.indexes.index_0 == 0x1 && header.indexes.index_3 == 0x0);
     log_print_string("Test adding a fifth event that overwrites the first event successful.");
 
     // Add a sixth event similar as the third and forth event, no new event should be added
@@ -144,7 +195,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x1 && header.stop_event_idx == 0x0);
+    assert(header.indexes.index_0 == 0x3 && header.indexes.index_3 == 0x0);
     log_print_string("Test adding a sixth event similar as the third and forth event successful.");
 
     // Adding fifth event again, no new event should be created
@@ -155,7 +206,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x1 && header.stop_event_idx == 0x0);
+    assert(header.indexes.index_0 == 0x1 && header.indexes.index_3 == 0x0);
     log_print_string("Test adding a fifth event again successful.");
 
     // Checking content of file
@@ -166,16 +217,16 @@ void run_test()
     // 3: fourth event with counter 1
     verify_content_t verify_content[] = {
         {
+            WATCHDOG_EVENT,
+            2,
+            event_1_data,
+            sizeof(event_1_data)
+        },
+        {
             ASSERT_EVENT,
             2,
             event_5_data,
             sizeof(event_5_data)
-        },
-        {
-            ASSERT_EVENT,
-            1,
-            event_2_data,
-            sizeof(event_2_data)
         },
         {
             LOG_EVENT,
@@ -204,13 +255,12 @@ void run_test()
     log_print_string("Test verify content of file successful");
 
     log_print_string("Reset error verify file...");
-    rc = error_event_file_reset();
-    assert(rc == SUCCESS);
+    error_event_file_reset(ERROR_EVENT_FILE_ID);
     assert(error_event_file_has_event() == false);
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0xFF && header.stop_event_idx == 0xFF);
+    assert(header.indexes.index_0 == 0xF && header.indexes.index_3 == 0xF);
     log_print_string("Reset error verify file successful.");
 
     // Add first event again
@@ -221,7 +271,7 @@ void run_test()
     length = sizeof(error_event_file_header_t);
     rc = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
     assert(rc == SUCCESS);
-    assert(header.start_event_idx == 0x0 && header.stop_event_idx == 0x0);
+    assert(header.indexes.index_0 == 0x0 && header.indexes.index_3 == 0xF);
     log_print_string("Test adding first event again successful.");
     
     exit(0);

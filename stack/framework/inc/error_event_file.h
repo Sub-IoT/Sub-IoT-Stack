@@ -25,6 +25,8 @@
 
 #define ERROR_EVENT_FILE_ID   52
 #define ERROR_EVENT_DATA_SIZE 30
+#define ERROR_EVENT_SIZE      (ERROR_EVENT_DATA_SIZE + 2)
+#define ERROR_HEADER_SIZE     4
 
 typedef enum __attribute__((__packed__))
 {
@@ -39,7 +41,8 @@ typedef error_t (*low_level_write_cb_t)(uint32_t address, const uint8_t *data, u
 error_t error_event_file_init(low_level_read_cb_t read_cb, low_level_write_cb_t write_cb);
 error_t error_event_file_log_event(error_event_type_t event, uint8_t* event_data, uint8_t event_data_size);
 bool error_event_file_has_event();
-error_t error_event_file_reset();
+void error_event_file_reset(uint8_t file_id);
+error_t error_event_get_file_with_latest_event_only(uint8_t* data, uint32_t* length);
 
 // Below functions are not implemented by the error even file
 // but can be used as function definition for the low level callbacks.

@@ -14,8 +14,9 @@
 #endif
 
 #define ERROR_EVENT_COUNT 4
-#define ERROR_EVENT_FILE_SIZE (4 + (ERROR_EVENT_COUNT * (ERROR_EVENT_DATA_SIZE + 2)))
+#define ERROR_EVENT_FILE_SIZE (ERROR_HEADER_SIZE + (ERROR_EVENT_COUNT * ERROR_EVENT_SIZE))
 #define ERROR_EVENT_FILE_ALLOCATED_SIZE 152
+#define INDEX_NOT_INITIALIZED 0x0F
 
 typedef struct __attribute__((__packed__))
 {
@@ -24,11 +25,33 @@ typedef struct __attribute__((__packed__))
     uint8_t data[ERROR_EVENT_DATA_SIZE];
 } error_event_t;
 
+
 typedef struct __attribute__((__packed__))
 {
-    uint8_t start_event_idx;
-    uint8_t stop_event_idx;
-    uint16_t RFU;
+    union
+    {
+        uint16_t raw;
+        struct
+        {
+            uint8_t index_0 : 4;
+            uint8_t index_1 : 4;
+            uint8_t index_2 : 4;
+            uint8_t index_3 : 4;
+        };
+    };
+} indexes_t;
+
+typedef struct __attribute__((__packed__))
+{
+    union
+    {
+        uint8_t bytes[4];
+        struct
+        {
+            indexes_t indexes;
+            uint16_t RFU;
+        };
+    };
 } error_event_file_header_t;
 
 typedef struct
@@ -64,7 +87,18 @@ static uint8_t event_reduced_compare_size[] = {
 
 static bool is_init_complete;
 static uint32_t start_of_file;
-static error_event_file_header_t header = {.start_event_idx = 0xFF, .stop_event_idx = 0xFF, .RFU=0};
+static error_event_file_header_t header = 
+{
+    .indexes = 
+    {
+        .index_0 = INDEX_NOT_INITIALIZED, 
+        .index_1 = INDEX_NOT_INITIALIZED, 
+        .index_2 = INDEX_NOT_INITIALIZED, 
+        .index_3 = INDEX_NOT_INITIALIZED
+    }, 
+    .RFU=0
+};
+static error_event_file_header_t written_header;
 static low_level_read_cb_t low_level_read_cb_function;
 static low_level_write_cb_t low_level_write_cb_function;
 
@@ -88,6 +122,7 @@ error_t error_event_file_init(low_level_read_cb_t read_cb, low_level_write_cb_t 
     {
         uint32_t length = sizeof(error_event_file_header_t);
         ret = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, 0, (uint8_t*)&header, &length, ROOT_AUTH);
+        if(ret)
         {
             return ret;
         }
@@ -104,15 +139,11 @@ error_t error_event_file_init(low_level_read_cb_t read_cb, low_level_write_cb_t 
         log_print_error_string("Error initialization of error event file: %d", ret);
         return ret;
     }
+    memcpy(written_header.bytes, header.bytes, sizeof(error_event_file_header_t));
     start_of_file = fs_get_address(ERROR_EVENT_FILE_ID) + sizeof(d7ap_fs_file_header_t);
 
-    // Check if file is valid
-    if(!((header.start_event_idx == 0xFF && header.stop_event_idx == 0xFF ) || (header.start_event_idx < ERROR_EVENT_COUNT && header.stop_event_idx < ERROR_EVENT_COUNT)))
-    {
-        log_print_error_string("error event file pointers are invalid. start: %d stop: %d", header.start_event_idx, header.stop_event_idx);
-        return ERROR;
-    }
     is_init_complete = true;
+    d7ap_fs_register_file_modified_callback(ERROR_EVENT_FILE_ID, &error_event_file_reset);
     return SUCCESS;
 }
 
@@ -126,26 +157,68 @@ static inline uint8_t get_pointer_to_next_event(uint8_t index)
     return (index + 1) % ERROR_EVENT_COUNT;
 }
 
+static void translate_indexes_to_array(indexes_t indexes, uint8_t* array) 
+{
+    array[0] = indexes.index_0;
+    array[1] = indexes.index_1;
+    array[2] = indexes.index_2;
+    array[3] = indexes.index_3;
+
+    _Static_assert(ERROR_EVENT_COUNT == 4, "This function should get changed when changing the amount of events logged.");
+}
+
+static void rotate_indexes(uint8_t event_idx)
+{
+    uint8_t index_array[ERROR_EVENT_COUNT];
+    uint8_t offset = 1;
+    translate_indexes_to_array(header.indexes, index_array);
+
+    header.indexes.raw = event_idx;
+    for(uint8_t i = 0; i < (ERROR_EVENT_COUNT - offset); i++)
+    {
+        if(index_array[i] != event_idx)
+            header.indexes.raw += index_array[i] << (ERROR_EVENT_COUNT * (i + offset));
+        else
+            offset = 0;
+    }
+}
+
+static void update_header_if_needed()
+{
+    if(memcmp(written_header.bytes, header.bytes, sizeof(error_event_file_header_t)))
+    {
+        low_level_write_cb_function(start_of_file, (const uint8_t*)&header, sizeof(error_event_file_header_t));
+        memcpy(written_header.bytes, header.bytes, sizeof(error_event_file_header_t));
+    }
+}
+
 error_t error_event_file_log_event(error_event_type_t event_type, uint8_t* event_data, uint8_t event_data_size)
 {
+    uint8_t index_array[ERROR_EVENT_COUNT];
     if(!is_init_complete)
     {
         return ERROR;
     }
     uint8_t event_idx;
     error_event_t event;
+    uint8_t first_reduced_compare_match = 0xFF;
     if(event_data_size > ERROR_EVENT_DATA_SIZE)
     {
         event_data_size = ERROR_EVENT_DATA_SIZE;
     }
+    translate_indexes_to_array(header.indexes, index_array);
     // If error file is not empty, check if event is already present
-    if(header.start_event_idx != 0xFF)
+    if(index_array[0] != INDEX_NOT_INITIALIZED)
     {
-        event_idx = header.start_event_idx;
         uint8_t reduced_compare_match_count = 0;
-        bool all_slots_in_use = get_pointer_to_next_event(header.stop_event_idx) == header.start_event_idx;
-        do
-        {
+        for(uint8_t index = 0; index < ERROR_EVENT_COUNT; index++) {
+            event_idx = index_array[index];
+            
+            if(event_idx == INDEX_NOT_INITIALIZED) {
+                event_idx = index;
+                break;
+            }
+
             if(low_level_read_cb_function(get_address_of_event(event_idx), (uint8_t*)&event, sizeof(error_event_t)) == SUCCESS)
             {
                 if(event.type == event_type)
@@ -159,13 +232,19 @@ error_t error_event_file_log_event(error_event_type_t event_type, uint8_t* event
                             event.counter++;
                             low_level_write_cb_function(get_address_of_event(event_idx) + sizeof(uint8_t), (const uint8_t*)&event.counter, sizeof(uint8_t));
                         }
+                        rotate_indexes(event_idx);
+                        update_header_if_needed();
                         return SUCCESS;
                     }
                     else if(event_reduced_compare_size[event_type] > 0 && memcmp(event.data, event_data, event_reduced_compare_size[event_type]) == 0)
                     {
+                        if(first_reduced_compare_match == 0xFF)
+                            first_reduced_compare_match = event_idx;
                         reduced_compare_match_count++;
                         if(reduced_compare_match_count >= 2)
                         {
+                            rotate_indexes(first_reduced_compare_match);
+                            update_header_if_needed();
                             // Already 2 events logged of this type
                             return ERROR;
                         }
@@ -173,33 +252,20 @@ error_t error_event_file_log_event(error_event_type_t event_type, uint8_t* event
 
                 }
             }
-            event_idx = get_pointer_to_next_event(event_idx);
         }
-        while(event_idx != get_pointer_to_next_event(header.stop_event_idx));
 
-        // Check if all slots are in use
-        if(all_slots_in_use)
-        {
-            // Use oldest slot for new event
-            event_idx = header.start_event_idx;
-            header.start_event_idx = get_pointer_to_next_event(header.start_event_idx);
-        }
-        else
-        {
-            event_idx = get_pointer_to_next_event(header.stop_event_idx);
-        }
+        rotate_indexes(event_idx);
     }
     else
     {
-        header.start_event_idx = 0;
+        header.indexes.index_0 = 0;
         event_idx = 0;
     }
     event.type = event_type;
     event.counter = 1;
     memcpy(event.data, event_data, event_data_size);
     low_level_write_cb_function(get_address_of_event(event_idx), (const uint8_t*)&event, event_data_size + 2);
-    header.stop_event_idx = event_idx;
-    low_level_write_cb_function(start_of_file, (const uint8_t*)&header, sizeof(error_event_file_header_t));
+    update_header_if_needed();
     return SUCCESS;
 }
 
@@ -207,19 +273,47 @@ bool error_event_file_has_event()
 {
     if(is_init_complete)
     {
-        return header.start_event_idx != 0xFF;
+        return header.indexes.index_0 != INDEX_NOT_INITIALIZED;
     }
     return false;
 }
 
-error_t error_event_file_reset()
+error_t error_event_get_file_with_latest_event_only(uint8_t* data, uint32_t* length) {
+    error_t result;
+    uint32_t offset;
+    uint8_t* current_data_pointer = data;
+
+    if(!error_event_file_has_event())
+    {
+        *length = 0;
+        return ERROR;
+    }
+
+    memcpy(current_data_pointer, header.bytes, sizeof(error_event_file_header_t));
+    current_data_pointer += sizeof(error_event_file_header_t);
+
+    *length = sizeof(error_event_t);
+    offset = sizeof(error_event_file_header_t) + (sizeof(error_event_t) * header.indexes.index_0);
+    result = d7ap_fs_read_file(ERROR_EVENT_FILE_ID, offset, current_data_pointer, length, ROOT_AUTH);
+    if(result != SUCCESS)
+    {
+        *length = 0;
+        return result;
+    }
+
+    *length = sizeof(error_event_file_header_t) + sizeof(error_event_t);
+    return SUCCESS;
+}
+
+void error_event_file_reset(uint8_t file_id)
 {
     if(is_init_complete)
     {
-        header.start_event_idx = 0xFF;
-        header.stop_event_idx = 0xFF;
+        header.indexes.index_0 = INDEX_NOT_INITIALIZED;
+        header.indexes.index_1 = INDEX_NOT_INITIALIZED;
+        header.indexes.index_2 = INDEX_NOT_INITIALIZED;
+        header.indexes.index_3 = INDEX_NOT_INITIALIZED;
         header.RFU = 0;
-        return low_level_write_cb_function(start_of_file, (const uint8_t*)&header, sizeof(error_event_file_header_t));
+        update_header_if_needed();
     }
-    return ERROR;
 }
