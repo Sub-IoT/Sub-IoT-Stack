@@ -34,6 +34,7 @@
 #include "debug.h"
 #include "errors.h"
 #include "log.h"
+#include "callstack.h"
 
 #define HWTIMER_NUM 1
 
@@ -287,8 +288,14 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
   return is_pending;
 }
 
+#ifdef FRAMEWORK_USE_CALLSTACK
+void TIMER_ISR_real(volatile uintptr_t sp)
+{
+  callstack_stack_pointer = sp;
+#else
 void TIMER_ISR(void)
 {
+#endif
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
 #if defined(STM32L0)
   if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_CMPOK) != RESET)
@@ -360,4 +367,24 @@ void TIMER_ISR(void)
 #endif
 }
 
+#ifdef FRAMEWORK_USE_CALLSTACK
+// This assembly function is executed before the real timer interrupt.
+// It puts the stack pointer in register 0 and calls the real timer interrupt
+// It checks if it has to take the main stack pointer or the process stack pointer
+void __attribute__((__naked__)) TIMER_ISR(void)
+{
+            __asm volatile("MRS R0, MSP\n"                \
+                           "MOV R1, LR\n"                 \
+                           "MOV R2, #4\n"                 \
+                           "TST R1, R2\n"                 \
+                           "BEQ TIMER_ISR_call_real\n"    \
+                           "MRS R0, PSP\n"                \
+                        "TIMER_ISR_call_real:\n"          \
+                           " ldr r2,  =TIMER_ISR_real\n"  \
+                           " bx  r2  \n"                  \
+                           :                              \
+                           :                              \
+                           : "r0", "r1", "r2");
+}
+#endif
 #endif

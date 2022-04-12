@@ -21,6 +21,10 @@
 // of about 5 seconds each (which shouldn't be a problem), then it will execute tasks that are 20 seconds which should trigger the software 
 // watchdog but not yet the hardware one. Then we do tasks that are too long and it should reboot the system
 
+// Configuration cmake -D FRAMEWORK_USE_CALLSTACK=y -D FRAMEWORK_USE_ERROR_EVENT_FILE=y -D FRAMEWORK_USE_POWER_TRACKING=n -D APP_WATCHDOG_TEST=y -DMODULE_D7AP=n -DMODULE_ALP=n .
+
+#include "error_event_file.h"
+#include "d7ap_fs.h"
 #include "scheduler.h"
 #include "hwwatchdog.h"
 #include "framework_defs.h"
@@ -29,16 +33,9 @@
 #include "log.h"
 #include "debug.h"
 
-#ifdef FRAMEWORK_USE_POWER_TRACKING
-	#error "This example can't be used in combination with FRAMEWORK_USE_POWER_TRACKING as the filesystem is not initialized here"
-#endif
-
 #ifndef FRAMEWORK_USE_WATCHDOG
 	#error "Enable the watchdog for this example"
 #endif
-
-// this is needed as we're not using the filesystem, also possible to remove blockdevices from platf_main.c
-uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
 
 static uint8_t blocking_task_count = 0;
 
@@ -62,7 +59,8 @@ void blocking_task() {
 void bootstrap()
 {
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
-
+	d7ap_fs_init();
+	error_event_file_init(&low_level_read_cb, &low_level_write_cb);
     sched_register_task((task_t)&blocking_task);
 	timer_post_task_delay(&blocking_task, TIMER_TICKS_PER_SEC * 36 + 3);
 }

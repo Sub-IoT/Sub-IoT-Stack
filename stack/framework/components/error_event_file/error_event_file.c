@@ -22,6 +22,10 @@ typedef struct __attribute__((__packed__))
 {
     error_event_type_t type;
     uint8_t counter;
+} error_event_header_t;
+typedef struct __attribute__((__packed__))
+{
+    error_event_header_t header;
     uint8_t data[ERROR_EVENT_DATA_SIZE];
 } error_event_t;
 
@@ -144,6 +148,7 @@ error_t error_event_file_init(low_level_read_cb_t read_cb, low_level_write_cb_t 
 
     is_init_complete = true;
     d7ap_fs_register_file_modified_callback(ERROR_EVENT_FILE_ID, &error_event_file_reset);
+    error_event_file_print();
     return SUCCESS;
 }
 
@@ -221,16 +226,16 @@ error_t error_event_file_log_event(error_event_type_t event_type, uint8_t* event
 
             if(low_level_read_cb_function(get_address_of_event(event_idx), (uint8_t*)&event, sizeof(error_event_t)) == SUCCESS)
             {
-                if(event.type == event_type)
+                if(event.header.type == event_type)
                 {
                     // Check if event is exactly the same
                     if(memcmp(event.data, event_data, event_data_size) == 0)
                     {
                         // Only increment of counter is needed
-                        if(event.counter < UINT8_MAX)
+                        if(event.header.counter < UINT8_MAX)
                         {
-                            event.counter++;
-                            low_level_write_cb_function(get_address_of_event(event_idx) + sizeof(uint8_t), (const uint8_t*)&event.counter, sizeof(uint8_t));
+                            event.header.counter++;
+                            low_level_write_cb_function(get_address_of_event(event_idx) + sizeof(uint8_t), (const uint8_t*)&event.header.counter, sizeof(uint8_t));
                         }
                         rotate_indexes(event_idx);
                         update_header_if_needed();
@@ -261,8 +266,8 @@ error_t error_event_file_log_event(error_event_type_t event_type, uint8_t* event
         header.indexes.index_0 = 0;
         event_idx = 0;
     }
-    event.type = event_type;
-    event.counter = 1;
+    event.header.type = event_type;
+    event.header.counter = 1;
     memcpy(event.data, event_data, event_data_size);
     low_level_write_cb_function(get_address_of_event(event_idx), (const uint8_t*)&event, event_data_size + 2);
     update_header_if_needed();
@@ -316,4 +321,54 @@ void error_event_file_reset(uint8_t file_id)
         header.RFU = 0;
         update_header_if_needed();
     }
+}
+
+void error_event_file_print()
+{
+#ifdef FRAMEWORK_LOG_ENABLED
+    if(!is_init_complete || header.indexes.index_0 == INDEX_NOT_INITIALIZED)
+    {
+        return;
+    }
+    uint8_t index_array[ERROR_EVENT_COUNT];
+    uint8_t event_idx;
+    translate_indexes_to_array(header.indexes, index_array);
+
+    for(uint8_t index = 0; index < ERROR_EVENT_COUNT; index++)
+    {
+        event_idx = index_array[index];
+        
+        if(event_idx == INDEX_NOT_INITIALIZED) {
+            break;
+        }
+        uint8_t offset = ERROR_HEADER_SIZE + (event_idx * ERROR_EVENT_SIZE);
+        uint32_t length = sizeof(error_event_header_t);
+        error_event_header_t event_header;
+        d7ap_fs_read_file(ERROR_EVENT_FILE_ID, offset, (uint8_t*)&event_header, &length, ROOT_AUTH);
+        log_print_string("Event %d count %d", event_header.type, event_header.counter);
+        offset += sizeof(error_event_header_t);
+        if(event_header.type == WATCHDOG_EVENT)
+        {
+            uintptr_t callstack[ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)];
+            length = sizeof(callstack);
+            d7ap_fs_read_file(ERROR_EVENT_FILE_ID, offset, (uint8_t*)&callstack, &length, ROOT_AUTH);
+            log_print_string("  Task 0x%08x", callstack[0]);
+            for(uint8_t index = 1; index < ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t); index ++)
+            {
+                if(callstack[index] == 0)
+                {
+                    break;
+                }
+                log_print_string("  PC%d: 0x%08x", index, callstack[index]);
+            }
+        }
+        else
+        {
+            uint8_t data[ERROR_EVENT_DATA_SIZE];
+            length = ERROR_EVENT_DATA_SIZE;
+            d7ap_fs_read_file(ERROR_EVENT_FILE_ID, offset, data, &length, ROOT_AUTH);
+            log_print_data(data, length);
+        }
+    }
+#endif
 }

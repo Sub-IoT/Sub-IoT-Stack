@@ -104,6 +104,7 @@ static HAL_StatusTypeDef init_clock(void)
     HAL_DBGMCU_DisableDBGStandbyMode( );
     __HAL_RCC_DBGMCU_CLK_DISABLE( );
 #endif
+    return ret;
 }
 
 void stm32_common_mcu_init()

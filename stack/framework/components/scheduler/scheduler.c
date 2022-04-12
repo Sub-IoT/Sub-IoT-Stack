@@ -28,6 +28,7 @@
 #include "scheduler.h"
 
 //needs to be decoupled
+#include "callstack.h"
 #include "debug.h"
 #include "log.h"
 #include <string.h>
@@ -35,6 +36,7 @@
 #include "hwatomic.h"
 #include "ng.h"
 #include "hwsystem.h"
+#include "error_event_file.h"
 #include "errors.h"
 #include "timer.h"
 #include "hwwatchdog.h"
@@ -84,6 +86,7 @@ task_info_t NGDEF(m_info)[NUM_TASKS];
 
 uint8_t NGDEF(m_head)[NUM_PRIORITIES];
 uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
+uint8_t current_task_id;
 volatile uint8_t NGDEF(current_priority);
 unsigned int NGDEF(num_registered_tasks);
 #if defined FRAMEWORK_USE_WATCHDOG
@@ -383,6 +386,13 @@ __LINK_C timer_tick_t sched_check_software_watchdog(task_t task, timer_tick_t cu
 			timer_tick_t difference = timer_calculate_difference(last_task_start_time, current_time);
 			if(difference > WATCHDOG_WARNING_TIMEOUT) {
 				// PANIC
+#if defined(FRAMEWORK_USE_CALLSTACK) && defined(FRAMEWORK_USE_ERROR_EVENT_FILE)
+				uintptr_t watchdog_event_data[ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)];
+				memset(watchdog_event_data, 0, sizeof(watchdog_event_data));
+				watchdog_event_data[0] = (uintptr_t)NG(m_info)[current_task_id].task;
+				callstack_from_isr(&watchdog_event_data[1], ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)-1);
+				error_event_file_log_event(WATCHDOG_EVENT, (uint8_t*) watchdog_event_data, sizeof(watchdog_event_data));
+#endif
 				return hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC;
 			}
 			return (hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC - difference);
@@ -423,6 +433,7 @@ __LINK_C void scheduler_run()
         timer_tick_t start = timer_get_counter_value();
         log_print_string("SCHED start %p at %i", NG(m_info)[id].task, start);
 #endif
+		current_task_id = id;
         NG(m_info)[id].task(NG(m_info)[id].arg);
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
         timer_tick_t stop = timer_get_counter_value();
