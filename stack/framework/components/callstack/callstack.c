@@ -90,7 +90,7 @@ _Unwind_Reason_Code trace_func(struct _Unwind_Context *context, void *arg)
         }
         return _URC_END_OF_STACK;
     }
-    if (strace_context->cstack_len >= strace_context->max_cstack_len - 1)
+    if (strace_context->cstack_len >= strace_context->max_cstack_len)
     {
         return _URC_END_OF_STACK;
     }
