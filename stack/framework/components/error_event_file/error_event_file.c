@@ -30,19 +30,13 @@ typedef struct __attribute__((__packed__))
 } error_event_t;
 
 
+// in practice this translates to 0x0123 because of endianess
 typedef struct __attribute__((__packed__))
 {
-    union
-    {
-        uint16_t raw;
-        struct
-        {
-            uint8_t index_0 : 4;
-            uint8_t index_1 : 4;
-            uint8_t index_2 : 4;
-            uint8_t index_3 : 4;
-        };
-    };
+    uint8_t index_1 : 4;
+    uint8_t index_0 : 4;
+    uint8_t index_3 : 4;
+    uint8_t index_2 : 4;
 } indexes_t;
 
 typedef struct __attribute__((__packed__))
@@ -174,18 +168,35 @@ static void translate_indexes_to_array(indexes_t indexes, uint8_t* array)
 
 static void rotate_indexes(uint8_t event_idx)
 {
-    uint8_t index_array[ERROR_EVENT_COUNT];
-    uint8_t offset = 1;
-    translate_indexes_to_array(header.indexes, index_array);
+    bool found = false;
+    indexes_t new_indexes;
+    if(header.indexes.index_0 == event_idx)
+        return;
 
-    header.indexes.raw = event_idx;
-    for(uint8_t i = 0; i < (ERROR_EVENT_COUNT - offset); i++)
+    new_indexes.index_0 = event_idx;
+    new_indexes.index_1 = header.indexes.index_0;
+
+    if(header.indexes.index_1 == event_idx) 
     {
-        if(index_array[i] != event_idx)
-            header.indexes.raw += index_array[i] << (ERROR_EVENT_COUNT * (i + offset));
-        else
-            offset = 0;
+        found = true;
+        new_indexes.index_2 = header.indexes.index_2;
     }
+    else
+    {
+        new_indexes.index_2 = header.indexes.index_1;
+    }
+
+    if(header.indexes.index_2 == event_idx || found) 
+    {
+        found = true;
+        new_indexes.index_3 = header.indexes.index_3;
+    }
+    else
+    {
+        new_indexes.index_3 = header.indexes.index_2;
+    }
+
+    header.indexes = new_indexes;
 }
 
 static void update_header_if_needed()
@@ -333,6 +344,7 @@ void error_event_file_print()
     uint8_t index_array[ERROR_EVENT_COUNT];
     uint8_t event_idx;
     translate_indexes_to_array(header.indexes, index_array);
+    log_print_string("indexes: %1X%1X%1X%1X", header.indexes.index_0, header.indexes.index_1, header.indexes.index_2, header.indexes.index_3);
 
     for(uint8_t index = 0; index < ERROR_EVENT_COUNT; index++)
     {

@@ -19,20 +19,13 @@
 const char _APP_NAME[] = "error_event_file_test";
 const char _GIT_SHA1[] = "";
 
-
+// in practice this translates to 0x0123 because of endianess
 typedef struct __attribute__((__packed__))
 {
-    union
-    {
-        uint16_t raw;
-        struct
-        {
-            uint8_t index_0 : 4;
-            uint8_t index_1 : 4;
-            uint8_t index_2 : 4;
-            uint8_t index_3 : 4;
-        };
-    };
+    uint8_t index_1 : 4;
+    uint8_t index_0 : 4;
+    uint8_t index_3 : 4;
+    uint8_t index_2 : 4;
 } indexes_t;
 
 typedef struct __attribute__((__packed__))
