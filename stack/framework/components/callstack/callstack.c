@@ -31,6 +31,7 @@ typedef struct
 {
     uint8_t cstack_len;
     uint8_t max_cstack_len;
+    uint8_t frames_to_skip;
     uintptr_t last_ip;
     intptr_t saved_lr;
     uintptr_t* callstack;
@@ -97,7 +98,14 @@ _Unwind_Reason_Code trace_func(struct _Unwind_Context *context, void *arg)
     strace_context->last_ip = ip;
     // This gives the start of the function back
     // ip = (void *)_Unwind_GetRegionStart(context);
-    strace_context->callstack[strace_context->cstack_len++] = ip;
+    if(strace_context->frames_to_skip > 0)
+    {
+        strace_context->frames_to_skip--;
+    }
+    else
+    {
+        strace_context->callstack[strace_context->cstack_len++] = ip;
+    }
     return _URC_NO_REASON;
 }
 
@@ -124,6 +132,7 @@ uint8_t callstack_from_isr(uintptr_t* cstack_buffer, uint8_t cstack_buffer_size)
     strace_context.max_cstack_len = cstack_buffer_size;
     strace_context.last_ip = (uintptr_t)NULL;
     strace_context.callstack = cstack_buffer;
+    strace_context.frames_to_skip = 0;
     // Make variable static so that it will not be placed on the stack
     static phase2_vrs_t phase2_vrs;
     fill_phase2_vrs(callstack_stack_pointer, &phase2_vrs,&strace_context.saved_lr);
@@ -142,5 +151,17 @@ uint8_t callstack_from_isr(uintptr_t* cstack_buffer, uint8_t cstack_buffer_size)
         phase2_vrs.core.r[15] = strace_context.saved_lr;
         __gnu_Unwind_Backtrace(&trace_func, &strace_context, &phase2_vrs);
     }
+    return strace_context.cstack_len;
+}
+
+uint8_t callstack(uintptr_t* cstack_buffer, uint8_t cstack_buffer_size, uint8_t skip_functions)
+{
+    strace_context_t strace_context;
+    strace_context.cstack_len = 0;
+    strace_context.max_cstack_len = cstack_buffer_size;
+    strace_context.last_ip = (uintptr_t)NULL;
+    strace_context.callstack = cstack_buffer;
+    strace_context.frames_to_skip = 1 + skip_functions;
+    _Unwind_Backtrace(&trace_func, &strace_context);
     return strace_context.cstack_len;
 }

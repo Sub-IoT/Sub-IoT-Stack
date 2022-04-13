@@ -139,6 +139,12 @@ __LINK_C void    sched_set_low_power_mode(uint8_t mode);
  */
 __LINK_C uint32_t sched_check_software_watchdog(task_t task, uint32_t current_time);
 
+/*! \brief Returns the task that is currently running
+ *
+ * \return task_t		The current active task.
+ */
+__LINK_C task_t sched_get_current_task(void);
+
 #endif /* SCHEDULER_H_ */
 
 /** @}*/

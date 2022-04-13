@@ -387,11 +387,7 @@ __LINK_C timer_tick_t sched_check_software_watchdog(task_t task, timer_tick_t cu
 			if(difference > WATCHDOG_WARNING_TIMEOUT) {
 				// PANIC
 #if defined(FRAMEWORK_USE_CALLSTACK) && defined(FRAMEWORK_USE_ERROR_EVENT_FILE)
-				uintptr_t watchdog_event_data[ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)];
-				memset(watchdog_event_data, 0, sizeof(watchdog_event_data));
-				watchdog_event_data[0] = (uintptr_t)NG(m_info)[current_task_id].task;
-				callstack_from_isr(&watchdog_event_data[1], ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)-1);
-				error_event_file_log_event(WATCHDOG_EVENT, (uint8_t*) watchdog_event_data, sizeof(watchdog_event_data));
+				error_event_create_watchdog_event();
 #endif
 				return hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC;
 			}
@@ -402,6 +398,18 @@ __LINK_C timer_tick_t sched_check_software_watchdog(task_t task, timer_tick_t cu
 	}
 	return 0;
 #endif
+}
+
+__LINK_C task_t sched_get_current_task(void)
+{
+	if(scheduler_active)
+	{
+		return NG(m_info)[current_task_id].task;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 __LINK_C void scheduler_run()

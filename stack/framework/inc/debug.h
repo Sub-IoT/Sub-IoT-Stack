@@ -30,6 +30,7 @@
 
 #include "framework_defs.h"
 #include "assert.h" // start from assert.h which defines __ASSERT_FUNCT and then redefine assert
+#include "error_event_file.h"
 #include "hwsystem.h"
 #include <stdio.h>
 #undef assert
@@ -48,12 +49,22 @@ void __assert_func(const char *, int, const char *, const char *);
 #ifdef NDEBUG           /* required by ANSI standard */
 # define assert(__e) (__e)
 #elif defined FRAMEWORK_DEBUG_ASSERT_REBOOT
+#if defined(FRAMEWORK_USE_CALLSTACK) && defined(FRAMEWORK_USE_ERROR_EVENT_FILE)
+# define assert(__e) \
+  do { \
+    if(!(__e)) { \
+      error_event_create_assert_event(); \
+      hw_reset(); \
+    } \
+  } while(0)
+#else
 # define assert(__e) \
   do { \
     if(!(__e)) { \
       hw_reset(); \
     } \
   } while(0)
+#endif
 #elif defined FRAMEWORK_DEBUG_ASSERT_MINIMAL
 # define assert(__e) ((__e) ? (void)0 : __assert_func (NULL, 0, NULL, NULL))
 #else

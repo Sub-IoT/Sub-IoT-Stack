@@ -28,13 +28,26 @@ extern uintptr_t callstack_stack_pointer;
  *
  * This function will write a call stack to cstack_buffer. The given call stack represents the call stack before a certain interrupt occurred.
  * The stack pointer on the moment of the interrupt should be stored in callstack_stack_pointer just before the interrupt service routine is executed.
- * The entries in the call stack contain the program counter of each function when it called the next function.
+ * The entries in the call stack contain the address of the next instruction in each function.
  *
  * \param cstack_buffer		    A pointer to a buffer that can contain multiple addresses.
  * \param cstack_buffer_size    The maximum number of addresses that the buffer can contain. 
- * \returns uint8_t	            The amount of addresses written to  cstack_buffer.
+ * \returns uint8_t	            The amount of addresses written to cstack_buffer.
  *
  */
 uint8_t callstack_from_isr(uintptr_t* cstack_buffer, uint8_t cstack_buffer_size);
+
+/*! \brief Fills the given buffer with the current call stack
+ *
+ * This function will write a call stack to cstack_buffer.
+ * The entries in the call stack contain the address of the next instruction in each function.
+ *
+ * \param cstack_buffer		    A pointer to a buffer that can contain multiple addresses.
+ * \param cstack_buffer_size    The maximum number of addresses that the buffer can contain. 
+ * \param skip_functions        The amount of functions to skip before starting with the call stack
+ * \returns uint8_t	            The amount of addresses written to cstack_buffer.
+ *
+ */
+uint8_t callstack(uintptr_t* cstack_buffer, uint8_t cstack_buffer_size, uint8_t skip_functions);
 
 #endif // __CALLSTACK_H_

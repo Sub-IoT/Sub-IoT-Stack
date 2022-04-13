@@ -44,6 +44,8 @@ bool error_event_file_has_event();
 void error_event_file_reset(uint8_t file_id);
 error_t error_event_get_file_with_latest_event_only(uint8_t* data, uint32_t* length);
 void error_event_file_print();
+error_t error_event_create_watchdog_event();
+error_t error_event_create_assert_event();
 
 // Below functions are not implemented by the error even file
 // but can be used as function definition for the low level callbacks.

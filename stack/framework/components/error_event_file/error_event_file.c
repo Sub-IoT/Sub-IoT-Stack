@@ -1,10 +1,12 @@
 
 //Sub-IoT
+#include "callstack.h"
 #include "d7ap_fs.h"
 #include "error_event_file.h"
 #include "fs.h"
 #include "log.h"
 #include "modules_defs.h"
+#include "scheduler.h"
 
 //Other
 #include "string.h"
@@ -79,7 +81,7 @@ _Static_assert(ERROR_EVENT_FILE_ALLOCATED_SIZE >= ERROR_EVENT_FILE_SIZE,
 // TODO check lengths after implementation
 static uint8_t event_reduced_compare_size[] = {
     4, // WATCHDOG_EVENT
-    0, // ASSERT_EVENT
+    4, // ASSERT_EVENT
     4, // LOG_EVENT
 };
 
@@ -99,6 +101,7 @@ static error_event_file_header_t header =
 static error_event_file_header_t written_header;
 static low_level_read_cb_t low_level_read_cb_function;
 static low_level_write_cb_t low_level_write_cb_function;
+static uintptr_t error_event_data_buffer[ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t)];
 
 error_t error_event_file_init(low_level_read_cb_t read_cb, low_level_write_cb_t write_cb)
 {
@@ -383,4 +386,20 @@ void error_event_file_print()
         }
     }
 #endif
+}
+
+error_t error_event_create_watchdog_event()
+{
+    memset(error_event_data_buffer, 0, sizeof(error_event_data_buffer));
+    error_event_data_buffer[0] = (uintptr_t)sched_get_current_task();
+    callstack_from_isr(&error_event_data_buffer[1], ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t) - 1);
+    return error_event_file_log_event(WATCHDOG_EVENT, (uint8_t*) error_event_data_buffer, sizeof(error_event_data_buffer));
+}
+
+error_t error_event_create_assert_event()
+{
+    memset(error_event_data_buffer, 0, sizeof(error_event_data_buffer));
+    error_event_data_buffer[0] = (uintptr_t)sched_get_current_task();
+    callstack(&error_event_data_buffer[1], ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t) - 1, 1);
+    return error_event_file_log_event(ASSERT_EVENT, (uint8_t*) error_event_data_buffer, sizeof(error_event_data_buffer));
 }
