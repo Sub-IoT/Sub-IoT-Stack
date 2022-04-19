@@ -1,23 +1,105 @@
-name: C/C++ CI
+name: Sub-IoT-Stack CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
-  build:
 
+  run-unit-tests:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+
+    - name: Build stack natively
+      run: |
+        mkdir build && cd build
+        platform="NATIVE"
+        cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DMODULE_D7AP=n -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
+        make -j
+
+    - name: Run unit tests
+      run: |
+        ./build/tests/aes/test_aes &> results_aes.txt
+        ./build/tests/alp/test_alp &> results_alp.txt
+        ./build/tests/fec/test_fec &> results_fec.txt
+        ./build/tests/fifo/test_fifo &> results_fifo.txt
+
+    - name: Upload the results
+      uses: actions/upload-artifact@v2
+      with:
+        name: results
+        path: |
+          results_aes
+          results_alp.txt
+          results_fec.txt
+          results_fifo.txt
+
+    - name: Handle results
+      run: |
+        if ! grep -q 'AES all unit tests OK !' "results_aes.txt"; then exit 1;  fi
+        if ! grep -q 'Unit-tests for ALP completed' "results_alp.txt"; then exit 1;  fi
+        if ! grep -q 'Input was decoded successfully' "results_fec.txt"; then exit 1;  fi
+        if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
+
+  run-testsuite:
+
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up compiler
+      uses: fiam/arm-none-eabi-gcc@v1
+      with:
+        release: '8-2018-q4'
+
+    - name: Build stack
+      run: |
+        mkdir build && cd build
+        platform="B_L072Z_LRWAN1"
+        cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y -DMODULE_D7AP_FS_DISABLE_PERMISSIONS=y -DAPP_MODEM_FORWARD_ALP_OVER_SERIAL=y
+        make -j
+        cd ..
+
+    - name: Upload the builds
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: |
+          build/apps/gateway/
+          build/apps/modem/
+          build/apps/sensor_push/
+
+    - name: Flash builds to devices
+      run: |
+        cd build/apps/modem
+        JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
+        JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
+        cat flashOutput1.txt
+        cat flashOutput2.txt
+        if grep -q 'FAILED\|ERROR' "flashOutput1.txt"; then exit 1; fi
+        if grep -q 'FAILED\|ERROR' "flashOutput2.txt"; then exit 1; fi
+
+    - name: Run testsuite
+      run: |
+        rm -rf Sub-IoT-testsuite
+        git clone --recurse-submodules https://github.com/Sub-IoT/Sub-IoT-testsuite.git
+        cd Sub-IoT-testsuite
+        pip install -r requirements.txt
+        cd lib/pyd7a/
+        pip install -r requirements.txt
+        cd ../..
+        python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: Sub-IoT-testsuite/report.xml
+
+    
+   
