@@ -1,4 +1,4 @@
-name: Sub-IoT-Stack CI
+name: C/C++ CI
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 jobs:
 
   run-unit-tests:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -46,7 +47,7 @@ jobs:
         if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
 
   run-testsuite:
-
+    name: Run Testsuite
     runs-on: self-hosted
 
     steps:
