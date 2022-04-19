@@ -34,7 +34,7 @@ jobs:
       with:
         name: results
         path: |
-          results_aes
+          results_aes.txt
           results_alp.txt
           results_fec.txt
           results_fifo.txt
