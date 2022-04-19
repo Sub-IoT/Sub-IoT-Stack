@@ -113,5 +113,21 @@ jobs:
         name: test-results
         path: Sub-IoT-testsuite/report.xml
 
-    
-   
+  check-clang-format:
+    name: Check CLang format
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Apply formatter
+      run: |
+        ./clang-format-patch.sh
+        if [[ -f clang_format.patch ]]; then exit 1; fi
+
+    - name: Upload patch
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: patch
+        path: clang_format.patch   
