@@ -148,7 +148,8 @@ MACRO(__APP_BUILD_ON_LOCATION app_name flash_origin flash_length version_locatio
 	  ${ADD_SECTIONS}
 	  ${ELF} ${app_name}-eeprom-fs.hex
 	)
-	
+	ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJDUMP} --source -d ${ELF} > ${app_name}-disassembly.txt)
+
 	# generate target for flashing application using jlink
 	# TODO optional depending on platform?
 	SET(BIN ${app_name}-app.bin)
