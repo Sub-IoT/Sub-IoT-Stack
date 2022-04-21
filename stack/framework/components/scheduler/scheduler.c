@@ -89,11 +89,11 @@ uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
 uint8_t current_task_id;
 volatile uint8_t NGDEF(current_priority);
 unsigned int NGDEF(num_registered_tasks);
+static bool scheduler_active = false;
 #if defined FRAMEWORK_USE_WATCHDOG
 #define WATCHDOG_WARNING_TIMEOUT TIMER_TICKS_PER_SEC * 17
 bool watchdog_wakeup;
 static timer_tick_t last_task_start_time = 0;
-static bool scheduler_active = false;
 #endif
 
 volatile bool task_scheduled_after_sched_loop = false;
@@ -429,12 +429,12 @@ __LINK_C void scheduler_run()
 			check_structs_are_valid();
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
+				scheduler_active = true;
 #if defined FRAMEWORK_USE_WATCHDOG
 				executed_tasks++;
 				task_list_empty = false;
 				hw_watchdog_feed();
 				last_task_start_time = timer_get_counter_value();
-				scheduler_active = true;
 #endif
 				check_structs_are_valid();
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
@@ -461,8 +461,8 @@ __LINK_C void scheduler_run()
 			task_scheduled_after_sched_loop = false;
 			end_atomic();	
 		}		
-#if defined FRAMEWORK_USE_WATCHDOG
 		scheduler_active = false;
+#if defined FRAMEWORK_USE_WATCHDOG
 		hw_watchdog_feed();
 #if defined FRAMEWORK_USE_POWER_TRACKING
 		//we don't want to register wake-ups that only trigger the watchdog
