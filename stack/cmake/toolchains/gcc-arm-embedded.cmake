@@ -41,8 +41,8 @@ SET(CMAKE_SYSTEM_VERSION 1)
 SET(CMAKE_CROSSCOMPILING 1)
 
 # set compiler flags to optimize for code size
-SET(CMAKE_C_FLAGS_DEBUG "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned" CACHE STRING "")
-SET(CMAKE_C_FLAGS_RELEASE "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned" CACHE STRING "")
+SET(CMAKE_C_FLAGS_DEBUG "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
+SET(CMAKE_C_FLAGS_RELEASE "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
 
 SET(TOOLCHAIN_DIR "" CACHE PATH "The directory containing all the cross compilation tools. (Compilation will fail if this is not set correctly)")
 

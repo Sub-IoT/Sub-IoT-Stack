@@ -39,9 +39,9 @@
 
 //#ifdef D7_PHY_USE_FEC
 
-const static uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1, 3, 0, 2, 1, 0, 3, 1, 2};
-const static uint8_t trellis0_lut[8] = {0, 1, 3, 2, 3, 2, 0, 1};
-const static uint8_t trellis1_lut[8] = {3, 2, 0, 1, 0, 1, 3, 2};
+static const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1, 3, 0, 2, 1, 0, 3, 1, 2};
+static const uint8_t trellis0_lut[8] = {0, 1, 3, 2, 3, 2, 0, 1};
+static const uint8_t trellis1_lut[8] = {3, 2, 0, 1, 0, 1, 3, 2};
 
 static uint8_t data_buffer[FEC_BUFFER_SIZE];
 static uint8_t* input_buffer;
@@ -254,8 +254,10 @@ uint16_t fec_decode_packet(uint8_t* data, uint16_t packet_length, uint16_t outpu
 
 		bool err = fec_decode(&data[i]);
 		decoded_length+=2;
-		if (!err)
+		if (!err) 
+		{
 			DPRINT("FEC encoding error\n");
+		}
 	}
 
 	memcpy(data, data_buffer, decoded_length);

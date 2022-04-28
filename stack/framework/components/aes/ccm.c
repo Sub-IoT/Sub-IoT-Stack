@@ -103,7 +103,7 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
     if (add_len > 0)
     {
         uint8_t use_len = add_len < AES_BLOCK_SIZE - 1 ? add_len : AES_BLOCK_SIZE - 1;
-        uint8_t remainders = add_len - use_len;
+        remainders = add_len - use_len;
 
         memset(blk, 0, AES_BLOCK_SIZE);
         // For DASH7, the additional data length shall be encoded in a field of 1 octet.

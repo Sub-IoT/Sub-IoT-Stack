@@ -43,6 +43,10 @@
 
 #define CRC_SIZE 2
 
+#if FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE == 0
+    #pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
+
 typedef enum {
     D7ANP_STATE_STOPPED,
     D7ANP_STATE_IDLE,

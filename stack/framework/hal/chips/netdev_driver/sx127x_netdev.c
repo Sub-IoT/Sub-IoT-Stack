@@ -681,10 +681,6 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
         case NETOPT_TX_POWER:
             assert(len <= sizeof(int8_t));
             int8_t power = *((const int8_t *)val);
-            if ((power < INT8_MIN) || (power > INT8_MAX)) {
-                res = -EINVAL;
-                break;
-            }
             sx127x_set_tx_power(dev, (int8_t)power);
             return sizeof(int16_t);
 

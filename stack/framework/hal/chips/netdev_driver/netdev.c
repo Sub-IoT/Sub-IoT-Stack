@@ -309,7 +309,6 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 break;
             case NETDEV_EVENT_RX_STARTED: {
                 uint8_t buffer[4];
-                uint8_t len;
 
                 len = dev->driver->recv(netdev, buffer, sizeof(buffer), NULL);
                 DPRINT("Packet Header received %i\n", len);

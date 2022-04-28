@@ -549,7 +549,6 @@ int alp_get_expected_response_length(alp_command_t* command)
             } else if (control.b6 && !control.b7) {
                 // interface status
                 e += fifo_skip(command_copy_fifo, 1); // skip status code
-                uint32_t length;
                 e += !alp_parse_length_operand(command_copy_fifo, &length);
                 e += fifo_skip(command_copy_fifo, (uint16_t)length); // itf_status_len + itf status
             } else

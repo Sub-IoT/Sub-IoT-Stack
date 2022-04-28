@@ -368,13 +368,13 @@ void error_event_file_print()
             length = sizeof(callstack);
             d7ap_fs_read_file(ERROR_EVENT_FILE_ID, offset, (uint8_t*)&callstack, &length, ROOT_AUTH);
             log_print_string("  Task 0x%08x", callstack[0]);
-            for(uint8_t index = 1; index < ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t); index ++)
+            for(uint8_t pc_index = 1; pc_index < ERROR_EVENT_DATA_SIZE/sizeof(uintptr_t); pc_index ++)
             {
-                if(callstack[index] == 0)
+                if(callstack[pc_index] == 0)
                 {
                     break;
                 }
-                log_print_string("  PC%d: 0x%08x", index, callstack[index]);
+                log_print_string("  PC%d: 0x%08x", pc_index, callstack[pc_index]);
             }
         }
         else

@@ -309,6 +309,7 @@ static void execute_state_machine()
       clear_modem_interface_timeout();
       target_uart_state_isr_count = 0;
       SWITCH_STATE(STATE_RESP);
+      __attribute__ ((fallthrough));
       //Intentional fall through
     }
     case STATE_RESP:
@@ -431,28 +432,28 @@ static void execute_state_machine()
 /** @Brief Check package counter and crc
  *  @return void
  */
-static bool verify_payload(fifo_t* bytes, uint8_t* header)
+static bool verify_payload(fifo_t* bytes, uint8_t* frame_header)
 {
   static uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE]; // statically allocated so this does not end up on stack
-  fifo_peek(bytes, payload, 0, header[SERIAL_FRAME_SIZE]);
+  fifo_peek(bytes, payload, 0, frame_header[SERIAL_FRAME_SIZE]);
 
   //check for missing packages
   packet_down_counter++;
-  if(header[SERIAL_FRAME_COUNTER]!=packet_down_counter)
+  if(frame_header[SERIAL_FRAME_COUNTER]!=packet_down_counter)
   {
     //TODO consequence? (save total missing packages?)
-    log_print_string("!!! missed packages: %i",(header[SERIAL_FRAME_COUNTER]-packet_down_counter));
-    packet_down_counter=header[SERIAL_FRAME_COUNTER]; //reset package counter
+    log_print_string("!!! missed packages: %i",(frame_header[SERIAL_FRAME_COUNTER]-packet_down_counter));
+    packet_down_counter=frame_header[SERIAL_FRAME_COUNTER]; //reset package counter
   }
 
   DPRINT("RX HEADER: ");
-  DPRINT_DATA(header, SERIAL_FRAME_HEADER_SIZE);
+  DPRINT_DATA(frame_header, SERIAL_FRAME_HEADER_SIZE);
   DPRINT("RX PAYLOAD: ");
-  DPRINT_DATA(payload, header[SERIAL_FRAME_SIZE]);
+  DPRINT_DATA(payload, frame_header[SERIAL_FRAME_SIZE]);
 
-  uint16_t calculated_crc = crc_calculate(payload, header[SERIAL_FRAME_SIZE]);
+  uint16_t calculated_crc = crc_calculate(payload, frame_header[SERIAL_FRAME_SIZE]);
  
-  if(header[SERIAL_FRAME_CRC1]!=((calculated_crc >> 8) & 0x00FF) || header[SERIAL_FRAME_CRC2]!=(calculated_crc & 0x00FF))
+  if(frame_header[SERIAL_FRAME_CRC1]!=((calculated_crc >> 8) & 0x00FF) || frame_header[SERIAL_FRAME_CRC2]!=(calculated_crc & 0x00FF))
   {
     //TODO consequence? (request repeat?)
     log_print_string("CRC incorrect!");
@@ -491,7 +492,7 @@ void modem_interface_clear_handler() {
 }
 
 
-static void uart_error_cb(uart_error_t error) {
+static void uart_error_callback(uart_error_t error) {
     log_print_string("UART ERROR %i", error);
     if(error == UART_OVERRUN_ERROR) {
       parsed_header = false;
@@ -577,8 +578,11 @@ static void process_rx_fifo(void *arg)
       }
       fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo)); // pop parsed bytes from original fifo
     }
-    else
-      DPRINT("!!!PAYLOAD DATA INCORRECT");
+    else 
+    {
+        DPRINT("!!!PAYLOAD DATA INCORRECT");
+    }
+      
     payload_len = 0;
     parsed_header = false;
     if(fifo_get_size(&rx_fifo) > SERIAL_FRAME_HEADER_SIZE)
@@ -596,7 +600,7 @@ static void uart_tx_cb()
 /** @Brief put received UART data in fifo
  *  @return void
  */
-static void uart_rx_cb(uint8_t data)
+static void uart_rx_callback(uint8_t data)
 {
     error_t err;
     start_atomic();
@@ -651,9 +655,9 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
   dma_tx = dma_channel_init(PLATFORM_MODEM_INTERFACE_DMA_TX);
   uart_set_tx_interrupt_callback(uart, &uart_tx_cb);
 #else
-  modem_interface_set_rx_interrupt_callback(&uart_rx_cb);
+  modem_interface_set_rx_interrupt_callback(&uart_rx_callback);
 #endif
-  modem_interface_set_error_callback(&uart_error_cb);
+  modem_interface_set_error_callback(&uart_error_callback);
 
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
   assert(sched_register_task(&modem_listen) == SUCCESS);
@@ -683,29 +687,29 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pi
 error_t modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
 {
   error_t result;
-  uint8_t header[SERIAL_FRAME_HEADER_SIZE];
+  uint8_t frame_header[SERIAL_FRAME_HEADER_SIZE];
   uint16_t crc=crc_calculate(bytes,length);
 
   packet_up_counter++;
-  header[0] = SERIAL_FRAME_SYNC_BYTE;
-  header[1] = SERIAL_FRAME_VERSION;
+  frame_header[0] = SERIAL_FRAME_SYNC_BYTE;
+  frame_header[1] = SERIAL_FRAME_VERSION;
 
-  header[SERIAL_FRAME_COUNTER] = packet_up_counter;
-  header[SERIAL_FRAME_TYPE] = type;
-  header[SERIAL_FRAME_SIZE] = length;
-  header[SERIAL_FRAME_CRC1] = (crc >> 8) & 0x00FF;
-  header[SERIAL_FRAME_CRC2] = crc & 0x00FF;
+  frame_header[SERIAL_FRAME_COUNTER] = packet_up_counter;
+  frame_header[SERIAL_FRAME_TYPE] = type;
+  frame_header[SERIAL_FRAME_SIZE] = length;
+  frame_header[SERIAL_FRAME_CRC1] = (crc >> 8) & 0x00FF;
+  frame_header[SERIAL_FRAME_CRC2] = crc & 0x00FF;
 
   DPRINT("TX HEADER:");
-  DPRINT_DATA(header, SERIAL_FRAME_HEADER_SIZE);
+  DPRINT_DATA(frame_header, SERIAL_FRAME_HEADER_SIZE);
   DPRINT("TX PAYLOAD:");
   DPRINT_DATA(bytes, length);
    
   start_atomic();
-  if((sizeof(modem_interface_tx_buffer) - fifo_get_size(&modem_interface_tx_fifo)) >= (SERIAL_FRAME_HEADER_SIZE + length))
+  if((sizeof(modem_interface_tx_buffer) - fifo_get_size(&modem_interface_tx_fifo)) >= (uint8_t) (SERIAL_FRAME_HEADER_SIZE + length))
   {
     request_pending = true;
-    fifo_put(&modem_interface_tx_fifo, (uint8_t*) &header, SERIAL_FRAME_HEADER_SIZE);
+    fifo_put(&modem_interface_tx_fifo, (uint8_t*) &frame_header, SERIAL_FRAME_HEADER_SIZE);
     fifo_put(&modem_interface_tx_fifo, bytes, length);
 
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES

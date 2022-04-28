@@ -149,6 +149,7 @@ bool uart_disable(uart_handle_t* uart) {
   {
     case LPUART1_BASE:
       __HAL_RCC_LPUART1_CLK_DISABLE();
+      break;
     case USART1_BASE:
       __HAL_RCC_USART1_CLK_DISABLE();
       break;

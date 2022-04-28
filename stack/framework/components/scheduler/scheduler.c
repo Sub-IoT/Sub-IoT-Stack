@@ -276,7 +276,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 	uint8_t task_id = get_task_id(task);
 	if(task_id == NO_TASK)
 		retVal = -EINVAL;
-	else if(priority > MIN_PRIORITY || priority < MAX_PRIORITY)
+	else if(priority > MIN_PRIORITY)
 		retVal = -ESIZE;
 	else if (is_scheduled(task_id))
 		retVal = -EALREADY;

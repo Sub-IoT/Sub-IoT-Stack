@@ -64,6 +64,11 @@ static error_t power_tracking_file_write(power_tracking_file_t* power_tracking_f
 _Static_assert(POWER_TRACKING_FILE_SIZE == sizeof(power_tracking_file_t),
                "length define of power tracking file is not the same size as the define");
 
+void power_tracking_persist_file_task() 
+{
+    power_tracking_persist_file();
+}
+
 error_t power_tracking_file_initialize()
 {
     // perform check on file sizes (needed in order to have decent packaging using the bytes member of the file)
@@ -90,11 +95,11 @@ error_t power_tracking_file_initialize()
         log_print_error_string("Error initialization of power tracking file: %d", ret);
         return ret;
     }
-    sched_register_task((task_t)&power_tracking_persist_file);
+    sched_register_task((task_t)&power_tracking_persist_file_task);
 
     current_power_tracking_file.boot_counter++;
 
-    sched_post_task((task_t)&power_tracking_persist_file);
+    sched_post_task((task_t)&power_tracking_persist_file_task);
     
     return SUCCESS;
 }

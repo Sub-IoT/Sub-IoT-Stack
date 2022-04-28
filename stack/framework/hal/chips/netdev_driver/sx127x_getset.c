@@ -671,7 +671,7 @@ void computeRxBwMantExp( uint32_t rxBwValue, uint8_t* mantisse, uint8_t* exponen
 {
     uint8_t tmpExp, tmpMant;
     uint32_t tmpRxBw;
-    uint32_t rxBwMin = 10e6;
+    int32_t rxBwMin = 10e6;
 
     for( tmpExp = 0; tmpExp < 8; tmpExp++ ) {
         for( tmpMant = 16; tmpMant <= 24; tmpMant += 4 ) {
@@ -1270,11 +1270,12 @@ uint8_t sx127x_get_preamble_polarity(const sx127x_t *dev)
     uint8_t polarity = sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
                        ~SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK;
 
-    if (polarity == SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK)
+    if (polarity == SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK) {
         DEBUG("[sx127x] Polarity set to 0x55");
-    else
+    }
+    else {
         DEBUG("[sx127x] Polarity set to default 0xAA");
-
+    }
     return (polarity >> 5);
 }
 

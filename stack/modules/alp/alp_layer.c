@@ -255,7 +255,7 @@ static void itf_ctrl_file_callback(uint8_t file_id)
                         else
                             current_itf_deinit();
                     }
-                    error_t err = interfaces[i]->init();
+                    err = interfaces[i]->init();
                     current_itf_deinit = interfaces[i]->deinit;
                     if(err < 0) {
                         current_itf_deinit();
@@ -652,9 +652,10 @@ static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_
                     d7ap_fs_write_file_with_callback(USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&current_itf_ctrl.raw_itf_ctrl, USER_FILE_ALP_CTRL_SIZE, ROOT_AUTH, false);
                 }
             }
-            uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
+            uint16_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
             if(forwarded_alp_size > ALP_PAYLOAD_MAX_SIZE)
                 return false;
+
             fifo_pop(&command->alp_command_fifo, command->alp_command, forwarded_alp_size);
             DPRINT("Forwarding command:");
             DPRINT_DATA(command->alp_command, forwarded_alp_size);

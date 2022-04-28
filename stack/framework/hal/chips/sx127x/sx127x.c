@@ -1095,8 +1095,8 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
   for(bw_exp_count = 1; bw_exp_count < 8; bw_exp_count++) {
     for(bw_mant_count = 16; bw_mant_count <= 24; bw_mant_count += 4) {
       computed_bw = SX127X_FXOSC / (bw_mant_count * (1 << (bw_exp_count + 2)));
-      if(abs(computed_bw - bw_hz) < min_bw_dif) {
-        min_bw_dif = abs(computed_bw - bw_hz);
+      if((uint32_t) abs(computed_bw - bw_hz) < min_bw_dif) {
+        min_bw_dif = (uint32_t) abs(computed_bw - bw_hz);
         reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
         rx_bw_number = (bw_exp_count - 1) * 3 + ((bw_mant_count - 16) >> 2);
         rx_bw_khz = (uint8_t) (computed_bw / 1000);
@@ -1338,9 +1338,9 @@ void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
   uint32_t min_diff = UINT32_MAX;
 
   for(uint8_t bw_cnt = 0; bw_cnt < 10; bw_cnt++) {
-    if(abs(lora_bw - lora_available_bw[bw_cnt]) < min_diff) {
+    if((uint32_t) abs(lora_bw - lora_available_bw[bw_cnt]) < min_diff) {
       lora_closest_bw_index = bw_cnt;
-      min_diff = abs(lora_bw - lora_available_bw[bw_cnt]);
+      min_diff = (uint32_t) abs(lora_bw - lora_available_bw[bw_cnt]);
     }
   }
   write_reg(REG_LR_MODEMCONFIG1, RFLR_MODEMCONFIG1_CODINGRATE_4_5 | RFLR_MODEMCONFIG1_IMPLICITHEADER_OFF | (lora_closest_bw_index << 4));

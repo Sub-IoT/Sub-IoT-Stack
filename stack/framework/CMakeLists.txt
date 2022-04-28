@@ -107,7 +107,7 @@ FRAMEWORK_HEADER_DEFINE(ID FRAMEWORK_TIMER_RESOLUTION)
 SET(FRAMEWORK_AES_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs in the AES algorithms")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_AES_LOG_ENABLED)
 
-SET(FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE "16" CACHE STRING "The max number of trusted node entries which can be used to store security state")
+SET(FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE "16u" CACHE STRING "The max number of trusted node entries which can be used to store security state")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE)
 
 SET(FRAMEWORK_FS_BLOCKDEVICES_COUNT "3" CACHE STRING "The number of block devices. Must be equal or greater than 3")

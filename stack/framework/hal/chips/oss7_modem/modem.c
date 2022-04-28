@@ -50,11 +50,12 @@ static alp_interface_config_t serial_itf_config = (alp_interface_config_t) {
 
 static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
-    if (success)
+    if (success) {
         DPRINT("Command %i completed successfully\n", tag_id);
-    else
+    }
+    else {
         DPRINT("Command %i failed, no ack received\n", tag_id);
-
+    }
     DPRINT("command with tag %i completed @ %i", tag_id, timer_get_counter_value());
     if (callbacks && callbacks->command_completed_callback)
         callbacks->command_completed_callback(!success, tag_id);

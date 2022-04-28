@@ -84,7 +84,7 @@ _Unwind_Reason_Code trace_func(struct _Unwind_Context *context, void *arg)
     ip = _Unwind_GetIP(context);
     if (strace_context->cstack_len != 0 && strace_context->last_ip == ip)
     {
-        if (strace_context->cstack_len == 1 && strace_context->saved_lr != _Unwind_GetGR(context, 14))
+        if (strace_context->cstack_len == 1 && (unsigned int) strace_context->saved_lr != _Unwind_GetGR(context, 14))
         {
             _Unwind_SetGR(context, 14, strace_context->saved_lr);
             return _URC_NO_REASON;
