@@ -137,6 +137,15 @@ int main(int argc, char *argv[])
 	int notrecovered = 0;
 	srand(time(NULL));
 
+	if(memcmp(input, decoded, input_length) == 0)
+    {
+        printf("Input was decoded successfully\n");
+    }
+    else
+    {
+        printf("error\n");
+    }
+
 //	while (notrecovered < 1)
 //	{
 //		int r = rand() % (lenght_encoded * 8);

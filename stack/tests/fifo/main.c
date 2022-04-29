@@ -284,4 +284,6 @@ int main(int argc, char *argv[])
     test_pop_empty();
     printf("Success!\n");
 
+    printf("All FIFO tests passed!\n");
+
 }
