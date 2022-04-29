@@ -101,6 +101,11 @@ bool uart_enable(uart_handle_t* uart) {
   uart->handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   uart->handle.Init.OverSampling = UART_OVERSAMPLING_16;
   uart->handle.Instance = uart->uart_port->uart;
+  if(uart->uart_port->swap_tx_rx)
+  {
+    uart->handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_SWAP_INIT;
+    uart->handle.AdvancedInit.Swap = UART_ADVFEATURE_SWAP_ENABLE;
+  }
   if (HAL_UART_Init(&(uart->handle)) != HAL_OK)
   {
     return false;
@@ -155,6 +160,9 @@ bool uart_disable(uart_handle_t* uart) {
       break;
     case USART2_BASE:
       __HAL_RCC_USART2_CLK_DISABLE();
+      break;
+    case USART4_BASE:
+      __HAL_RCC_USART4_CLK_DISABLE();
       break;
     default:
       assert(false);
@@ -359,6 +367,10 @@ void USART1_IRQHandler(void) {
 
 void LPUART1_IRQHandler(void) {
   uart_irq_handler(LPUART1);
+}
+
+void USART4_5_IRQHandler(void) {
+  uart_irq_handler(USART4);
 }
 
 //void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
