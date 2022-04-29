@@ -81,13 +81,12 @@ jobs:
     needs: generate-builds
     env:
       TESTSUITE_STATUS_CHANGED_DURING_RUN: false
+      TESTSUITE_RUNNING_STATUS_LOC: ${{ secrets.TESTSUITE_RUNNING_STATUS_LOC }}
 
     steps:
     - uses: actions/download-artifact@v3
 
     - name: Flash builds to devices
-      env:
-        TESTSUITE_RUNNING_STATUS_LOC: ${{ secrets.TESTSUITE_RUNNING_STATUS_LOC }}
       run: |
         if [ $(cat $TESTSUITE_RUNNING_STATUS_LOC) = RUNNING ] ; then exit 1; fi
         echo RUNNING > $TESTSUITE_RUNNING_STATUS_LOC
