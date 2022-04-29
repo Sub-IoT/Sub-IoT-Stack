@@ -91,7 +91,7 @@ jobs:
         if [ $(cat $TESTSUITE_RUNNING_STATUS_LOC) = RUNNING ] ; then exit 1; fi
         echo RUNNING > $TESTSUITE_RUNNING_STATUS_LOC
         echo "true" >> $TESTSUITE_STATUS_CHANGED_DURING_RUN
-        echo $TESTSUITE_STATUS_CHANGED_DURING_RUN
+        echo "set status is $TESTSUITE_STATUS_CHANGED_DURING_RUN"
         cd build/apps/modem
         JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
         JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
@@ -102,7 +102,7 @@ jobs:
 
     - name: Run testsuite
       run: |
-        echo $TESTSUITE_STATUS_CHANGED_DURING_RUN
+        echo "set status is $TESTSUITE_STATUS_CHANGED_DURING_RUN"
         rm -rf Sub-IoT-testsuite
         git clone --recurse-submodules https://github.com/Sub-IoT/Sub-IoT-testsuite.git
         cd Sub-IoT-testsuite
@@ -122,7 +122,7 @@ jobs:
     - name: Reset atomic on failure of previous steps
       if: always()
       run: |
-        echo $TESTSUITE_STATUS_CHANGED_DURING_RUN
+        echo "set status is $TESTSUITE_STATUS_CHANGED_DURING_RUN"
         if [ $TESTSUITE_STATUS_CHANGED_DURING_RUN = true ] ; then echo STOPPED > $TESTSUITE_RUNNING_STATUS_LOC ; fi
 
 
