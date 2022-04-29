@@ -90,7 +90,7 @@ jobs:
       run: |
         if [ $(cat $TESTSUITE_RUNNING_STATUS_LOC) = RUNNING ] ; then exit 1; fi
         echo RUNNING > $TESTSUITE_RUNNING_STATUS_LOC
-        echo "$TESTSUITE_STATUS_CHANGED_DURING_RUN=true" >> $GITHUB_ENV
+        echo "TESTSUITE_STATUS_CHANGED_DURING_RUN=true" >> $GITHUB_ENV
         echo "set status is $TESTSUITE_STATUS_CHANGED_DURING_RUN"
         cd build/apps/modem
         JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
@@ -119,7 +119,7 @@ jobs:
         name: test-results
         path: Sub-IoT-testsuite/report.xml
 
-    - name: Reset atomic on failure of previous steps
+    - name: Reset var on failure of previous steps
       if: always()
       run: |
         echo "set status is $TESTSUITE_STATUS_CHANGED_DURING_RUN"
