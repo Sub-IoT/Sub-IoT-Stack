@@ -46,9 +46,9 @@ jobs:
         if ! grep -q 'Input was decoded successfully' "results_fec.txt"; then exit 1;  fi
         if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
 
-  run-testsuite:
-    name: Run Testsuite
-    runs-on: self-hosted
+  generate-builds:
+    name: Generate Builds
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -74,6 +74,17 @@ jobs:
           build/apps/gateway/
           build/apps/modem/
           build/apps/sensor_push/
+
+  run-testsuite:
+    name: Run Testsuite
+    runs-on: self-hosted
+    needs: generate-builds
+
+    steps:
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: build/apps/modem/
 
     - name: Flash builds to devices
       run: |
