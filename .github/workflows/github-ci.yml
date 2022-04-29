@@ -85,9 +85,9 @@ jobs:
 
     - name: Flash builds to devices
       run: |
-        if [ lsof -i -P -n | grep -q JLinkExe ] ; then exit 1; fi
-        if [ lsof -n /dev/ttyUSB0 | grep -q /dev/ttyUSB0 ] ; then exit 1; fi
-        if [ lsof -n /dev/ttyUSB1 | grep -q /dev/ttyUSB1 ] ; then exit 1; fi
+        if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
+        if $(lsof -n /dev/ttyUSB0 | grep -q /dev/ttyUSB0) ; then exit 1; fi
+        if $(lsof -n /dev/ttyUSB1 | grep -q /dev/ttyUSB1) ; then exit 1; fi
         cd build/apps/modem
         JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
         JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
@@ -98,9 +98,9 @@ jobs:
 
     - name: Run testsuite
       run: |
-        if [ lsof -i -P -n | grep -q JLinkExe ] ; then exit 1; fi
-        if [ lsof -n /dev/ttyUSB0 | grep -q /dev/ttyUSB0 ] ; then exit 1; fi
-        if [ lsof -n /dev/ttyUSB1 | grep -q /dev/ttyUSB1 ] ; then exit 1; fi
+        if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
+        if $(lsof -n /dev/ttyUSB0 | grep -q /dev/ttyUSB0) ; then exit 1; fi
+        if $(lsof -n /dev/ttyUSB1 | grep -q /dev/ttyUSB1) ; then exit 1; fi
         rm -rf Sub-IoT-testsuite
         git clone --recurse-submodules https://github.com/Sub-IoT/Sub-IoT-testsuite.git
         cd Sub-IoT-testsuite
