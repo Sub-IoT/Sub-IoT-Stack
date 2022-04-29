@@ -83,8 +83,6 @@ jobs:
     steps:
 
     - uses: actions/download-artifact@v3
-      with:
-        name: build/apps/modem/
 
     - name: Flash builds to devices
       run: |
