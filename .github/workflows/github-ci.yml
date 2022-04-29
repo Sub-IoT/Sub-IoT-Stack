@@ -84,9 +84,11 @@ jobs:
     - uses: actions/download-artifact@v3
 
     - name: Flash builds to devices
+      env:
+        TESTSUITE_RUNNING_STATUS_LOC: ${{ secrets.TESTSUITE_RUNNING_STATUS_LOC }}
       run: |
-        echo %TESTSUITE_RUNNING_STATUS_LOC
-        cat %TESTSUITE_RUNNING_STATUS_LOC
+        echo $TESTSUITE_RUNNING_STATUS_LOC
+        cat $TESTSUITE_RUNNING_STATUS_LOC
         cd build/apps/modem
         JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
         JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
