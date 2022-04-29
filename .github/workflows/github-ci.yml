@@ -79,6 +79,8 @@ jobs:
     name: Run Testsuite
     runs-on: self-hosted
     needs: generate-builds
+    env:
+      TESTSUITE_STATUS_CHANGED_DURING_RUN: false
 
     steps:
     - uses: actions/download-artifact@v3
@@ -87,8 +89,9 @@ jobs:
       env:
         TESTSUITE_RUNNING_STATUS_LOC: ${{ secrets.TESTSUITE_RUNNING_STATUS_LOC }}
       run: |
-        echo $TESTSUITE_RUNNING_STATUS_LOC
-        cat $TESTSUITE_RUNNING_STATUS_LOC
+        if [ $(cat $TESTSUITE_RUNNING_STATUS_LOC) = RUNNING ] ; then exit 1; fi
+        echo RUNNING > $TESTSUITE_RUNNING_STATUS_LOC
+        echo true >> $TESTSUITE_STATUS_CHANGED_DURING_RUN
         cd build/apps/modem
         JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
         JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
@@ -107,12 +110,19 @@ jobs:
         pip install -r requirements.txt
         cd ../..
         python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
+        echo STOPPED > $TESTSUITE_RUNNING_STATUS_LOC
 
     - name: Upload test results
       uses: actions/upload-artifact@v2
       with:
         name: test-results
         path: Sub-IoT-testsuite/report.xml
+
+    - name: Reset atomic on failure of previous steps
+      if: always()
+      run: |
+        if [ $TESTSUITE_STATUS_CHANGED_DURING_RUN = true ] ; then echo STOPPED > $TESTSUITE_RUNNING_STATUS_LOC ; fi
+
 
     
    
