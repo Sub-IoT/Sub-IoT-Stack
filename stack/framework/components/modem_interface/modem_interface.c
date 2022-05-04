@@ -60,7 +60,8 @@ _Static_assert(false, "FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES should be d
 #endif
 
 #ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
-#define MODEM_INTERFACE_TIMEOUT (5 * TIMER_TICKS_PER_SEC)
+#define MODEM_INTERFACE_TIMEOUT            (5 * TIMER_TICKS_PER_SEC)
+#define MODEM_INTERFACE_TIMEOUT_BLOCK_TIME (5 * TIMER_TICKS_PER_MINUTE)
 static bool modem_interface_timeout_active;
 static timer_tick_t modem_interface_timeout_start_time;
 #endif
@@ -259,14 +260,21 @@ static bool modem_interface_timeout()
 {
   if(modem_interface_timeout_active)
   {
-    timer_tick_t diff = timer_calculate_difference(modem_interface_timeout_start_time, timer_get_counter_value());
+    timer_tick_t timer_value = timer_get_counter_value();
+    timer_tick_t diff = timer_calculate_difference(modem_interface_timeout_start_time, timer_value);
     if(diff > MODEM_INTERFACE_TIMEOUT)
     {
-      log_print_error_string("modem_interface timeout occurred in state %d", state);
 #ifdef FRAMEWORK_DEBUG_ASSERT_REBOOT
       modem_interface_clear_handler();
+      log_print_error_string("modem_interface timeout occurred in state %d", state);
       return true;
 #else
+      log_print_string("modem_interface timeout occurred in state %d", state);
+      if(timer_value < MODEM_INTERFACE_TIMEOUT_BLOCK_TIME)
+      {
+        modem_interface_clear_handler();
+        return true;
+      }
       assert(false);
 #endif
     }
