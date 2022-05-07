@@ -46,7 +46,7 @@ __LINK_C void log_counter_reset()
 	NG(counter) = 0;
 }
 
-__LINK_C void log_print_string(char* format, ...)
+__LINK_C void log_print_string(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -55,7 +55,7 @@ __LINK_C void log_print_string(char* format, ...)
     va_end(args);
 }
 
-__LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
+__LINK_C void log_print_stack_string(log_stack_layer_t type, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -76,7 +76,7 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
     }
 }
 
-void log_print_error_string(char* format,...)
+void log_print_error_string(const char* format,...)
 {
     va_list args;
     va_start(args, format);

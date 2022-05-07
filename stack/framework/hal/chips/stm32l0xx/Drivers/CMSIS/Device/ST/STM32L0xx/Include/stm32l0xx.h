@@ -196,9 +196,9 @@ typedef enum
 /** @addtogroup Exported_macro
   * @{
   */
-#define SET_BIT(REG, BIT)     ((REG) |= (BIT))
+#define SET_BIT(REG, BIT)     ((REG) = (REG) | (BIT))
 
-#define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
+#define CLEAR_BIT(REG, BIT)   ((REG) = (REG) & ~(BIT))
 
 #define READ_BIT(REG, BIT)    ((REG) & (BIT))
 
