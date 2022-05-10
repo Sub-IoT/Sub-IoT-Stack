@@ -58,7 +58,6 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 #Set platform specific compile options
 #INSERT_C_FLAGS(AFTER "-c -Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
 INSERT_C_FLAGS(AFTER "-Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
-INSERT_CXX_FLAGS(AFTER "-Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")

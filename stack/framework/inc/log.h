@@ -64,17 +64,17 @@ __LINK_C void log_counter_reset(void);
 
 /*! \brief Log a string which can be optionally formatted using printf() style
  * format specifiers. */
-__LINK_C void log_print_string(const char* format,...);
+__LINK_C void log_print_string(char* format,...);
 
 /*! \brief Log a string from a specific stack layer, which can be optionally formatted using printf() style
  * format specifiers. Note: this is only to be used from within stack code, not from application level code. */
-__LINK_C void log_print_stack_string(log_stack_layer_t type, const char* format, ...);
+__LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...);
 
 /*! \brief Log raw data */
 __LINK_C void log_print_data(uint8_t* message, uint32_t length);
 
 /*! \brief Log a string using a bright red background to note an error */
-void log_print_error_string(const char* format,...);
+void log_print_error_string(char* format,...);
 
 #else
     #define log_counter_reset() ((void)0)

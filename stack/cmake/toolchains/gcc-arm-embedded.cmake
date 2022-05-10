@@ -44,14 +44,6 @@ SET(CMAKE_CROSSCOMPILING 1)
 SET(CMAKE_C_FLAGS_DEBUG "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
 SET(CMAKE_C_FLAGS_RELEASE "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
 
-# set C++ compiler flags to the same as the C compiler flags, but with some -Wno-error flags because of more restrictive
-# C++ compiler behaviour.
-#   missing-field-initializers - for configuration of structures like e.g. alp_init_args_t
-#   register - C++-17+ doesn't like register storage class specified, but not much we can do about this
-#   volatile - Likewise, 'volatile'-qualified parameter is deprecated
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-missing-field-initializers -Wno-register -Wno-volatile" CACHE STRING "")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-missing-field-initializers -Wno-register -Wno-volatile" CACHE STRING "")
-
 SET(TOOLCHAIN_DIR "" CACHE PATH "The directory containing all the cross compilation tools. (Compilation will fail if this is not set correctly)")
 
 # where is the target environment 

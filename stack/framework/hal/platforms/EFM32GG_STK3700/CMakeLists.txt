@@ -65,7 +65,6 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 #Set platform specific compile options
 INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
-INSERT_CXX_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
