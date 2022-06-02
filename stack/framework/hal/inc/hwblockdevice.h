@@ -27,7 +27,7 @@
 typedef struct blockdevice blockdevice_t;
 
 typedef struct {
-  void (*init)(blockdevice_t* bd);
+  error_t (*init)(blockdevice_t* bd);
   error_t (*read)(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
   error_t (*program)(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
   error_t (*erase_chip)(blockdevice_t* bd);
@@ -45,7 +45,7 @@ struct blockdevice {
   uint32_t offset;
 };
 
-void blockdevice_init(blockdevice_t* bd);
+error_t blockdevice_init(blockdevice_t* bd);
 error_t blockdevice_read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 error_t blockdevice_program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 error_t blockdevice_erase_chip(blockdevice_t* bd, uint32_t addr);

@@ -20,9 +20,9 @@
 #include "hwblockdevice.h"
 #include "debug.h"
 
-void blockdevice_init(blockdevice_t* bd) {
+error_t blockdevice_init(blockdevice_t* bd) {
   assert(bd && bd->driver && bd->driver->init);
-  bd->driver->init(bd);
+  return bd->driver->init(bd);
 }
 
 error_t blockdevice_read(blockdevice_t* bd, uint8_t *data, uint32_t addr, uint32_t size) {

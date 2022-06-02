@@ -336,7 +336,7 @@ static void _init_timers(sx127x_t *dev)
 static int _init_spi(sx127x_t *dev)
 {
     /* Setup SPI for SX127X */
-    spi_handle_t* spi_handle = spi_init(dev->params.spi, SX127x_SPI_BAUDRATE, 8, true, false);
+    spi_handle_t* spi_handle = spi_init(dev->params.spi, SX127x_SPI_BAUDRATE, 8, true, false, NULL);
 
     if (spi_handle == NULL) {
         DEBUG("sx127x: error initializing SPI_%i device\n", dev->params.spi);

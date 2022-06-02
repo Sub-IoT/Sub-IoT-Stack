@@ -36,7 +36,7 @@
 #endif
 
 // forward declare driver function pointers
-static void init(blockdevice_t* bd);
+static error_t init(blockdevice_t* bd);
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 
@@ -49,9 +49,10 @@ blockdevice_driver_t blockdevice_driver_ram = {
 };
 
 
-static void init(blockdevice_t* bd) {
+static error_t init(blockdevice_t* bd) {
   blockdevice_ram_t* bd_ram = (blockdevice_ram_t*)bd;
   DPRINT("init RAM block device of size %i\n", bd_ram->size);
+  return SUCCESS;
 }
 
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {

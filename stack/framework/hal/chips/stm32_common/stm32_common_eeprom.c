@@ -25,7 +25,7 @@
 // TODO validate embedded EEPROM works the same on stm32l1 and uses same start address and size as well
 
 // forward declare driver function pointers
-static void init(blockdevice_t* bd);
+static error_t init(blockdevice_t* bd);
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 
@@ -38,8 +38,9 @@ blockdevice_driver_t blockdevice_driver_stm32_eeprom = {
 };
 
 
-static void init(blockdevice_t* bd) { // TODO SPI as param
+static error_t init(blockdevice_t* bd) { // TODO SPI as param
   (void)bd; // suppress unused warning
+  return SUCCESS;
 }
 
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {

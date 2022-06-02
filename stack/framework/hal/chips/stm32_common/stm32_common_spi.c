@@ -59,6 +59,7 @@ spi_slave_handle_t slave_handle[MAX_SPI_SLAVE_HANDLES];
 struct spi_handle {
   SPI_HandleTypeDef hspi;
   spi_slave_handle_t* slave[MAX_SPI_SLAVE_HANDLES];
+  uncoupler_handle_t*  uhandle;
   uint8_t             slaves;  // number of slaves for array mgmt
   uint8_t             users;   // for reference counting of active slaves
   bool                active;
@@ -121,6 +122,11 @@ void spi_enable(spi_handle_t* spi) {
   // already active?
   if(spi->active) { return; }
 
+  if(spi->uhandle)
+  {
+    spi->uhandle->driver->uncoupler_set(spi->uhandle, true);
+  }
+
   init_pins(spi);
 
   // bringing SPI bus up
@@ -169,11 +175,16 @@ void spi_disable(spi_handle_t* spi) {
   // turn off all CS lines
   ensure_slaves_deselected(spi);
 
+  if(spi->uhandle)
+  {
+    spi->uhandle->driver->uncoupler_set(spi->uhandle, false);
+  }
+
   spi->active = false;
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex, bool cpol, bool cpha) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex, bool cpol, bool cpha, uncoupler_handle_t* uhandle) {
   // assert what is supported by HW
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
@@ -251,6 +262,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   handle[spi_number].hspi.Init.TIMode = SPI_TIMODE_DISABLE;
   handle[spi_number].hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   handle[spi_number].hspi.Init.CRCPolynomial = 10;
+
+  handle[spi_number].uhandle = uhandle;
 
   spi_enable(&handle[spi_number]);
   return &handle[spi_number];
