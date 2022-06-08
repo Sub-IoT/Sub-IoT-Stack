@@ -184,6 +184,11 @@ int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8
     if (_is_file_defined(file_id))
         return -EEXIST;
 
+    if((bd_data_offset[bd_type] + length) > bd[bd_type]->size)
+    {
+        return -ENOMEM;
+    }
+
     // update file caching for stat lookup
     files[file_id].blockdevice_index = (uint8_t)bd_type;
     files[file_id].length = length;
