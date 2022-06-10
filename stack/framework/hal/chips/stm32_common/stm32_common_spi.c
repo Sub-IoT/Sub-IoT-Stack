@@ -110,8 +110,13 @@ static void init_pins(spi_handle_t* spi) {
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].sck_alternate;
+  if(spi->hspi.Init.CLKPolarity == SPI_POLARITY_HIGH)
+  {
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+  }
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
-  
+
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].miso_alternate;
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
   GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].mosi_alternate;
