@@ -41,8 +41,8 @@ SET(CMAKE_SYSTEM_VERSION 1)
 SET(CMAKE_CROSSCOMPILING 1)
 
 # set compiler flags to optimize for code size
-SET(CMAKE_C_FLAGS_DEBUG "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
-SET(CMAKE_C_FLAGS_RELEASE "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra" CACHE STRING "")
+SET(CMAKE_C_FLAGS_DEBUG "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra -Wno-type-limits" CACHE STRING "")
+SET(CMAKE_C_FLAGS_RELEASE "-Og -Werror -Wcast-align=strict -Wall -Wno-unused -Wno-maybe-uninitialized -Wno-switch -Wno-return-type -Wpacked-not-aligned -Wshadow -Wextra -Wno-type-limits" CACHE STRING "")
 
 # set C++ compiler flags to the same as the C compiler flags, but with some -Wno-error flags because of more restrictive
 # C++ compiler behaviour.
