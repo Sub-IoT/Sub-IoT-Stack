@@ -37,7 +37,8 @@ SET(lib_sources stm32_common_atomic.c
                 stm32_common_rtctimer.c
                 stm32_common_uart.c
                 stm32_common_watchdog.c
-                stm32_common_eeprom.c)
+                stm32_common_eeprom.c
+                stm32_common_adc.c)
 if(FRAMEWORK_MODEM_INTERFACE_USE_DMA)
     list(APPEND lib_sources stm32_common_dma.c)
 endif(FRAMEWORK_MODEM_INTERFACE_USE_DMA)

@@ -64,7 +64,8 @@ typedef enum
         adcInputSingleInputCh2,
         adcInputSingleInputCh4,
         adcInputSingleInputCh5,
-        adcInputSingleInputCh6
+        adcInputSingleInputCh6,
+        adcInputUnused
 } ADC_Input;
 
 
@@ -72,7 +73,7 @@ typedef enum
  * 	\param reference selects the reference voltage used by the ADC
  * 	\param input selects the input used by the ADC
  */
-__LINK_C void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency);
+__LINK_C error_t adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency);
 
 /*! \brief Calibrates the ADC
  */
@@ -96,6 +97,11 @@ __LINK_C bool adc_ready();
  * 	\return ADC register value
  */
 __LINK_C uint32_t adc_read_single();
+
+/*! \brief Gets the ADC value of all defined channels
+ * 	\return array with ADC register values
+ */
+__LINK_C error_t adc_read_all(uint16_t* measurements);
 
 /*! \brief Clears the ADC interrupt flag
  */

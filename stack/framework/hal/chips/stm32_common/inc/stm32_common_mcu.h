@@ -66,6 +66,10 @@ typedef struct {
   uint32_t sda_alternate;
 } i2c_port_t;
 
+typedef struct adc_channel_handle {
+  ADC_ChannelConfTypeDef adc_channel;
+} adc_channel_handle_t;
+
 
 typedef struct {
   dma_peripheral_t peripheral;
