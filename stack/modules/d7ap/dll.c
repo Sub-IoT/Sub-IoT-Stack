@@ -486,7 +486,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
     }
     else
     {
-        DPRINT("Channel not clear, RSSI: %i", cur_rssi);
+        DPRINT("Channel not clear, RSSI: %i vs CCA: %i", cur_rssi, E_CCA);
         switch_state(DLL_STATE_CSMA_CA_RETRY);
         execute_csma_ca(NULL);
     }
