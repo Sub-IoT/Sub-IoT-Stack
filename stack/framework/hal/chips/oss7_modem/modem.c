@@ -41,7 +41,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-static modem_callbacks_t* callbacks;
+static modem_callbacks_t* callbacks = NULL;
 static alp_init_args_t alp_init_args;
 
 static alp_interface_config_t serial_itf_config = (alp_interface_config_t) {
@@ -228,6 +228,19 @@ int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_
     alp_layer_process(command);
 
     return command->tag_id;
+}
+
+bool modem_write_files(uint8_t file_id1, uint32_t offset1, uint32_t size1, uint8_t* data1, uint8_t file_id2, uint32_t offset2, uint32_t size2, uint8_t* data2) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_write_file_data_action(&command.fifo, file_id1, offset1, size1, data1, true, false);
+
+  alp_append_write_file_data_action(&command.fifo, file_id2, offset2, size2, data2, true, false);
+    
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+
+  return true;
 }
 
 int16_t modem_send_unsolicited_response(

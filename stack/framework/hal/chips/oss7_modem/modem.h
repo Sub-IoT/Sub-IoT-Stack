@@ -51,6 +51,7 @@ void modem_reinit();
 int16_t modem_execute_raw_alp(uint8_t* alp, uint8_t len);
 alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
+bool modem_write_files(uint8_t file_id1, uint32_t offset1, uint32_t size1, uint8_t* data1, uint8_t file_id2, uint32_t offset2, uint32_t size2, uint8_t* data2);
 int16_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, alp_interface_config_t* interface_config);
 int16_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, alp_interface_config_t* interface_config);
 int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 

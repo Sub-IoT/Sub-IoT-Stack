@@ -54,6 +54,17 @@ typedef struct __attribute__((__packed__)) {
     uint16_t duty_cycle_wait_time;
 } lorawan_session_result_t;
 
+typedef struct {
+    uint8_t nwkSKey[16] ;
+    uint8_t appSKey[16] ;
+    uint32_t devAddr;
+    uint32_t network_id;
+    bool request_ack;
+    uint8_t application_port;
+    bool adr_enabled;
+    uint8_t data_rate;
+} lorawan_session_config_abp_t;
+
 typedef struct __attribute__((__packed__)) {
     union {
       uint8_t raw;
@@ -67,6 +78,19 @@ typedef struct __attribute__((__packed__)) {
     uint8_t application_port;
     uint8_t data_rate;
 } lorawan_session_config_otaa_t;
+
+typedef enum {
+    LORAWAN_REGION_AS923,
+    LORAWAN_REGION_AU915,
+    LORAWAN_REGION_CN470,
+    LORAWAN_REGION_CN779,
+    LORAWAN_REGION_EU433,
+    LORAWAN_REGION_EU868,
+    LORAWAN_REGION_KR920,
+    LORAWAN_REGION_IN865,
+    LORAWAN_REGION_US915,
+    LORAWAN_REGION_US915_HYBRID,
+} lorawan_region_t;
 
 // override alp_interface_config_t
 typedef struct {
@@ -95,5 +119,13 @@ static uint8_t* lorawan_get_deveui( void );
 static uint8_t* lorawan_get_appeui( void );
 
 static void lorawan_set_antenna_gain(uint8_t file_id);
+
+void lorawan_stack_set_tx_power(int8_t power);
+void lorawan_stack_set_rxwindow(bool activate);
+void lorawan_stack_set_duty_cycle(bool activate);
+lorawan_stack_status_t lorawan_stack_set_region(lorawan_region_t region);
+
+void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config);
+
 #endif //LORAWAN_STACK_H
 

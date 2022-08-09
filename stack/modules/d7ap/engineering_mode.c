@@ -30,6 +30,12 @@
 
 #include "modem_interface.h"
 
+#include "modules_defs.h"
+
+#ifdef MODULE_LORAWAN
+#include "lorawan_stack.h"
+#endif
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
@@ -40,13 +46,13 @@
 
 // Define the maximum length of the user data according the size occupied already by the parameters length, counter, id and crc
 #define PACKET_METADATA_SIZE (2*sizeof(uint16_t) /* word for crc + counter */  + 1 /*byte length*/)
-#define PACKET_SIZE 10
+#define PACKET_SIZE 20
 #if(PACKET_SIZE <= 5)
 # error
 #endif
 
 #define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
-#define PER_PACKET_DELAY 20
+#define PER_PACKET_DELAY (TIMER_TICKS_PER_SEC * 2)//20
 
 typedef struct packet packet_t;
 
@@ -60,6 +66,9 @@ static uint16_t per_received_packets_counter = 0;
 static uint16_t per_packet_counter = 0; 
 static uint16_t per_start_index = 65535; //Impossible value to show this is not yet set
 static uint16_t per_packet_limit = 0;
+static uint8_t lora_packet[250]; //largest packetsize currently needed
+static uint8_t lora_packet_size;
+
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
 typedef struct {
@@ -73,6 +82,23 @@ static engineering_mode_t active_mode = EM_OFF;
 
 static void start_mode();
 static void stop_mode();
+
+#ifdef MODULE_LORAWAN
+bool previous_message_lorawan = false;
+
+static uint8_t delay_seconds = 0;
+
+static void em_lorawan_send_abp(){
+  // uint8_t temp[300];
+  // lorawan_stack_send(temp, sizeof(temp), 2, false);
+  lorawan_stack_send(lora_packet, lora_packet_size, 2, false);
+  if(delay_seconds == 0)
+    sched_post_task(&em_lorawan_send_abp);
+  else 
+    timer_post_task_delay(&em_lorawan_send_abp, TIMER_TICKS_PER_SEC * delay_seconds);
+
+}
+#endif
 
 static void cont_tx_done_callback(packet_t* packet) { 
   phy_switch_to_sleep_mode();
@@ -209,6 +235,14 @@ static void em_file_change_callback(uint8_t file_id) {
     DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
+    #ifdef MODULE_LORAWAN
+    if(previous_message_lorawan && !((em_command->channel_id.channel_header.ch_class == PHY_CLASS_LORA) && (em_command->mode == EM_CONT_TX_DUTY_CYCLE))) {
+      lorawan_stack_deinit();
+      d7ap_init();
+      previous_message_lorawan = false;
+    }
+    #endif
+
     rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
     tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
@@ -274,6 +308,59 @@ static void em_file_change_callback(uint8_t file_id) {
         }
         timer_post_task_delay(&start_mode, 500);
         break;
+      case EM_CONT_TX_DUTY_CYCLE:
+        DPRINT("CONT_TX WITH DUTY CYCLE");
+        if(em_command->channel_id.channel_header.ch_class == 1) {
+        #ifdef MODULE_LORAWAN
+          previous_message_lorawan = true;
+
+          d7ap_stop();
+
+
+          /*switch(em_command->channel_id.channel_header.ch_freq_band) {
+            case PHY_BAND_868:
+              lorawan_stack_set_region(LORAWAN_REGION_EU868);
+              break;
+            case PHY_BAND_915:
+              lorawan_stack_set_region(LORAWAN_REGION_US915);
+              break;
+          }*/
+
+          delay_seconds = em_command->timeout;
+
+          if(em_command->flags) //Hybrid mode --> DR 4
+            lora_packet_size = 242;
+          else  //FHSS --> DR 0
+            lora_packet_size = 11;
+
+
+          lorawan_session_config_abp_t session_config = {
+            .nwkSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            .appSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            .devAddr = 1,
+            .network_id = 1,
+            .request_ack = false,
+            .application_port = 2,
+            .adr_enabled = false,
+            .data_rate = em_command->flags * 4
+          };
+          lorawan_stack_init_abp(&session_config);
+
+          lorawan_stack_set_rxwindow(false); //this is not possible with new version?
+
+          lorawan_stack_set_duty_cycle(true);
+
+          lorawan_stack_set_tx_power(em_command->eirp > 7? 17 - em_command->eirp : 10);
+
+          DPRINT("set to cont tx duty cycle with data rate %i and power %i", em_command->flags  * 4, em_command->eirp);
+
+          sched_post_task(&em_lorawan_send_abp);
+        #else
+          DPRINT("Lorawan stack is not activated");
+        #endif
+        }
+        break;
+
     }
 }
 
@@ -287,6 +374,10 @@ error_t engineering_mode_init()
 
   sched_register_task(&start_mode);
   sched_register_task(&stop_mode);
+  #ifdef MODULE_LORAWAN
+    sched_register_task(&em_lorawan_send_abp);
+  #endif
+
 
   return SUCCESS;
 }

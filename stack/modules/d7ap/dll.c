@@ -903,6 +903,7 @@ void dll_notify_dialog_terminated()
 
 void dll_init()
 {
+    log_print_string("dll init");
     assert(dll_state == DLL_STATE_STOPPED);
 
     uint8_t nf_ctrl;
