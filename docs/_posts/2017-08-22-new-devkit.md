@@ -16,4 +16,4 @@ This devkit is a complete off the shelf solution, containing a programmer an STM
 More precisely, it contains a [Murata CMWX1ZZABZ-091 module](http://wireless.murata.com/eng/products/rf-modules-1/lpwa/type-abz.html) which embeds a STM32L072CZ MCU and a Semtech sx1276 RF chip together on a stand-alone module.
 
 This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. By adding this module to your board you can access the DASH7 modem running on this module from your main application MCU, for instance.
-For projects requiring multi-modal communication you can use DASH7, DASH7-over-LoRa, LoRaWAN or even SigFox ([since the Murata module has recently been certified for SigFox](http://www.murata.com/about/newsroom/news/product/frontend/2017/0718)).
+For projects requiring multi-modal communication you can use DASH7, DASH7-over-LoRa, LoRaWAN or even SigFox ([since the Murata module has recently been certified for SigFox](https://www.murata.com/en-global/products/connectivitymodule/lpwa/overview/sigfox)).

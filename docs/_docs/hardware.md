@@ -42,23 +42,23 @@ The [Murata Type ABZ](https://wireless.murata.com/eng/products/rf-modules-1/lpwa
 This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. Note that this module only supports the 868 and 915 MHz bands, not the 433 MHz band.
 
 
-## NUCLEO_L073RZ
+## NUCLEO-L073RZ
 
-The [NUCLEO_L073RZ](http://www.st.com/en/evaluation-tools/nucleo-l073rz.html) is a Nucleo-64 type of development board from STMicroelectronics. The MCU is basically the same as the B_L072Z_LRWAN1 above, so it is using the same HAL driver. The board does not include a radio, but a separate [SX1276MB1xAS](https://os.mbed.com/components/SX1276MB1xAS/) containing a Semtech sx1276 can be ordered. Here as well, the radio is reusing the same driver as with the Murata module. The platform is very comparable to the B_L072Z_LRWAN1 overall. A distinction is that the SX1276MB1xAS has a LF output, which allows to use the 433 MHz band, while the Murata module only supports the 868 and 915 MHz bands. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-nucleo-l073.md %}) for more specific information on how to use this platform.
+The [NUCLEO-L073RZ](http://www.st.com/en/evaluation-tools/nucleo-l073rz.html) is a Nucleo-64 type of development board from STMicroelectronics. The MCU is basically the same as the B_L072Z_LRWAN1 above, so it is using the same HAL driver. The board does not include a radio, but a separate [SX1276MB1xAS](https://os.mbed.com/components/SX1276MB1xAS/) containing a Semtech sx1276 can be ordered. Here as well, the radio is reusing the same driver as with the Murata module. The platform is very comparable to the B_L072Z_LRWAN1 overall. A distinction is that the SX1276MB1xAS has a LF output, which allows to use the 433 MHz band, while the Murata module only supports the 868 and 915 MHz bands. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-nucleo-l073.md %}) for more specific information on how to use this platform.
 
 ![The nucleo-l073rz + SX1276MB1xAS devkit]({{site.baseurl}}/img/nucleo.jpg)
 
-## EZR32LG_WSTK6200
+## EZR32LG WSTK6200
 
-The [EZR32LG_WSTK6200](https://www.silabs.com/products/development-tools/wireless/proprietary/slwstk6200a-ezr32-leopard-gecko-868-mhz-starter-kit) platform is a starter kit based on the EZR32 Leopard Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M3 combined with an RF chip (si4460).
+The EZR32LG WSTK6200 platform is a starter kit based on the EZR32 Leopard Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M3 combined with an RF chip (si4460).
 See the [platform notes]({{ site.baseurl }}{% link _docs/platform-wstk6200a.md %}) for more specific information on how to use this platform.
 
 ![The EZR32LG devkit]({{site.baseurl}}/img/wstk6200.png)
 
 
 
-## EFM32GG_STK3700
-The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is a devkit for the SiLabs Giant Gecko MCU. An advantage is that a JLink programmer is already included on the board, making this is a cheap option (currently around 25 euro!).
+## EFM32GG STK3700
+The [EFM32GG STK3700](https://www.silabs.com/development-tools/mcu/32-bit/efm32gg-starter-kit) is a devkit for the SiLabs Giant Gecko MCU. An advantage is that a JLink programmer is already included on the board, making this is a cheap option (currently around 25 euro!).
 A disadvantage of this platform is that you need to attach an external radio. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics.
 
 

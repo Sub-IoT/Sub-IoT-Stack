@@ -2,7 +2,7 @@
 
 # Welcome
 
-Sub-IoT houses an implementation of the [DASH 7 Alliance](http://www.dash7-alliance.org) protocol, which can be optionally combined with a 3rd party implementation [LoRaMAC-node](https://github.com/Lora-net/LoRaMac-node) of the [LoRaWAN](https://lora-alliance.org/about) specification for ultra low power communication. The aim of the project is to provide an implementation of the sub-GHz stacks which allows for fast development and prototyping. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
+Sub-IoT houses an implementation of the [DASH 7 Alliance](http://www.dash7-alliance.org) protocol, which can be optionally combined with a 3rd party implementation [LoRaMAC-node](https://github.com/Lora-net/LoRaMac-node) of the [LoRaWAN](https://lora-alliance.org/) specification for ultra low power communication. The aim of the project is to provide an implementation of the sub-GHz stacks which allows for fast development and prototyping. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
 
 For more information visit the [Sub-IoT site](https://sub-iot.github.io/Sub-IoT-Stack/).
 
