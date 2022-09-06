@@ -610,7 +610,7 @@ static alp_status_codes_t process_op_create_file(alp_action_t* action) {
 
 static alp_status_codes_t write_itf_command(itf_ctrl_action_t action, authentication_t origin_auth)
 {
-    int rc = d7ap_fs_write_file(USER_FILE_ALP_CTRL_FILE_ID, 0, &action, 1, origin_auth); // gets handled in write file callback
+    int rc = d7ap_fs_write_file(USER_FILE_ALP_CTRL_FILE_ID, 0, (uint8_t*)&action, 1, origin_auth); // gets handled in write file callback
     return rc == SUCCESS ? ALP_STATUS_OK : alp_translate_error(rc);
 }
 

@@ -23,7 +23,7 @@ jobs:
       run: |
         mkdir build && cd build
         platform="NATIVE"
-        cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DMODULE_D7AP=n -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n
+        cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DMODULE_D7AP=n -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
         make -j
 
     - name: Run unit tests
@@ -32,6 +32,7 @@ jobs:
         ./build/tests/alp/test_alp &> results_alp.txt
         ./build/tests/fec/test_fec &> results_fec.txt
         ./build/tests/fifo/test_fifo &> results_fifo.txt
+        ./build/tests/scheduler/test_scheduler &> results_scheduler.txt
 
     - name: Upload the results
       uses: actions/upload-artifact@v2
@@ -42,6 +43,7 @@ jobs:
           results_alp.txt
           results_fec.txt
           results_fifo.txt
+          results_scheduler.txt
 
     - name: Handle results
       run: |
@@ -49,6 +51,7 @@ jobs:
         if ! grep -q 'Unit-tests for ALP completed' "results_alp.txt"; then exit 1;  fi
         if ! grep -q 'Input was decoded successfully' "results_fec.txt"; then exit 1;  fi
         if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
+        if ! grep -q 'All scheduler tests passed!' "results_scheduler.txt"; then exit 1;  fi   
 
   generate-builds:
     name: Generate Builds

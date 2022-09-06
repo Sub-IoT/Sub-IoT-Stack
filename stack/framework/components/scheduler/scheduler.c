@@ -45,6 +45,9 @@
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
 
+_Static_assert(SCHEDULER_MAX_TASKS < UINT8_MAX,
+               "SCHEDULER_MAX_TASKS can not be set larger than 254");
+
 #ifdef NODE_GLOBALS
     #warning NODE_GLOBALS is defined when using the default scheduler. Are you sure this is what you want ?
 #endif
@@ -54,7 +57,6 @@
 #else
   #define DPRINT(...)
 #endif
-
 
 enum
 {
@@ -88,7 +90,7 @@ uint8_t NGDEF(m_head)[NUM_PRIORITIES];
 uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
 uint8_t current_task_id;
 volatile uint8_t NGDEF(current_priority);
-unsigned int NGDEF(num_registered_tasks);
+uint8_t NGDEF(num_registered_tasks);
 static bool scheduler_active = false;
 #if defined FRAMEWORK_USE_WATCHDOG
 #define WATCHDOG_WARNING_TIMEOUT TIMER_TICKS_PER_SEC * 17
@@ -205,18 +207,22 @@ __LINK_C uint8_t get_task_id(task_t task)
 			end = pivot-1;
 		else
 		{
-			return NG(m_index)[pivot].index;
+			while((pivot > 1) && (NG(m_index)[pivot-1].task == task))
+			{
+				pivot--;
+			}
+			return pivot;
 		}
 		i++;
-		assert(i < 10000);
+		assert(i <= NG(num_registered_tasks));
 	}
 	return NO_TASK;
 }
 
-__LINK_C error_t sched_register_task(task_t task)
+__LINK_C error_t sched_register_task_allow_multiple(task_t task, bool allow)
 {
   assert(NG(num_registered_tasks) < NUM_TASKS);
-  if(get_task_id(task) != NO_TASK)
+  if(!allow && (get_task_id(task) != NO_TASK))
     return -EALREADY;
 
 	error_t retVal;
@@ -231,7 +237,7 @@ __LINK_C error_t sched_register_task(task_t task)
             NG(m_index)[i].task = task;
             NG(m_index)[i].index = NG(num_registered_tasks);
             NG(m_info)[NG(m_index)[i].index].task = task;
-            NG(m_info)[NG(m_index)[i].index].arg = NULL;
+            NG(m_info)[NG(m_index)[i].index].arg = (void*)UINTPTR_MAX;
             break;
         }
         else
@@ -248,24 +254,84 @@ __LINK_C error_t sched_register_task(task_t task)
 	return retVal;
 }
 
+static inline bool is_next_task_the_same(uint8_t id)
+{
+	return ((id + 1) < NG(num_registered_tasks)) && (NG(m_index)[id].task == NG(m_index)[id + 1].task);
+}
+
 static inline bool is_scheduled(uint8_t id)
 {
 	assert(id < NUM_TASKS);
 	check_structs_are_valid();
-	return NG(m_info)[id].priority != NOT_SCHEDULED;
+	return NG(m_info)[NG(m_index)[id].index].priority != NOT_SCHEDULED;
 }
 
-__LINK_C bool sched_is_scheduled(task_t task)
+static bool is_scheduled_with_arg(uint8_t id, void *arg)
+{
+	assert(id < NUM_TASKS);
+	check_structs_are_valid();
+	while(true)
+	{
+		uint8_t index = NG(m_index)[id].index;
+		if(arg == NG(m_info)[index].arg)
+		{
+			return NG(m_info)[index].priority != NOT_SCHEDULED;
+		}
+		if(is_next_task_the_same(id))
+		{
+			id += 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return false;
+}
+
+__LINK_C bool sched_is_scheduled_with_arg(task_t task, void *arg)
 {
 	//INT_Disable();
 	start_atomic();
 	uint8_t task_id = get_task_id(task);
 	bool retVal = false;
 	if(task_id != NO_TASK)
-		retVal = is_scheduled(task_id);
+	{
+		if(is_next_task_the_same(task_id))
+		{
+			retVal = is_scheduled_with_arg(task_id, arg);
+		}
+		else
+		{
+			retVal = is_scheduled(task_id);
+		}
+	}
 	//INT_Enable();
 	end_atomic();
 	return retVal;
+}
+
+static error_t do_initial_task_checks(uint8_t task_id, void *arg, bool cancel)
+{
+	if(task_id == NO_TASK)
+	{
+		return -EINVAL;
+	}
+	if(is_next_task_the_same(task_id))
+	{
+		if(!cancel == is_scheduled_with_arg(task_id, arg))
+		{
+			return -EALREADY;
+		}
+	}
+	else 
+	{
+		if ((!cancel) == is_scheduled(task_id))
+		{
+			return -EALREADY;
+		}
+	}
+	return SUCCESS;
 }
 
 __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
@@ -274,32 +340,53 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 	start_atomic();
 	check_structs_are_valid();
 	uint8_t task_id = get_task_id(task);
-	if(task_id == NO_TASK)
-		retVal = -EINVAL;
-	else if(priority > MIN_PRIORITY)
-		retVal = -ESIZE;
-	else if (is_scheduled(task_id))
-		retVal = -EALREADY;
-	else
+	retVal = do_initial_task_checks(task_id, arg, false);
+	if(priority > MIN_PRIORITY)
 	{
-		if(NG(m_head)[priority] == NO_TASK)
+		retVal = -ESIZE;
+	}
+	else if(retVal == SUCCESS)
+	{
+		if(is_next_task_the_same(task_id))
 		{
-			NG(m_head)[priority] = task_id;
-			NG(m_tail)[priority] = task_id;
+			while (true)
+			{
+				if(NG(m_info)[NG(m_index)[task_id].index].priority == NOT_SCHEDULED)
+				{
+					break;
+				}
+				if(is_next_task_the_same(task_id))
+				{
+					task_id += 1;
+				}
+				else
+				{
+					retVal = -ENOMEM;
+					break;
+				}
+			}
 		}
-		else
+		uint8_t index = NG(m_index)[task_id].index;
+		if(retVal == SUCCESS)
 		{
-			NG(m_info)[NG(m_tail)[priority]].next = task_id;
-			NG(m_info)[task_id].prev = NG(m_tail)[priority];
-			NG(m_tail)[priority] = task_id;
+			if(NG(m_head)[priority] == NO_TASK)
+			{
+				NG(m_head)[priority] = index;
+				NG(m_tail)[priority] = index;
+			}
+			else
+			{
+				NG(m_info)[NG(m_tail)[priority]].next = index;
+				NG(m_info)[index].prev = NG(m_tail)[priority];
+				NG(m_tail)[priority] = index;
+			}
+			NG(m_info)[index].priority = priority;
+			NG(m_info)[index].arg = arg;
+			//if our priority is higher than the currently known maximum priority
+			if((priority < NG(current_priority)))
+				NG(current_priority) = priority;
+			check_structs_are_valid();
 		}
-		NG(m_info)[task_id].priority = priority;
-                NG(m_info)[task_id].arg = arg;
-		//if our priority is higher than the currently known maximum priority
-		if((priority < NG(current_priority)))
-			NG(current_priority) = priority;
-		check_structs_are_valid();
-		retVal = SUCCESS;
 	}
 	end_atomic();
 	check_structs_are_valid();
@@ -307,34 +394,54 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 	return retVal;
 }
 
-__LINK_C error_t sched_cancel_task(task_t task)
+__LINK_C error_t sched_cancel_task_with_arg(task_t task, void *arg)
 {
 	check_structs_are_valid();
-	error_t retVal;
+	error_t retVal = SUCCESS;
 
 	start_atomic();
 	uint8_t id = get_task_id(task);
-	if(id == NO_TASK)
-		retVal = -EINVAL;
-	else if(!is_scheduled(id))
-		retVal = -EALREADY;
-	else
+	retVal = do_initial_task_checks(id, arg, true);
+	if(retVal == SUCCESS)
 	{
-		if (NG(m_info)[id].prev == NO_TASK)
-			NG(m_head)[NG(m_info)[id].priority] = NG(m_info)[id].next;
-		else
-			NG(m_info)[NG(m_info)[id].prev].next = NG(m_info)[id].next;
+		if(is_next_task_the_same(id))
+		{
+			while (true)
+			{
+				if(NG(m_info)[NG(m_index)[id].index].arg == arg)
+				{
+					break;
+				}
+				if(is_next_task_the_same(id))
+				{
+					id += 1;
+				}
+				else
+				{
+					// This shouldn't happen
+					retVal = -EALREADY;
+					break;
+				}
+			}
+		}
+		if(retVal == SUCCESS)
+		{
+			uint8_t index = NG(m_index)[id].index;
+			if (NG(m_info)[index].prev == NO_TASK)
+				NG(m_head)[NG(m_info)[index].priority] = NG(m_info)[index].next;
+			else
+				NG(m_info)[NG(m_info)[index].prev].next = NG(m_info)[index].next;
 
-		if (NG(m_info)[id].next == NO_TASK)
-			NG(m_tail)[NG(m_info)[id].priority] = NG(m_info)[id].prev;
-		else
-			NG(m_info)[NG(m_info)[id].next].prev = NG(m_info)[id].prev;
+			if (NG(m_info)[index].next == NO_TASK)
+				NG(m_tail)[NG(m_info)[index].priority] = NG(m_info)[index].prev;
+			else
+				NG(m_info)[NG(m_info)[index].next].prev = NG(m_info)[index].prev;
 
-		NG(m_info)[id].prev = NO_TASK;
-		NG(m_info)[id].next = NO_TASK;
-		NG(m_info)[id].priority = NOT_SCHEDULED;
-		check_structs_are_valid();
-		retVal = SUCCESS;
+			NG(m_info)[index].prev = NO_TASK;
+			NG(m_info)[index].next = NO_TASK;
+			NG(m_info)[index].priority = NOT_SCHEDULED;
+			check_structs_are_valid();
+		}
 	}
 	end_atomic();
 	return retVal;

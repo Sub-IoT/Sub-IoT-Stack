@@ -73,6 +73,43 @@ job 1:
    - build/apps/gateway/*
    - build/apps/modem/*
    - build/apps/sensor_push/*
+job 1b:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
+  tags: 
+  - docker
+  stage: build stack
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
+  script: 
+  - mkdir build && cd build
+  - platform="NATIVE"
+  - cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DMODULE_D7AP=n -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
+  - make -j
+  - ./tests/aes/test_aes &> results_aes.txt
+  - ./tests/alp/test_alp &> results_alp.txt
+  - ./tests/fec/test_fec &> results_fec.txt
+  - ./tests/fifo/test_fifo &> results_fifo.txt
+  - ./tests/scheduler/test_scheduler &> results_scheduler.txt
+  - if ! grep -q 'AES all unit tests OK !' "results_aes.txt"; then exit 1;  fi
+  - if ! grep -q 'Unit-tests for ALP completed' "results_alp.txt"; then exit 1;  fi
+  - if ! grep -q 'Input was decoded successfully' "results_fec.txt"; then exit 1;  fi
+  - if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
+  - if ! grep -q 'All scheduler tests passed!' "results_scheduler.txt"; then exit 1;  fi
+  - cd ..
+  - mv build /builds/aloxy/$CI_PROJECT_NAME/build
+  artifacts:
+   name: "$CI_COMMIT_REF_NAME"
+   when: always
+   paths:
+   - build/results_aes.txt
+   - build/results_alp.txt
+   - build/results_fec.txt
+   - build/results_fifo.txt
+   - build/results_scheduler.txt
 job 2:
   tags:
   - testsuite
