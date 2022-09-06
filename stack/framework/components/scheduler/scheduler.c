@@ -482,8 +482,10 @@ __LINK_C void scheduler_run()
 		//during some oss7-testsuite cases we can see a scheduling of the flushing of the fifos for the UART in between the end of the scheduler 
 		//priority loop, and the call to enter low power mode. This caused the test to fail as the response was received by the testsuite only 
 		//after the watchdog woke up the device. So, task_scheduled_after_sched_loop is used to ensure the tasklist is really empty.
+		start_atomic();
 		if(!task_scheduled_after_sched_loop) {
 			hw_enter_lowpower_mode(low_power_mode);
 		}
+		end_atomic();
 	}
 }
