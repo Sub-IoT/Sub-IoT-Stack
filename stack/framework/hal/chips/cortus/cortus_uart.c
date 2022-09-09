@@ -117,6 +117,6 @@ void interrupt_handler(IRQ_UART1_RX)
     while(((uart1->rx_status)&(0x01)) != 0){
         ch = uart1->rx_data;
         if (rx_inthandler != 0x0)
-            rx_inthandler(ch);
+            rx_inthandler(&handle, ch);
     }
 }

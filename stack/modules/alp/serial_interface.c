@@ -30,7 +30,6 @@
 #include "types.h"
 #include "string.h"
 #include "alp_layer.h"
-#include "shell.h"
 #include "debug.h"
 #include "d7ap.h"
 #include "ng.h"
@@ -87,13 +86,9 @@ void serial_interface_register() {
         .unique = false
     };
 
-    alp_layer_register_interface(&alp_modem_interface);
+    modem_interface_init();
 
-#ifdef FRAMEWORK_MODEM_INTERFACE_USE_INTERRUPT_LINES
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, PLATFORM_MODEM_INTERFACE_UART_STATE_PIN, PLATFORM_MODEM_INTERFACE_TARGET_UART_STATE_PIN);
-#else
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
-#endif
+    alp_layer_register_interface(&alp_modem_interface);
 
     modem_interface_register_handler(&serial_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 }

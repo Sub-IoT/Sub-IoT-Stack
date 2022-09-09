@@ -152,12 +152,14 @@ static int            LastUsbTxCnt;
 static bool           usbRxActive;
 static bool           usbTxActive;
 
+static uart_handle_t* uart_reference = NULL;
 static uart_rx_inthandler_t rx_callback = NULL;
 
 /** @endcond */
 
-void           cdc_set_rx_interrupt_callback(uart_rx_inthandler_t rx_handler)
+void           cdc_set_rx_interrupt_callback(uart_handle_t* uart, uart_rx_inthandler_t rx_handler)
 {
+  uart_reference = uart;
 	rx_callback = rx_handler;
 }
 
@@ -314,7 +316,7 @@ static int UsbDataReceived(USB_Status_TypeDef status,
 	  {
 		  int i = 0;
 		  for (;i<xferred;i++)
-			  rx_callback(usbRxBuffer[i]);
+			  rx_callback(uart, usbRxBuffer[i]);
 	  }
 
 

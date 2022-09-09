@@ -19,6 +19,7 @@
 
 #include "engineering_mode.h"
 #include "MODULE_D7AP_defs.h"
+#include "framework_defs.h"
 
 #include "d7ap.h"
 #include "log.h"
@@ -137,7 +138,9 @@ static void packet_received_em(packet_t* packet) {
       if(msg_counter % 5 == 0) {
         char to_uart_uint[40];
         sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi);
+#ifdef FRAMEWORK_MODEM_INTERFACE_ENABLED
         modem_interface_transfer_bytes((uint8_t*)to_uart_uint, 40, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
+#endif
         DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi, packet->hw_radio_packet.length + 1, packet->hw_radio_packet.rx_meta.timestamp);
       }
   }

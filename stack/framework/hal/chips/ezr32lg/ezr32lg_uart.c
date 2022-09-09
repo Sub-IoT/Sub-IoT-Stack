@@ -356,28 +356,28 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
 void UART0_RX_IRQHandler(void) {
   if(handle[0].channel->STATUS & UART_STATUS_RXDATAV) {
     assert((USART_IntGet(handle[0].channel) & UART_IF_RXOF) == 0);
-    handler[0](USART_Rx(handle[0].channel));
+    handler[0](&handle[0], USART_Rx(handle[0].channel));
     USART_IntClear(handle[0].channel, UART_IF_RXDATAV);
   }
 }
 
 void UART1_RX_IRQHandler(void) {
   if(handle[1].channel->STATUS & UART_STATUS_RXDATAV) {
-    handler[1](USART_Rx(handle[1].channel));
+    handler[1](&handle[1], USART_Rx(handle[1].channel));
     USART_IntClear(handle[1].channel, UART_IF_RXDATAV);
   }
 }
 
 void USART1_RX_IRQHandler(void) {
   if(handle[2].channel->STATUS & USART_STATUS_RXDATAV) {
-    handler[2](USART_Rx(handle[2].channel));
+    handler[2](&handle[2], USART_Rx(handle[2].channel));
     USART_IntClear(handle[2].channel, USART_IF_RXDATAV);
   }
 }
 
 void USART2_RX_IRQHandler(void) {
   if(handle[3].channel->STATUS & USART_STATUS_RXDATAV) {
-    handler[3](USART_Rx(handle[3].channel));
+    handler[3](&handle[3], USART_Rx(handle[3].channel));
     USART_IntClear(handle[3].channel, USART_IF_RXDATAV);
   }
 }

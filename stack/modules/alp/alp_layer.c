@@ -30,6 +30,7 @@
 #include "timer.h"
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
+#include "framework_defs.h"
 
 
 #ifdef MODULE_D7AP
@@ -312,7 +313,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool forward_unsollicited_ov
 
   d7ap_fs_init();
   init_auth_key_files();
-#ifdef MODULE_ALP_SERIAL_INTERFACE_ENABLED
+#ifdef FRAMEWORK_MODEM_INTERFACE_ENABLED
   serial_interface_register();
 #else
   assert(!fwd_unsollicited_serial);

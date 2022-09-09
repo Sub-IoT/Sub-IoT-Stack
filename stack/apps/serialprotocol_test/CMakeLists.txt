@@ -32,13 +32,13 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-SET(${APP_PREFIX}_SEND_PING "FALSE" CACHE BOOL "Modem interface test application will send ping to other party.")
+SET(${APP_PREFIX}_SEND_PING "FALSE" CACHE BOOL "Serial protocol test application will send ping to other party.")
 APP_HEADER_DEFINE(BOOL ${APP_PREFIX}_SEND_PING)
-SET(${APP_PREFIX}_SEND_DATA "FALSE" CACHE BOOL "Modem interface test application will send data to other party.")
+SET(${APP_PREFIX}_SEND_DATA "FALSE" CACHE BOOL "Serial protocol test application will send data to other party.")
 APP_HEADER_DEFINE(BOOL ${APP_PREFIX}_SEND_DATA)
 
 APP_BUILD_SETTINGS_FILE()
 
 SET(libs framework)
 
-APP_BUILD(NAME ${APP_NAME} SOURCES modeminterface_test.c LIBS ${libs})
+APP_BUILD(NAME ${APP_NAME} SOURCES serialprotocol_test.c LIBS ${libs})

@@ -41,10 +41,10 @@
 typedef struct uart_handle uart_handle_t;
 
 // callback handler for received byte
-typedef void (*uart_rx_inthandler_t)(uint8_t byte);
+typedef void (*uart_rx_inthandler_t)(uart_handle_t* uart, uint8_t byte);
 
 // callback handler for transmit complete (only used when DMA is used)
-typedef void (*uart_tx_inthandler_t)(void);
+typedef void (*uart_tx_inthandler_t)(uart_handle_t* uart);
 
 typedef enum
 {
@@ -55,7 +55,7 @@ typedef enum
   UART_PARITY_ERROR,
 } uart_error_t;
 
-typedef void (*uart_error_handler_t)(uart_error_t error);
+typedef void (*uart_error_handler_t)(uart_handle_t* uart, uart_error_t error);
 
 __LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins);
 __LINK_C uart_handle_t* uart_get_handle(uint8_t port_idx);
@@ -84,7 +84,7 @@ __LINK_C void           uart_set_rx_interrupt_callback(uart_handle_t* uart,
 __LINK_C void           uart_set_tx_interrupt_callback(uart_handle_t* uart,
                                                        uart_tx_inthandler_t tx_handler);
 
-__LINK_C void           cdc_set_rx_interrupt_callback(uart_rx_inthandler_t rx_handler);
+__LINK_C void           cdc_set_rx_interrupt_callback(uart_handle_t* uart,uart_rx_inthandler_t rx_handler);
 
 __LINK_C void           uart_set_error_callback(uart_handle_t* uart, uart_error_handler_t error_handler);
 

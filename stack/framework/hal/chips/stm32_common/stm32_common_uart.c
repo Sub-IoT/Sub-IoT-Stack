@@ -317,7 +317,7 @@ static void uart_irq_handler(USART_TypeDef* uart)
             uint8_t idx = 0;
             do {
               if(handle[idx].error_cb != NULL && handle[idx].handle.Instance == uart) {
-                  handle[idx].error_cb(err);
+                  handle[idx].error_cb(&handle[idx], err);
                   break;
               }
               idx++;
@@ -331,7 +331,7 @@ static void uart_irq_handler(USART_TypeDef* uart)
         uint8_t idx = 0;
         do {
             if (handle[idx].uart_port != NULL && handle[idx].handle.Instance == uart) {
-                handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
+                handle[idx].rx_cb(&handle[idx], LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
                 return;
             }
 
@@ -349,7 +349,7 @@ static void uart_irq_handler(USART_TypeDef* uart)
           //Easy way would be to just call HAL_UART_IRQHandler but this pulls a lot of unnecessary code with it so we put the required code here.
           LL_USART_DisableIT_TC(uart);
           handle[idx].handle.gState = HAL_UART_STATE_READY;
-          handle[idx].tx_cb();
+          handle[idx].tx_cb(&handle[idx]);
           return;
         }
         idx++;

@@ -39,7 +39,7 @@ typedef struct {
     modem_interface_status_callback_t modem_interface_status_callback;
     modem_return_file_data_callback_t return_file_data_callback;
     modem_write_file_data_callback_t write_file_data_callback;
-    target_rebooted_callback_t modem_rebooted_callback;
+    modem_interface_target_rebooted_callback_t modem_rebooted_callback;
 } modem_callbacks_t;
 
 // TODO doc

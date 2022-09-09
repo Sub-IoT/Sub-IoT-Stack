@@ -87,7 +87,7 @@ job 1b:
   script: 
   - mkdir build && cd build
   - platform="NATIVE"
-  - cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DMODULE_D7AP=n -DMODULE_ALP_SERIAL_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
+  - cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DMODULE_D7AP=n -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
   - make -j
   - ./tests/aes/test_aes &> results_aes.txt
   - ./tests/alp/test_alp &> results_alp.txt
