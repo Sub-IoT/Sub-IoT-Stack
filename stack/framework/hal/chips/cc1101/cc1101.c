@@ -53,6 +53,7 @@
 #include "fec.h"
 #include "crc.h"
 #include "phy.h"
+#include "MODULE_D7AP_defs.h"
 
 // turn on/off the debug prints
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
@@ -788,7 +789,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     if(current_state == HW_RADIO_STATE_TX)
         return EBUSY;
 
-    assert(packet->length < PACKET_MAX_SIZE);
+    assert(packet->length < MODULE_D7AP_RAW_PACKET_SIZE);
 
     tx_packet_callback = tx_cb;
 
@@ -870,7 +871,7 @@ error_t hw_radio_send_background_packet(hw_radio_packet_t* packet, tx_packet_cal
     if(current_state == HW_RADIO_STATE_TX)
         return EBUSY;
 
-    assert(packet->length < PACKET_MAX_SIZE);
+    assert(packet->length < MODULE_D7AP_RAW_PACKET_SIZE);
 
     tx_packet_callback = tx_cb;
 

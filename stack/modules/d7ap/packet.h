@@ -34,6 +34,8 @@
 #include "d7anp.h"
 #include "phy.h"
 #include "hwradio.h"
+#include "MODULE_D7AP_defs.h"
+
 
 typedef enum {
     INITIAL_REQUEST,
@@ -69,13 +71,12 @@ struct packet
     uint16_t tx_duration;
     // TODO d7atp ack template
     uint8_t payload_length;
-    uint8_t payload[239]; // TODO make max size configurable using cmake
+    uint8_t payload[MODULE_D7AP_PAYLOAD_SIZE];
                             // TODO store payload here or only pointer to file where we need to fetch it? can we assume data will not be changed in between
     phy_config_t phy_config;
     hw_radio_packet_t hw_radio_packet; // TODO we might not need all metadata included in hw_radio_packet_t. If not copy needed data fields
-    uint8_t __data[255];    // reserves space for hw_radio_packet_t.data flexible array member,
+    uint8_t __data[MODULE_D7AP_RAW_PACKET_SIZE];    // reserves space for hw_radio_packet_t.data flexible array member,
                             // do not use this directly but use hw_radio_packet_t.data instead, which contains the length byte
-                            // TODO configure max length from cmake
 };
 
 

@@ -464,6 +464,12 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
         return EINVAL;
     }
 
+    if(length > MODULE_D7AP_PAYLOAD_SIZE)
+    {
+        log_print_error_string("%s:%s Payload too large, %d > %d", __FILE__, __FUNCTION__, length, MODULE_D7AP_PAYLOAD_SIZE);
+        return EFBIG;
+    }
+
     current_response_packet->payload_length = length;
     memcpy(current_response_packet->payload, payload, length);
 

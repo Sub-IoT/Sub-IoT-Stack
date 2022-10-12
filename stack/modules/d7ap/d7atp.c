@@ -474,15 +474,27 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 
 bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
 {
+    if(packet->hw_radio_packet.length < (*data_idx + 3))
+    {
+        return false;
+    }
     packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     if (packet->d7atp_ctrl.ctrl_agc) {
+        if(packet->hw_radio_packet.length < (*data_idx + 1))
+        {
+            return false;
+        }
         packet->d7atp_target_rx_level_i = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
     }
 
     if (packet->d7atp_ctrl.ctrl_tl) {
+        if(packet->hw_radio_packet.length < (*data_idx + 1))
+        {
+            return false;
+        }
         packet->d7atp_tl = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
     }
@@ -490,6 +502,10 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
         packet->d7atp_tl = 0;
 
     if (packet->d7atp_ctrl.ctrl_te) {
+        if(packet->hw_radio_packet.length < (*data_idx + 1))
+        {
+            return false;
+        }
         packet->d7atp_te = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
     }
@@ -497,12 +513,20 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
         packet->d7atp_te = 0;
 
     if ((d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
-      packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)];
-      (*data_idx)++;
+        if(packet->hw_radio_packet.length < (*data_idx + 1))
+        {
+            return false;
+        }
+        packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)];
+        (*data_idx)++;
     }
 
     if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
+        if(packet->hw_radio_packet.length < (*data_idx + 2))
+        {
+            return false;
+        }
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         // TODO ACK bitmap, support for multiple segments to ack not implemented yet

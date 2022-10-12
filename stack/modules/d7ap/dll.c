@@ -1231,6 +1231,11 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 
 bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
+    if(packet->hw_radio_packet.length < (*data_idx + 2))
+    {
+        log_print_error_string("%s:%s Packet too small %d < %d",__FILE__, __FUNCTION__, packet->hw_radio_packet.length, *data_idx + 2);
+        return false;
+    }
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     uint8_t FSS = ACCESS_SPECIFIER(packet->dll_header.subnet);
     uint8_t FSM = ACCESS_MASK(packet->dll_header.subnet);
@@ -1291,6 +1296,11 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         }
         else
         {
+            if(packet->hw_radio_packet.length < (*data_idx + address_len))
+            {
+                log_print_error_string("%s:%s Packet too small %d < %d", __FILE__, __FUNCTION__, packet->hw_radio_packet.length, *data_idx + address_len);
+                return false;
+            }
             if (memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
             {
                 DPRINT("Device ID filtering failed, skipping packet");

@@ -219,7 +219,7 @@ bg_adv_t bg_adv;
 typedef struct
 {
     uint16_t encoded_length;
-    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + (PACKET_MAX_SIZE + 1)*2]; // include space for preamble and syncword
+    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + MODULE_D7AP_RAW_PACKET_SIZE]; // include space for preamble and syncword
     uint16_t transmitted_index;
     bool bg_adv;
 }fg_frame_t;
@@ -365,8 +365,7 @@ static void packet_header_received(uint8_t *data, uint8_t len)
     else
         packet_len = data[0] + 1 ;
 
-    if((current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9 && (packet_len > (0xFF * 2))) ||
-       (current_channel_id.channel_header.ch_coding != PHY_CODING_FEC_PN9 && (packet_len > 0xFF)) || (packet_len < 4))
+    if((packet_len > MODULE_D7AP_RAW_PACKET_SIZE) || (packet_len < 4))
         packet_len = 0;
 
     DPRINT("RX Packet Length: %i ", packet_len);
@@ -741,7 +740,7 @@ static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet
 
 error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_tx_packet_callback_t tx_callback)
 {
-    assert(packet->length <= PACKET_MAX_SIZE);
+    assert(packet->length <= MODULE_D7AP_RAW_PACKET_SIZE);
 
     transmitted_callback = tx_callback;
 
@@ -768,7 +767,6 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_
     DPRINT_DATA(packet->data, packet->length);
 
     // Encode the packet if not supported by xcvr
-    // uint8_t encoded_packet[(PACKET_MAX_SIZE + 1)*2]; // bufer sized for FEC encoding
     fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);
 
     DPRINT("AFTER ENCODING TX len=%i\n", fg_frame.encoded_length);

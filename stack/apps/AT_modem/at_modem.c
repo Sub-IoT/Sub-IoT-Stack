@@ -51,6 +51,7 @@
 #include "crc.h"
 #include "pn9.h"
 #include "fec.h"
+#include "MODULE_D7AP_defs.h"
 
 
 #if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A && !defined PLATFORM_CORTUS_FPGA)
@@ -97,10 +98,12 @@
 // => BW > 250 + 17.36 kHz => > 267.36 kHZ.
 #define RXBW_H    267360 //Hz
 
+#define DATA_SIZE 255
+
 typedef struct
 {
     hw_radio_packet_t hw_radio_packet;
-    uint8_t __data[255];
+    uint8_t __data[DATA_SIZE];
 } frame_t;
 
 static netdev_t *netdev;
@@ -223,6 +226,13 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     hw_radio_packet->length = hw_radio_packet->data[0] + 1;
     DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
 
+    if(hw_radio_packet->length < (sizeof(uint64_t) + sizeof(uint16_t)))
+    {
+        log_print_error_string("%s:%s Packet too small, %d < %d", __FILE__, __FUNCTION__, hw_radio_packet->length, (sizeof(uint64_t) + sizeof(uint16_t)));
+        missed_packets_counter++;
+        return;
+    }
+
     if (hw_radio_packet->rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
         uint16_t crc;
@@ -249,7 +259,14 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     uint64_t msg_id;
     uint16_t data_len = hw_radio_packet->length - sizeof(msg_id) - sizeof(msg_counter) - 2;
 
-    char rx_data[PACKET_MAX_SIZE + 1];
+    if(data_len > DATA_SIZE)
+    {
+        log_print_error_string("%s:%s Data too large, %d > %d", __FILE__, __FUNCTION__, data_len, DATA_SIZE);
+        missed_packets_counter++;
+        return;
+    }
+
+    char rx_data[DATA_SIZE + 1];
     memcpy(&msg_id, hw_radio_packet->data + 1, sizeof(msg_id));
     memcpy(&msg_counter, hw_radio_packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
     memcpy(rx_data, hw_radio_packet->data + 1 + sizeof(msg_id) + sizeof(msg_counter), data_len);
@@ -306,6 +323,11 @@ static void packet_header_received(uint8_t *data, uint8_t len)
     }
     else
         packet_len = data[0] + 1 ;
+    if(packet_len > DATA_SIZE)
+    {
+        packet_len = 0;
+        log_print_error_string("%s:%s Received data too large, %d > %d", __FILE__, __FUNCTION__, packet_len, DATA_SIZE);
+    }
 
     DPRINT("RX Packet Length: %i ", packet_len);
     // set PayloadLength to the length of the expected foreground frame
@@ -942,6 +964,11 @@ static char cmd_tx(char *value)
     state = STATE_TX;
 
     tx_frame.hw_radio_packet.length = sizeof(id) + sizeof(counter) + strlen(value);
+    if(tx_frame.hw_radio_packet.length > DATA_SIZE)
+    {
+        DPRINT("%s:%s Cannot send: packet too large, %d > %d", __FILE__, __FUNCTION__, tx_frame.hw_radio_packet.length, DATA_SIZE)
+        return AT_ERROR;
+    }
     memcpy(tx_frame.hw_radio_packet.data + 1, &id, sizeof(id));
     memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
     memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), value, strlen(value));

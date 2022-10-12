@@ -131,13 +131,25 @@ void packet_disassemble(packet_t* packet)
             goto cleanup;
 
         // extract payload
+        if(packet->hw_radio_packet.length < (data_idx + 2))
+        {
+            goto cleanup;
+        }
         packet->payload_length = packet->hw_radio_packet.length - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+        if(packet->payload_length > MODULE_D7AP_PAYLOAD_SIZE)
+        {
+            goto cleanup;
+        }
         memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
     }
     else
     {
         // extract ETA for background frames
         uint16_t eta;
+        if(packet->hw_radio_packet.length < (data_idx + 2))
+        {
+            goto cleanup;
+        }
         packet->payload_length = packet->hw_radio_packet.length - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
         assert(packet->payload_length == sizeof(uint16_t));
 

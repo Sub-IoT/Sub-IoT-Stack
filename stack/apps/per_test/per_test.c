@@ -180,6 +180,13 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
 }
 
 static void packet_received(hw_radio_packet_t* packet) {
+    if(packet->length < (sizeof(uint64_t) + sizeof(uint16_t)))
+    {
+        log_print_error_string("%s:%s Packet too small, %d < %d", __FILE__, __FUNCTION__, packet->length, (sizeof(uint64_t) + sizeof(uint16_t)));
+        missed_packets_counter++;
+        return;
+    }
+
     uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length + 1 - 2));
 
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
@@ -197,6 +204,13 @@ static void packet_received(hw_radio_packet_t* packet) {
         uint16_t data_len = packet->length - sizeof(msg_counter) - 2;
 
         uint8_t rx_data[FILL_DATA_SIZE+1];
+
+        if(data_len > sizeof(rx_data))
+        {
+            log_print_error_string("%s:%s Packet too large, %d > %d", __FILE__, __FUNCTION__, data_len, sizeof(rx_data));
+            missed_packets_counter++;
+            return;
+        }
         memcpy(&msg_counter, packet->data + 1, sizeof(msg_counter));
         memcpy(rx_data, packet->data + 1 + sizeof(msg_counter), data_len);
         char chan[8];

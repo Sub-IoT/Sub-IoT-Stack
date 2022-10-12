@@ -123,6 +123,10 @@ static void print_vstate()
 /* Convolutional encoder */
 uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 {
+	if(nbytes > FEC_BUFFER_SIZE)
+	{
+		return 0;
+	}
 	memcpy(data_buffer, data, nbytes);
 	uint8_t *input = data_buffer;
 	unsigned int encstate = 0;

@@ -479,9 +479,17 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
 
     nls_method = packet->d7anp_ctrl.nls_method;
 
+    if(packet->hw_radio_packet.length < (index + CRC_SIZE))
+    {
+        return false;
+    }
     //this said payload_len = packet->hw_radio_packet.length + 1 - index - CRC_SIZE; but I don't know why we would add 1 and it seems to only work without it.
     payload_len = packet->hw_radio_packet.length - index - CRC_SIZE; // exclude the headers CRC bytes // TODO exclude footers
     auth_len = get_auth_len(nls_method); // the authentication length is given in bytes
+    if(payload_len < auth_len)
+    {
+        return false;
+    }
 
     /* remove the authentication tag from the payload length if relevant */
     payload_len -= auth_len;
@@ -649,19 +657,35 @@ dae_nwl_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counte
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 {
+    if(packet->hw_radio_packet.length < (*data_idx + 1))
+    {
+        return false;
+    }
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
     if (!packet->d7anp_ctrl.origin_void)
     {
+        if(packet->hw_radio_packet.length < (*data_idx + 1))
+        {
+            return false;
+        }
         packet->origin_access_class = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
         if (!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
         {
             uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8;
+            if(packet->hw_radio_packet.length < (*data_idx + origin_access_id_size))
+            {
+                return false;
+            }
             memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
+            if(packet->hw_radio_packet.length < (*data_idx + 1))
+            {
+                return false;
+            }
             packet->origin_access_id[0] = packet->hw_radio_packet.data[(*data_idx)];
             (*data_idx)++;
         }
@@ -682,6 +706,10 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
         if (nls_method == AES_CTR || nls_method == AES_CCM_32 ||
             nls_method == AES_CCM_64 || nls_method == AES_CCM_128)
         {
+            if(packet->hw_radio_packet.length < (*data_idx + 1 + sizeof(uint32_t)))
+            {
+                return false;
+            }
             // extract the key counter and the frame counter
             packet->d7anp_security.key_counter = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
             packet->d7anp_security.frame_counter = read_be32(packet->hw_radio_packet.data + (*data_idx));
