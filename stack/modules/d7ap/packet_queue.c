@@ -44,6 +44,8 @@ static packet_t NGDEF(_packet_queue)[MODULE_D7AP_PACKET_QUEUE_SIZE];
 static packet_queue_element_status_t NGDEF(_packet_queue_element_status)[MODULE_D7AP_PACKET_QUEUE_SIZE];
 #define packet_queue_element_status NG(_packet_queue_element_status)
 
+static uint8_t max_alloc = 0;
+
 void packet_queue_init()
 {
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
@@ -59,14 +61,17 @@ packet_t* packet_queue_alloc_packet()
     {
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_FREE)
         {
+            max_alloc = (max_alloc < i) ? i : max_alloc;
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED;
             DPRINT("Packet queue alloc %p slot %i", &(packet_queue[i]), i);
+            log_print_error_string("packet queue alloc slot %i/%i", i, max_alloc);
             return &(packet_queue[i]);
         }
     }
 
     // should not happen, possible to small PACKET_QUEUE_SIZE or not always free()-ed correctly?
-    DPRINT("Packet queue full, could not alloc new packet!");
+    max_alloc = MODULE_D7AP_PACKET_QUEUE_SIZE;
+    log_print_error_string("Packet queue full, could not alloc new packet!");
     return NULL;
 }
 

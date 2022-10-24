@@ -46,6 +46,43 @@
 #include "modem_interface.h"
 #include "platform.h"
 
+
+static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
+  .itf_id = ALP_ITF_ID_D7ASP,
+  .d7ap_session_config = {
+    .qos = {
+        .qos_resp_mode = SESSION_RESP_MODE_ALL,
+        .qos_retry_mode = SESSION_RETRY_MODE_NO
+    },
+    .dormant_timeout = 0x3F,
+    .addressee = {
+        .ctrl = {
+            .nls_method = AES_NONE,
+            .id_type = ID_TYPE_UID,
+        },
+        .access_class = 0x21,
+        .id = { 0x35, 0x32, 0x30, 0x39, 0x00, 0x3E, 0x00, 0x27 }
+    }
+  }
+};
+
+static void add_dormant_session()
+{
+  alp_command_t* command = alp_layer_command_alloc(true, false);
+
+  // forward to the D7 interface
+  alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
+
+  // add the return file data action
+  uint8_t data[] = {0, 1};
+  alp_append_write_file_data_action(command, 0x48, 0, 2, data, true, false);
+
+  // and finally execute this
+  alp_layer_process(command);
+
+  log_print_string("\ndormant session should be added\n");
+}
+
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
 
@@ -59,7 +96,11 @@
     log_print_string("gotten message from interface 0x%X", origin_itf_status ? origin_itf_status->itf_id : 0xFF);
     led_on(0);
 
+    log_print_string("command %i completed %i with error %i ", command->tag_id, command->is_response_completed, command->is_response_error);
+
     timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+
+    timer_post_task_delay(&add_dormant_session, TIMER_TICKS_PER_SEC);
   }
   static alp_init_args_t alp_init_args = { .alp_command_result_cb = &led_blink };
 #else
@@ -72,6 +113,8 @@ void bootstrap()
   alp_layer_init(&alp_init_args, true);
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
+
+  sched_register_task(&add_dormant_session);
 
 #ifdef HAS_LCD
   lcd_write_string("GW %s", _GIT_SHA1);

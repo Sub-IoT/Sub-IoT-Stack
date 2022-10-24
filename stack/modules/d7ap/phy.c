@@ -188,6 +188,9 @@ static uint8_t write_file_counter = 0;
 
 static uint8_t gain_offset = 0;
 
+static hw_radio_packet_t* temp_packet;
+static phy_tx_config_t* temp_config;
+
 /*
  * FSK packet handler structure
  */
@@ -290,6 +293,7 @@ static void packet_transmitted(timer_tick_t timestamp)
     phy_switch_to_standby_mode();
 
     transmitted_callback(packet_queue_find_packet(current_packet));
+    // phy_send_packet(temp_packet, temp_config, transmitted_callback);
 }
 
 static void packet_received(hw_radio_packet_t* hw_radio_packet)
@@ -326,8 +330,8 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     if(packet->type != BACKGROUND_ADV)
         total_succeeded_fg++;
 
-    DPRINT("RX packet fully decoded <len = %d>", hw_radio_packet->length);
-    DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
+    log_print_string("RX packet fully decoded <len = %d>", hw_radio_packet->length);
+    log_print_data(hw_radio_packet->data, hw_radio_packet->length);
 
     packet->phy_config.rx.syncword_class = current_syncword_class;
     memcpy(&(packet->phy_config.rx.channel_id), &current_channel_id, sizeof(channel_id_t));
@@ -740,6 +744,8 @@ static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet
 
 error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_tx_packet_callback_t tx_callback)
 {
+    temp_packet = packet;
+    temp_config = config;
     assert(packet->length <= MODULE_D7AP_RAW_PACKET_SIZE);
 
     transmitted_callback = tx_callback;
@@ -763,8 +769,8 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_
 
     state = STATE_TX;
 
-    DPRINT("BEFORE ENCODING TX len=%i", packet->length);
-    DPRINT_DATA(packet->data, packet->length);
+    log_print_string("BEFORE ENCODING TX len=%i", packet->length);
+    log_print_data(packet->data, packet->length);
 
     // Encode the packet if not supported by xcvr
     fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);

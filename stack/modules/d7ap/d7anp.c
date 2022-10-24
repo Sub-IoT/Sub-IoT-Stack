@@ -304,6 +304,9 @@ security:
 
     packet->d7anp_ctrl.nls_method = packet->d7anp_addressee->ctrl.nls_method;
 
+    // packet->d7anp_ctrl.nls_method = AES_NONE;
+    // packet->d7anp_addressee->ctrl.nls_method = AES_NONE;
+
     if (packet->d7anp_ctrl.nls_method == AES_CTR ||
         packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
         packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
@@ -700,6 +703,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
         uint8_t nls_method = packet->d7anp_ctrl.nls_method;
         bool create_node = false;
         bool prevent_replay_attack = false;
+        log_print_string("gotten encrypted message with nls method %i", nls_method);
 
         DPRINT("Received nls method %d", nls_method);
 
@@ -764,7 +768,8 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
         if (create_node)
              add_trusted_node(packet->origin_access_id, packet->d7anp_security.frame_counter,
                               packet->d7anp_security.key_counter);
-    }
+    } else 
+        log_print_string("message was not encrypted");
 #endif
 
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported

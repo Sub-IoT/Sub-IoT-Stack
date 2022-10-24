@@ -47,7 +47,7 @@
   #include "hwi2c.h"
 #endif
 
-#define SENSOR_FILE_ID           0x40
+#define SENSOR_FILE_ID           0x48
 #define SENSOR_FILE_SIZE         2
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
@@ -67,7 +67,7 @@ static alp_interface_config_d7ap_t itf_config = (alp_interface_config_d7ap_t){
     .dormant_timeout = 0,
     .addressee = {
         .ctrl = {
-            .nls_method = AES_NONE,
+            .nls_method = AES_CTR,
             .id_type = ID_TYPE_NOID,
         },
         .access_class = 0x01,
@@ -94,7 +94,7 @@ void execute_sensor_measurement()
   // This is an unsolicited message, where we push the sensor data to the gateway(s).
   
   // alloc command. This will be freed when the command completes
-  alp_command_t* command = alp_layer_command_alloc(false, false);
+  alp_command_t* command = alp_layer_command_alloc(true, false);
   
   // forward to the D7 interface
   alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
@@ -129,6 +129,10 @@ void on_alp_command_result_cb(alp_command_t *alp_command, alp_interface_status_t
   fifo_skip(&alp_command->alp_command_fifo, fifo_get_size(&alp_command->alp_command_fifo));
 }
 
+static void modified_callback(uint8_t file_id) {
+  log_print_error_string("someone tried to modify the file %i", file_id);
+}
+
 static alp_init_args_t alp_init_args;
 
 void bootstrap()
@@ -136,6 +140,21 @@ void bootstrap()
     log_print_string("Device booted\n");
     d7ap_fs_init();
     d7ap_init();
+
+    const d7ap_fs_file_header_t header = (d7ap_fs_file_header_t) {
+        .file_permissions              = (file_permission_t){ .guest_read  = true,
+                                                 .guest_write = true,
+                                                 .user_read   = true,
+                                                 .user_write  = true }, // other permissions are default false // TODO authenticate
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .length                        = SENSOR_FILE_SIZE,
+        .allocated_length              = SENSOR_FILE_SIZE
+    };
+    error_t err = d7ap_fs_init_file(SENSOR_FILE_ID, &header, NULL);
+    log_print_string("init file with err %i", err);
+    assert((err == SUCCESS) || (err == -EEXIST));
+
+    assert(d7ap_fs_register_file_modified_callback(SENSOR_FILE_ID, &modified_callback));
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
@@ -153,4 +172,8 @@ void bootstrap()
 
     sched_register_task(&execute_sensor_measurement);
     sched_post_task(&execute_sensor_measurement);
+
+    uint8_t uid[8];
+    d7ap_fs_read_uid(uid);
+    log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 }
