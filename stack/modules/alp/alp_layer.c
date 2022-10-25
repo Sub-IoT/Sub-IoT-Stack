@@ -548,7 +548,7 @@ static alp_status_codes_t process_op_forward(alp_action_t* action, uint8_t* itf_
     // TODO move session config to alp_command_t struct
     memcpy(session_config, &action->interface_config, sizeof(alp_interface_config_t));
     *itf_id = action->interface_config.itf_id;
-    DPRINT("FORWARD %02X", session_config->itf_id);
+    log_print_string("FORWARD %02X", session_config->itf_id);
     return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
@@ -629,6 +629,7 @@ static alp_status_codes_t process_op_stop_itf(alp_action_t* action, authenticati
 
 static bool forward_command(alp_command_t* command, alp_interface_config_t* itf_config)
 {
+    log_print_string("forwarding over %i", itf_config->itf_id);
     alp_interface_status_t empty_itf_status = { .itf_id = 0, .len = 0 };
 
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {

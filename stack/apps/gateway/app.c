@@ -56,7 +56,7 @@
 
   void led_blink(alp_command_t* command, alp_interface_status_t* origin_itf_status)
   {
-    log_print_string("gotten message from interface 0x%X", origin_itf_status ? origin_itf_status->itf_id : 0xFF);
+    log_print_string("gotten message %i from interface 0x%X", command->tag_id, origin_itf_status ? origin_itf_status->itf_id : 0xFF);
     led_on(0);
 
     timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);

@@ -365,7 +365,7 @@ static void dormant_session_timeout() {
 static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
   assert(dormant_session->state == D7ASP_MASTER_SESSION_DORMANT);
   timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
-  DPRINT("Sched dormant timeout in %i s", timeout);
+  log_print_string("Sched dormant timeout in %i s", timeout);
   dormant_session_timer.next_event = timeout * 1024;
   error_t rtc = timer_add_event(&dormant_session_timer);
   assert(rtc == SUCCESS);
