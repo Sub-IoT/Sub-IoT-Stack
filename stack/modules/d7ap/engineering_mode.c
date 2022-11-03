@@ -328,11 +328,18 @@ static void em_file_change_callback(uint8_t file_id) {
 
           delay_seconds = em_command->timeout;
 
-          if(em_command->flags) //Hybrid mode --> DR 4
-            lora_packet_size = 242;
-          else  //FHSS --> DR 0
+          //TODO: fix this to automatically choose correct option depending on region
+          if(em_command->flags) //Hybrid mode --> DR 6
+            lora_packet_size = 222;
+          else  //FHSS --> DR 2
             lora_packet_size = 11;
 
+          uint8_t dr = 0;
+          if(em_command->flags) {
+            dr = 6;
+          } else {
+            dr = 2;
+          }
 
           lorawan_session_config_abp_t session_config = {
             .nwkSKey = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -342,7 +349,7 @@ static void em_file_change_callback(uint8_t file_id) {
             .request_ack = false,
             .application_port = 2,
             .adr_enabled = false,
-            .data_rate = em_command->flags * 4
+            .data_rate = dr
           };
           lorawan_stack_init_abp(&session_config);
 
@@ -352,7 +359,7 @@ static void em_file_change_callback(uint8_t file_id) {
 
           lorawan_stack_set_tx_power(em_command->eirp > 7? 17 - em_command->eirp : 10);
 
-          DPRINT("set to cont tx duty cycle with data rate %i and power %i", em_command->flags  * 4, em_command->eirp);
+          DPRINT("set to cont tx duty cycle with data rate %i and power %i", dr, em_command->eirp);
 
           sched_post_task(&em_lorawan_send_abp);
         #else
