@@ -101,7 +101,7 @@ void packet_disassemble(packet_t* packet)
 
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length - 2, 2) != 0)
         {
-            DPRINT_DLL("CRC invalid");
+            log_print_error_string("CRC invalid");
             DPRINT_DLL("Packet: len %d", packet->hw_radio_packet.length);
             DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length);
             goto cleanup;
@@ -166,7 +166,7 @@ void packet_disassemble(packet_t* packet)
     return;
 
     cleanup:
-        DPRINT_FWK("Skipping packet");
+        log_print_error_string("Skipping packet");
         packet_queue_free_packet(packet);
         return;
 }

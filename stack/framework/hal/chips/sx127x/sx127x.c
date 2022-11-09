@@ -615,9 +615,9 @@ static void wait_for_fifo_level_isr() {
 static void reinit_rx() {
  FskPacketHandler_sx127x.NbBytes = 0;
  FskPacketHandler_sx127x.Size = 0;
- FskPacketHandler_sx127x.FifoThresh = 0;
+ FskPacketHandler_sx127x.FifoThresh = 4;
 
- write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
+ write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (FskPacketHandler_sx127x.FifoThresh - 1));
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
  previous_payload_length = 0;
  write_reg(REG_PACKETCONFIG2, (read_reg(REG_PACKETCONFIG2) & RF_PACKETCONFIG2_PAYLOADLENGTH_MSB_MASK));
@@ -681,14 +681,15 @@ static void fifo_threshold_isr() {
        FskPacketHandler_sx127x.NbBytes = 4;
    }
 
-   if (FskPacketHandler_sx127x.FifoThresh)
-   {
+   while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler_sx127x.NbBytes < FskPacketHandler_sx127x.Size)) {
+     uint8_t flags = read_reg(REG_IRQFLAGS2);
+     if((flags & RF_IRQFLAGS2_FIFOLEVEL) && ((FskPacketHandler_sx127x.NbBytes + FskPacketHandler_sx127x.FifoThresh) < FskPacketHandler_sx127x.Size)) {
        read_fifo(&current_packet->data[FskPacketHandler_sx127x.NbBytes], FskPacketHandler_sx127x.FifoThresh);
        FskPacketHandler_sx127x.NbBytes += FskPacketHandler_sx127x.FifoThresh;
+     } else if(!(flags & RF_IRQFLAGS2_FIFOEMPTY)) {
+       current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO); 
+     }
    }
-
-   while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler_sx127x.NbBytes < FskPacketHandler_sx127x.Size))
-      current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO);
 
    uint16_t remaining_bytes = FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes;
 
@@ -720,14 +721,10 @@ static void fifo_threshold_isr() {
 
    //Trigger FifoLevel interrupt
    if ( remaining_bytes > FIFO_SIZE)
-   {
-       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (BYTES_IN_RX_FIFO - 1));
-       FskPacketHandler_sx127x.FifoThresh = BYTES_IN_RX_FIFO;
-   } else {
-      // wakeup right before the entire message arrives to get the data asap
-      write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (remaining_bytes - 3));
+      FskPacketHandler_sx127x.FifoThresh = BYTES_IN_RX_FIFO;
+   else
       FskPacketHandler_sx127x.FifoThresh = remaining_bytes - 2;
-   }
+    write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (FskPacketHandler_sx127x.FifoThresh - 1));
 
    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
@@ -976,10 +973,10 @@ void set_state_rx() {
     }
     flush_fifo();
 
-    write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
+    FskPacketHandler_sx127x.FifoThresh = 4;
+    write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (FskPacketHandler_sx127x.FifoThresh - 1));
     write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
 
-    FskPacketHandler_sx127x.FifoThresh = 0;
     FskPacketHandler_sx127x.NbBytes = 0;
 
     set_packet_handler_enabled(true);

@@ -381,6 +381,14 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         uint16_t resp_tc = (SFc * nb + 1) * tx_duration_response + t_g;
         packet->d7atp_tc = compress_data(resp_tc, true);
 
+        packet->d7atp_ctrl.ctrl_te = true;
+        uint16_t execution_time = 6; // normal flow takes about 6 ticks
+        if(active_addressee_access_profile.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            execution_time += (packet->payload_length / 6); // software FEC decoding 6 bytes takes about 1 tick
+        if(packet->d7anp_addressee->ctrl.nls_method != AES_NONE)
+            execution_time += (packet->payload_length / 27); // software AES decryption 27 bytes takes about 1 tick
+        packet->d7atp_te = compress_data(execution_time, true);
+
         DPRINT("Tc <%i (Ti)> Tc <0x%02x (CT)> Tx duration <%i>", resp_tc, packet->d7atp_tc, tx_duration_response);
     }
 
@@ -658,7 +666,7 @@ void d7atp_process_received_packet(packet_t* packet)
             }
             else
             {
-                DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
+                log_print_error_string("Start dialog not allowed when in master transaction state, skipping segment");
                 packet_queue_free_packet(packet);
                 return;
             }
@@ -674,7 +682,7 @@ void d7atp_process_received_packet(packet_t* packet)
           */
         if ((current_dialog_id) && (current_dialog_id != packet->d7atp_dialog_id))
         {
-            DPRINT("Filtered frame with Dialog ID not matching the recorded Dialog ID");
+            log_print_error_string("Filtered frame with Dialog ID not matching the recorded Dialog ID");
             packet_queue_free_packet(packet);
             return;
         }
@@ -683,7 +691,7 @@ void d7atp_process_received_packet(packet_t* packet)
         if ((!current_dialog_id) && (!packet->d7atp_ctrl.ctrl_is_start))
         {
             //Responders discard segments marked with START flag set to 0 until they receive a segment with START flag set to 1
-            DPRINT("Filtered frame with START cleared");
+            log_print_error_string("Filtered frame with START cleared");
             packet_queue_free_packet(packet);
             return;
         }
@@ -714,7 +722,7 @@ void d7atp_process_received_packet(packet_t* packet)
 
             if (Tc == 0)
             {
-                DPRINT("Discard the request since the response period is expired");
+                log_print_error_string("Discard the request since the response period is expired");
                 packet_queue_free_packet(packet);
                 return;
             }

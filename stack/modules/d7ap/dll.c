@@ -555,7 +555,7 @@ static void execute_csma_ca(void *arg)
 
             if (dll_tca <= 0)
             {
-                DPRINT("Tca negative, CCA failed");
+                log_print_error_string("Tca negative, CCA failed");
                 // Let the upper layer decide eventually to change the channel in order to get a chance a send this frame
                 switch_state(DLL_STATE_IDLE); // TODO in this case we should return to scan automation
                 resume_fg_scan = false;
@@ -629,7 +629,7 @@ static void execute_csma_ca(void *arg)
 
             if (dll_to <= 0)
             {
-                DPRINT("CCA fail because dll_to = %i", dll_to);
+                log_print_error_string("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
                 dll_csma_timer.next_event = 0;
                 error_t rtc = timer_add_event(&dll_csma_timer);
@@ -727,7 +727,7 @@ static uint8_t get_position_channel() {
            ((channels[position].raw_channel_status_identifier == local_channel.raw_channel_status_identifier) && (channels[position].channel_index_lsb == local_channel.channel_index_lsb)))
             return position;
     }
-    DPRINT("position of channel out of bound. Increase channels size or delete previous");
+    log_print_error_string("position of channel out of bound. Increase channels size or delete previous");
     return UINT8_MAX;
 }
 
@@ -1290,7 +1290,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             /* Check that the tag corresponds to the 6 least significant bits of the CRC16 */
             if (packet->dll_header.control_identifier_tag != ((uint8_t)crc & 0x3F))
             {
-                DPRINT("Identifier Tag filtering failed, skipping packet");
+                log_print_error_string("Identifier Tag filtering failed, skipping packet");
                 return false;
             }
         }
