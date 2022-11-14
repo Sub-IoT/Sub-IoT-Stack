@@ -77,10 +77,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: build
-        path: |
-          build/apps/gateway/
-          build/apps/modem/
-          build/apps/sensor_push/
+        path: build/
 
   run-testsuite:
     name: Run Testsuite
