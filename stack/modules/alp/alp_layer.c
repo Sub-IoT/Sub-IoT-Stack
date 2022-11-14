@@ -503,6 +503,7 @@ static alp_status_codes_t process_op_indirect_forward(
                 uint32_t length = 1;
                 d7ap_fs_read_file(action->indirect_interface_operand.interface_file_id, 0, itf_id, &length, ROOT_AUTH);
                 previous_interface_file_id = action->indirect_interface_operand.interface_file_id;
+                session_config_saved.itf_id = *itf_id;
             } else
                 return ALP_STATUS_WRONG_OPERAND_FORMAT;
         } else {
