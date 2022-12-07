@@ -41,4 +41,5 @@ uint8_t compress_data(uint16_t value, bool ceil)
             return (uint8_t)( i<<5 | mantissa);
         }
     }
+    return 0;
 }

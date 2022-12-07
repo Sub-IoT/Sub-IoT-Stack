@@ -75,6 +75,7 @@ error_t modem_interface_register_handler(modem_interface_cmd_handler_t cmd_handl
     }
     cmd_handlers[type] = cmd_handler;
     sp_handle.driver->serial_protocol_register_handler(&sp_handle, &modem_interface_cmd_handler, type);
+    return SUCCESS;
 }
 
 void modem_interface_unregister_handler(serial_message_type_t type)
@@ -99,6 +100,7 @@ error_t modem_interface_set_target_rebooted_callback(modem_interface_target_rebo
     }
     modem_interface_target_rebooted_callback = cb;
     sp_handle.driver->serial_protocol_set_target_rebooted_callback(&sp_handle, &target_rebooted_callback);
+    return SUCCESS;
 }
 
 void modem_interface_clear_handler()

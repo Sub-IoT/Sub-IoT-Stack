@@ -153,6 +153,7 @@ error_t power_tracking_register_radio_action(power_tracking_transmit_mode_t powe
         current_power_tracking_file.temp_standby_time += time;
         break;
     }
+    return SUCCESS;
 }
 #endif // FRAMEWORK_POWER_TRACKING_RF
 

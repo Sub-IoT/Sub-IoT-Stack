@@ -340,7 +340,9 @@ bool alp_append_read_file_data_action(alp_command_t* command, uint8_t file_id, u
 bool alp_append_write_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
 bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* config, uint8_t config_len);
 bool alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
+bool alp_fifo_append_return_file_data_action(fifo_t* cmd_fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 bool alp_append_length_operand(alp_command_t* command, uint32_t length);
+bool alp_fifo_append_length_operand(fifo_t* cmd_fifo, uint32_t length);
 bool alp_append_create_new_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
 bool alp_append_indirect_forward_action(alp_command_t* command, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
 bool alp_append_interface_status(alp_command_t* command, alp_interface_status_t* status);

@@ -339,6 +339,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     return SUCCESS;
   } else {
     assert(false);
+    return FAIL;
   }
 }
 #elif defined(STM32L1)
@@ -356,6 +357,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     return SUCCESS;
   } else {
     assert(false);
+    return FAIL;
   }
 }
 #else

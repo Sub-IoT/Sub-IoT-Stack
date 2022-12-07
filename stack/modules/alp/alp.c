@@ -75,8 +75,7 @@ bool alp_parse_length_operand(fifo_t* cmd_fifo, uint32_t* length)
     return true;
 }
 
-bool alp_append_length_operand(alp_command_t* command, uint32_t length) {
-    fifo_t* cmd_fifo = &command->alp_command_fifo;
+bool alp_fifo_append_length_operand(fifo_t* cmd_fifo, uint32_t length) {
     if (length < 64) {
         // can be coded in one byte
         return (fifo_put(cmd_fifo, (uint8_t*)&length, 1) == SUCCESS);
@@ -98,6 +97,10 @@ bool alp_append_length_operand(alp_command_t* command, uint32_t length) {
         rc += fifo_put(cmd_fifo, (uint8_t*)&length + size, 1);
     } while (size > 0);
     return rc == SUCCESS;
+}
+
+bool alp_append_length_operand(alp_command_t* command, uint32_t length) {
+    return alp_fifo_append_length_operand(&command->alp_command_fifo, length);
 }
 
 bool alp_parse_file_offset_operand(fifo_t* cmd_fifo, alp_operand_file_offset_t* operand)
@@ -167,15 +170,20 @@ bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* i
     return (rc == SUCCESS);
 }
 
-bool alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
-    fifo_t* cmd_fifo = &command->alp_command_fifo;
+bool alp_fifo_append_return_file_data_action(fifo_t* cmd_fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
     int rc;
     rc = fifo_put_byte(cmd_fifo, ALP_OP_RETURN_FILE_DATA);
     rc += fifo_put_byte(cmd_fifo, file_id);
-    rc += !alp_append_length_operand(command, offset);
-    rc += !alp_append_length_operand(command, length);
-    rc += fifo_put(cmd_fifo, data, length);
+    rc += !alp_fifo_append_length_operand(cmd_fifo, offset);
+    rc += !alp_fifo_append_length_operand(cmd_fifo, length);
+    // only put data if given
+    if(data != NULL)
+        rc += fifo_put(cmd_fifo, data, length);
     return rc == SUCCESS;
+}
+
+bool alp_append_return_file_data_action(alp_command_t* command, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
+    return alp_fifo_append_return_file_data_action(&command->alp_command_fifo, file_id, offset, length, data);
 }
 
 static bool parse_operand_file_data(alp_command_t* command, alp_action_t* action)

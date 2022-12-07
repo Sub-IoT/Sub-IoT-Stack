@@ -98,6 +98,7 @@ static inline uint8_t get_auth_len(uint8_t nls_method)
         return 4;
     default:
         assert(false);
+        return 0;
     }
 }
 #endif
