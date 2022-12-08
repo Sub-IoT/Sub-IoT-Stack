@@ -48,6 +48,25 @@ typedef enum {
   LORAWAN_STACK_ERROR_NOT_INITED
 } lorawan_stack_status_t;
 
+typedef enum
+{
+    AS923_1_DUTY_CYCLE, // //LoRaWAN: duty cycle enabled, dwell time disabled (Japan, Malaysia, Singapore)
+    AS923_1_DUTY_CYCLE_DWELL_TIME, // //LoRaWAN: duty cycle enabled, dwell time enabled (Hong Kong, Thailand)
+    AS923_1_NO_RESTRICTIONS, // //LoRaWAN: duty cycle disabled, dwell time disabled (Australia - note: customer should make choice of this or AU915)
+    AS923_2, //LoRaWAN: duty cycle enabled, dwell time disabled (Indonesia, Vietnam)
+    AS923_3, //LoRaWAN: duty cycle enabled, dwell time disabled (Algeria, Comoros, Cuba, Iran, Jordan, Kuwait, Philippines, Qatar, Saudi Arabia, Somalia, Syria, UAE)
+    AS923_4, //LoRaWAN: duty cycle enabled, dwell time disabled (Israel)
+    AU915,
+    CN470,
+    CN779,
+    EU433,
+    EU868,
+    KR920,
+    IN865,
+    US915,
+    RU864
+} lorawan_region_t;
+
 typedef struct __attribute__((__packed__)) {
     uint8_t attempts;
     lorawan_stack_status_t error_state;
