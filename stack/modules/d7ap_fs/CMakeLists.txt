@@ -17,9 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-#Module specific parameters and options can be defined using
-#MODULE_OPTION and MODULE_PARAMETER
-#See cmake/module_macros.cmake for more information
+# Module specific parameters and options can be defined using
+# MODULE_OPTION and MODULE_PARAMETER
+# See cmake/module_macros.cmake for more information
+
+INCLUDE_DIRECTORIES(inc)
 
 MODULE_OPTION(${MODULE_PREFIX}_USE_DEFAULT_SYSTEMFILES "Use the default D7AP systemfiles values" TRUE)
 MODULE_OPTION(${MODULE_PREFIX}_DISABLE_PERMISSIONS "Temporary disable permission checks for testing purposes" FALSE)
@@ -47,5 +49,6 @@ GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
 target_include_directories(d7ap_fs PUBLIC
 	${__global_include_dirs}
     ${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_FS_defs.h
+    inc
 )
 

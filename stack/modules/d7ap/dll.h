@@ -34,7 +34,6 @@
 #include "phy.h"
 
 #include "d7anp.h"
-#include "dae.h"
 
 typedef enum {
     D7ADLL_FIXED_NOISE_FLOOR,

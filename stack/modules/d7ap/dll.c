@@ -18,6 +18,7 @@
  */
 
 
+#include "d7ap_internal.h"
 #include "log.h"
 #include "crc.h"
 #include "debug.h"
@@ -1278,7 +1279,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         }
         else
         {
-            d7ap_fs_read_vid(id);
+            d7ap_read_vid(id);
             address_len = 2;
         }
 

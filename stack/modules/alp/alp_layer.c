@@ -88,6 +88,16 @@ static uint8_t next_tag_id = 0;
 static fifo_t command_fifo;
 static alp_command_t* command_fifo_buffer[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
 
+#ifdef MODULE_D7AP
+/*!
+ * \brief Process a command triggered by D7A Action Protocol, where the resut of the command will be transmitted over the supplied interface
+ * \param interface_config The interface config to transmit the response on
+ * \param alp_command The ALP command to execute
+ * \param alp_command_length Length of the command
+ */
+static void alp_layer_process_d7aactp(uint8_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length);
+#endif
+
 static void free_command(alp_command_t* command) {
   DPRINT("!!! Free cmd %02x %p", command->trans_id, command);
   memset(command, 0, sizeof (alp_command_t));
@@ -312,6 +322,9 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool forward_unsollicited_ov
   alp_layer_free_commands();
 
   d7ap_fs_init();
+#ifdef MODULE_D7AP
+  d7ap_fs_set_process_d7aactp_callback(&alp_layer_process_d7aactp);
+#endif
   init_auth_key_files();
 #ifdef FRAMEWORK_MODEM_INTERFACE_ENABLED
   serial_interface_register();
@@ -329,7 +342,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool forward_unsollicited_ov
 
   sched_register_task(&process_async);
 
-  if(fs_file_stat(USER_FILE_ALP_CTRL_FILE_ID)) {
+  if(fs_is_file_defined(USER_FILE_ALP_CTRL_FILE_ID)) {
     d7ap_fs_register_file_modified_callback(USER_FILE_ALP_CTRL_FILE_ID, &itf_ctrl_file_callback);
     itf_ctrl_file_callback(USER_FILE_ALP_CTRL_FILE_ID);
   } else
@@ -497,7 +510,7 @@ static alp_status_codes_t process_op_indirect_forward(
         re_read = true;
         interface_file_changed = false;
         if (previous_interface_file_id != action->indirect_interface_operand.interface_file_id) {
-            if (fs_file_stat(action->indirect_interface_operand.interface_file_id) != NULL) {
+            if (fs_is_file_defined(action->indirect_interface_operand.interface_file_id)) {
                 d7ap_fs_unregister_file_modified_callback(previous_interface_file_id);
                 d7ap_fs_register_file_modified_callback(action->indirect_interface_operand.interface_file_id, &interface_file_changed_callback);
                 uint32_t length = 1;
@@ -1041,8 +1054,9 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
 }
 
 #ifdef MODULE_D7AP
-void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length)
+void alp_layer_process_d7aactp(uint8_t *interface_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
+    alp_interface_config_t* alp_interface_config = (alp_interface_config_t*)interface_config;
     // TODO refactor, might be removed
     alp_command_t* command = alp_layer_command_alloc(false, false);
     if(command == NULL) {
@@ -1051,7 +1065,7 @@ void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t
     }
 
     command->use_d7aactp = true;
-    memcpy(&command->d7aactp_interface_config, interface_config, sizeof(alp_interface_config_t));
+    memcpy(&command->d7aactp_interface_config, alp_interface_config, sizeof(alp_interface_config_t));
     error_t e = fifo_put(&command->alp_command_fifo, alp_command, alp_command_length);
     if(e != SUCCESS) {
         log_print_error_string("process d7aactp failed as fifo put of %i bytes failed", alp_command_length);

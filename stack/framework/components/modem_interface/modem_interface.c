@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-#include "alp_layer.h"
 #include "framework_defs.h"
 #include "modem_interface.h"
 #include "platform.h"

@@ -25,7 +25,6 @@
 #define __POWER_TRACKING_FILE_H
 
 // oss7
-#include "d7ap_fs.h"
 #include "framework_defs.h"
 #include "timer.h"
 

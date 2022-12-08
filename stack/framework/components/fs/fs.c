@@ -314,15 +314,7 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
     return 0;
 }
 
-fs_file_stat_t *fs_file_stat(uint8_t file_id)
+bool fs_is_file_defined(uint8_t file_id)
 {
-    assert(is_fs_init_completed);
-
-    if(file_id >= FRAMEWORK_FS_FILE_COUNT)
-        return NULL;
-
-    if (_is_file_defined(file_id))
-        return (fs_file_stat_t*)&files[file_id];
-    else
-        return NULL;
+    return _is_file_defined(file_id);
 }

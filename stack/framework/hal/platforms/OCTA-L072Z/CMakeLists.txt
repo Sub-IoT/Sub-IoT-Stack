@@ -144,8 +144,8 @@ IF(${PLATFORM_USE_NUCLEO_IKS01A2_SHIELD})
 ENDIF()
 
 IF(${PLATFORM_USE_EXTERNAL_MODEM})
-    ADD_CHIP("oss7_modem")
+    SET(MODULE_ALP_USE_EXTERNAL_MODEM TRUE)
 ENDIF()
 
-#Build the 'platform_defs.h' settings file
+# Build the 'platform_defs.h' settings file
 PLATFORM_BUILD_SETTINGS_FILE()

@@ -20,3 +20,5 @@ limitations under the License.
 #Each Framework component must generate a single OBJECT library named
 #'${COMPONENT_LIBRARY_NAME}'
 ADD_LIBRARY(${COMPONENT_LIBRARY_NAME} OBJECT power_tracking_file.c)
+
+TARGET_LINK_LIBRARIES(${COMPONENT_LIBRARY_NAME} d7ap_fs)

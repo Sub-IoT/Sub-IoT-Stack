@@ -32,7 +32,6 @@
 #include <stdbool.h>
 
 #include "framework_defs.h"
-#include "dae.h"
 #include "hwblockdevice.h"
     
 #ifndef FRAMEWORK_FS_FILE_COUNT
@@ -73,12 +72,6 @@ typedef enum
     FS_BLOCKDEVICE_TYPE_VOLATILE = 2
 } fs_blockdevice_types_t;
 
-typedef struct  __attribute__((__packed__))
-{
-    uint32_t length;
-    fs_storage_class_t storage : 2;
-    uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
-} fs_file_stat_t;
 
 typedef struct __attribute__((__packed__))
 {
@@ -91,7 +84,7 @@ void fs_init();
 int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t initial_data_length, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
-fs_file_stat_t *fs_file_stat(uint8_t file_id);
+bool fs_is_file_defined(uint8_t file_id);
 
 uint32_t fs_get_address(uint8_t file_id);
 

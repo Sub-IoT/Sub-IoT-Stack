@@ -134,7 +134,7 @@ static uint8_t transmit(uint8_t* alp, uint16_t len) {
                              "option MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT)");
 
   alp_interface_config_t* itf_cfg = (current_network == D7_ACTIVE) ? (alp_interface_config_t*) &d7_itf_cfg : (alp_interface_config_t*) &lora_itf_cfg;
-  uint8_t itf_cfg_len = (current_network == D7_ACTIVE) ? sizeof(d7_itf_cfg) : sizeof(lora_itf_cfg);
+  uint8_t itf_cfg_len = (current_network == D7_ACTIVE) ? d7ap_session_config_length(&d7_itf_cfg.d7ap_session_config) : sizeof(lora_itf_cfg.lorawan_session_config_otaa);
 
   alp_append_forward_action(command, itf_cfg, itf_cfg_len);
 

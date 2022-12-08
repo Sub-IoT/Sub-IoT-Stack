@@ -20,7 +20,9 @@
 #include "modem.h"
 #include "alp.h"
 #include "alp_layer.h"
+#ifdef MODULE_D7AP
 #include "d7ap.h"
+#endif
 #include "debug.h"
 #include "errors.h"
 #include "fifo.h"
@@ -72,13 +74,16 @@ static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__un
             if (action.interface_status.len == 0) {
                 break; // skip interface status with no content
             }
+#ifdef MODULE_D7AP
             if (action.interface_status.itf_id == ALP_ITF_ID_D7ASP) {
                 if (action.interface_status.len > 0) {
                     d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)action.interface_status.itf_status);
                     DPRINT("recv response @ %i dB link budget from:", d7_result->rx_level);
                     DPRINT_DATA(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
                 }
-            } else {
+            } else
+#endif
+            {
                 DPRINT("itf status for itf id %i len %i", action.interface_status.itf_id, action.interface_status.len);
             }
 
@@ -107,6 +112,23 @@ static void on_alp_command_result_cb(alp_command_t* command, __attribute__((__un
             DPRINT("ALP op %i not handled", action.ctrl.operation);
             break;
         }
+    }
+}
+
+static uint8_t get_interface_config_length(alp_interface_config_t * int_cfg)
+{
+    switch (int_cfg->itf_id)
+    {
+        case ALP_ITF_ID_SERIAL:
+            return 0;
+        case ALP_ITF_ID_LORAWAN_OTAA:
+            return sizeof(lorawan_session_config_otaa_t);
+#ifdef MODULE_D7AP
+        case ALP_ITF_ID_D7ASP:
+            return d7ap_session_config_length((d7ap_session_config_t*)&int_cfg->itf_config);
+#endif
+        default:
+            return 0;
     }
 }
 
@@ -164,7 +186,7 @@ static alp_command_t* create_command(bool init_tag_request, bool always_respond)
     if (!command)
         return NULL;
 
-    alp_append_forward_action(command, &serial_itf_config, 0);
+    alp_append_forward_action(command, &serial_itf_config, get_interface_config_length(&serial_itf_config));
     alp_append_tag_request_action(command, command->tag_id, true);
     return command;
 }
@@ -236,7 +258,7 @@ int16_t modem_send_unsolicited_response(
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    alp_append_forward_action(command, interface_config, 0);
+    alp_append_forward_action(command, interface_config, get_interface_config_length(interface_config));
     alp_append_return_file_data_action(command, file_id, offset, length, data);
 
     alp_layer_process(command);
@@ -249,7 +271,7 @@ int16_t modem_send_raw_unsolicited_response(
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    alp_append_forward_action(command, interface_config, 0);
+    alp_append_forward_action(command, interface_config, get_interface_config_length(interface_config));
     fifo_put(&command->alp_command_fifo, alp_command, length);
 
     alp_layer_process(command);
@@ -258,16 +280,12 @@ int16_t modem_send_raw_unsolicited_response(
 }
 
 int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data,
-    uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
+    uint8_t interface_file_id)
 {
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    if(overload && d7_addressee)
-        alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)d7_addressee,
-            d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
-    else
-        alp_append_indirect_forward_action(command, interface_file_id, overload, NULL, 0);
+    alp_append_indirect_forward_action(command, interface_file_id, false, NULL, 0);
 
     alp_append_return_file_data_action(command, data_file_id, offset, length, data);
 
@@ -276,16 +294,12 @@ int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t 
 }
 
 int16_t modem_send_raw_indirect_unsolicited_response(
-    uint8_t* alp_command, uint32_t length, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
+    uint8_t* alp_command, uint32_t length, uint8_t interface_file_id)
 {
     alp_command_t* command = create_command(true, false);
     if (!command)
         return -1;
-    if(overload && d7_addressee)
-        alp_append_indirect_forward_action(command, interface_file_id, overload, (uint8_t*)d7_addressee,
-            d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
-    else
-        alp_append_indirect_forward_action(command, interface_file_id, overload, NULL, 0);
+    alp_append_indirect_forward_action(command, interface_file_id, false, NULL, 0);
     
     fifo_put(&command->alp_command_fifo, alp_command, length);
 

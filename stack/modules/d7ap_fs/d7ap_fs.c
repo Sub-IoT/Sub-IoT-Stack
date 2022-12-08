@@ -27,14 +27,8 @@
 #include "string.h"
 #include "debug.h"
 #include "fs.h"
-#include "d7ap.h"
 #include "d7ap_fs.h"
-#ifdef MODULE_ALP
-#include "alp_layer.h"
-#endif // MODULE_ALP
-#include "hwsystem.h"
 #include "version.h"
-#include "key.h"
 #include "log.h"
 
 ///////////////////////////////////////
@@ -69,23 +63,19 @@ static uint8_t file_buffer[FILE_SIZE_MAX]; // statically allocated buffer used d
 static d7ap_fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL }; // TODO limit to lower number so save RAM?
 static d7ap_fs_modifying_file_callback_t file_modifying_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
 
-static inline bool is_file_defined(uint8_t file_id)
-{
-    fs_file_stat_t *stat = fs_file_stat(file_id);
-    return (stat != NULL);
-}
-
 #if defined(MODULE_ALP) && defined(MODULE_D7AP)
+process_d7aactp_callback_t process_d7aactp_callback;
+
 static int execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface_file_id)
 {
   // TODO interface_file_id is optional, how do we code this in file header?
   // for now we assume it's always used
-  if(!is_file_defined(action_file_id) || !is_file_defined(interface_file_id))
+  if(!fs_is_file_defined(action_file_id) || !fs_is_file_defined(interface_file_id))
     return -ECHILD;
     
-  alp_interface_config_t itf_cfg;
-  uint32_t length = sizeof(alp_interface_config_t);
-  int rc = d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&itf_cfg, &length, ROOT_AUTH);
+  uint8_t itf_cfg[MAX_ITF_CONFIG_SIZE];
+  uint32_t length = MAX_ITF_CONFIG_SIZE;
+  int rc = d7ap_fs_read_file(interface_file_id, 0, itf_cfg, &length, ROOT_AUTH);
   if(rc != SUCCESS)
     return rc;
   uint32_t action_len = d7ap_fs_get_file_length(action_file_id);
@@ -94,9 +84,16 @@ static int execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface
   rc = fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
   if(rc != SUCCESS)
     return rc;
-
-  alp_layer_process_d7aactp(&itf_cfg, file_buffer, action_len);
+  if(process_d7aactp_callback != NULL)
+  {
+    process_d7aactp_callback(itf_cfg, file_buffer, action_len);
+  }
   return SUCCESS;
+}
+
+void d7ap_fs_set_process_d7aactp_callback(process_d7aactp_callback_t callback)
+{
+  process_d7aactp_callback = callback;
 }
 #endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
@@ -170,7 +167,7 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
 
   DPRINT("FS RD %i\n", file_id);
 
-  if(!is_file_defined(file_id)) return -ENOENT;
+  if(!fs_is_file_defined(file_id)) return -ENOENT;
 
   rtc = d7ap_fs_read_file_header(file_id, &header);
   if (rtc != 0)
@@ -209,7 +206,7 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
 int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header)
 {
   int rtc;
-  if(!is_file_defined(file_id)) return -ENOENT;
+  if(!fs_is_file_defined(file_id)) return -ENOENT;
 
   rtc = fs_read_file(file_id, 0, (uint8_t *)file_header, sizeof(d7ap_fs_file_header_t));
   if (rtc != 0)
@@ -228,7 +225,7 @@ int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_heade
 {
   d7ap_fs_file_header_t header;
 
-  if(!is_file_defined(file_id)) return -ENOENT;
+  if(!fs_is_file_defined(file_id)) return -ENOENT;
 
   d7ap_fs_read_file_header(file_id, &header);
 
@@ -258,7 +255,7 @@ int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uin
 
   DPRINT("FS WR %i\n", file_id);
 
-  if(!is_file_defined(file_id)) return -ENOENT;
+  if(!fs_is_file_defined(file_id)) return -ENOENT;
 
   rtc = d7ap_fs_read_file_header(file_id, &header);
   if (rtc != 0)
@@ -316,12 +313,6 @@ int d7ap_fs_read_uid(uint8_t *buffer)
     return (d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, &length, ROOT_AUTH));
 }
 
-int d7ap_fs_read_vid(uint8_t *buffer)
-{
-    uint32_t length = ID_TYPE_VID_LENGTH;
-    return (d7ap_fs_read_file(D7A_FILE_VID_FILE_ID, 0, buffer, &length, ROOT_AUTH));
-}
-
 int d7ap_fs_read_nwl_security_key(uint8_t *buffer)
 {
     uint32_t length = D7A_FILE_NWL_SECURITY_KEY_SIZE;
@@ -342,7 +333,7 @@ int d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security)
 
 int d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security)
 {
-  if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return -ENOENT;
+  if(!fs_is_file_defined(D7A_FILE_NWL_SECURITY)) return -ENOENT;
 
   dae_nwl_security_t sec;
   memcpy(&sec, nwl_security, sizeof (sec));
@@ -355,7 +346,7 @@ int d7ap_fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state)
   int rtc;
   uint32_t length = sizeof(dae_nwl_ssr_t);
 
-  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
+  if(!fs_is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
 
   rtc = (d7ap_fs_read_file(D7A_FILE_NWL_SECURITY_STATE_REG, 0,
                            (uint8_t*)node_security_state, &length, ROOT_AUTH));
@@ -388,7 +379,7 @@ int d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *truste
 {
   // TODO test
   assert(trusted_node_nb <= FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE);
-  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
+  if(!fs_is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
 
   // first add the new entry ...
   write_security_state_register_entry(trusted_node, trusted_node_nb);
@@ -399,7 +390,7 @@ int d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *truste
 int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node,
                                                uint8_t trusted_node_index)
 {
-  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
+  if(!fs_is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return -ENOENT;
 
   return (write_security_state_register_entry(trusted_node, trusted_node_index));
 }
@@ -410,7 +401,7 @@ int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *
 
   if(access_class_index >= 15)
     return -EFAULT;
-  if(!is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
+  if(!fs_is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
     return -ENOENT;
   int result = d7ap_fs_read_file(D7A_FILE_ACCESS_PROFILE_ID + access_class_index, 0, (uint8_t*)access_class, &length, ROOT_AUTH);
   for(int i=0; i<SUBBANDS_NB; i++) {
@@ -424,7 +415,7 @@ int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t*
 {
   if(access_class_index >= 15)
     return -EFAULT;
-  if(!is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
+  if(!fs_is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index))
     return -ENOENT;
   dae_access_profile_t temp_access_class;
   memcpy(&temp_access_class, access_class, sizeof(dae_access_profile_t));
@@ -480,7 +471,7 @@ bool d7ap_fs_unregister_file_modified_callback(uint8_t file_id) {
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, d7ap_fs_modified_file_callback_t callback)
 {
-    if(!fs_file_stat(file_id))
+    if(!fs_is_file_defined(file_id))
         return false;
 
     if(file_modified_callbacks[file_id])
@@ -500,7 +491,7 @@ bool d7ap_fs_unregister_file_modifying_callback(uint8_t file_id) {
 
 bool d7ap_fs_register_file_modifying_callback(uint8_t file_id, d7ap_fs_modifying_file_callback_t callback)
 {
-    if(!fs_file_stat(file_id))
+    if(!fs_is_file_defined(file_id))
         return false;
 
     if(file_modifying_callbacks[file_id])

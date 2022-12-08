@@ -31,7 +31,6 @@
 #include "string.h"
 #include "alp_layer.h"
 #include "debug.h"
-#include "d7ap.h"
 #include "ng.h"
 #include "log.h"
 #include "MODULE_ALP_defs.h"

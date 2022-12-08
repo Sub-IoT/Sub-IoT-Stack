@@ -25,6 +25,7 @@
 #include "power_tracking_file.h"
 
 // oss7
+#include "d7ap_fs.h"
 #include "debug.h"
 #include "framework_defs.h"
 #include "log.h"

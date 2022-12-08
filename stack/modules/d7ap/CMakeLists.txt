@@ -17,9 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-#Module specific parameters and options can be defined using
-#MODULE_OPTION and MODULE_PARAMETER
-#See cmake/module_macros.cmake for more information
+# Module specific parameters and options can be defined using
+# MODULE_OPTION and MODULE_PARAMETER
+# See cmake/module_macros.cmake for more information
+
+INCLUDE_DIRECTORIES(inc)
 
 MODULE_PARAM(${MODULE_PREFIX}_MAX_CLIENT_COUNT "2" STRING "The maximum number of d7ap clients")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_CLIENT_COUNT)
@@ -102,6 +104,7 @@ GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
 target_include_directories(d7ap PUBLIC
 	${__global_include_dirs}
 	${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_defs.h
+    inc
 )
 
-TARGET_LINK_LIBRARIES(d7ap m)
+TARGET_LINK_LIBRARIES(d7ap PRIVATE m d7ap_fs)

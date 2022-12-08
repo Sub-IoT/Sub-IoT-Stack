@@ -22,11 +22,12 @@
 #include "errors.h"
 #include "string.h"
 #include "modules_defs.h"
-
 #include "alp.h"
+#ifdef MODULE_D7AP
+#include "d7ap.h"
+#endif
 #include "dae.h"
 #include "fifo.h"
-#include "d7ap.h"
 #include "log.h"
 #include "lorawan_stack.h"
 
@@ -144,27 +145,7 @@ bool alp_append_forward_action(alp_command_t* command, alp_interface_config_t* i
     error_t rc = SUCCESS;
     rc = fifo_put_byte(cmd_fifo, ALP_OP_FORWARD);
     rc += fifo_put_byte(cmd_fifo, itf_config->itf_id);
-
-    if (itf_config->itf_id == ALP_ITF_ID_SERIAL) // TODO make optional?
-    {
-        // empty interface config
-    } else if (itf_config->itf_id == ALP_ITF_ID_D7ASP) {
-        rc += fifo_put_byte(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->qos.raw);
-        rc += fifo_put_byte(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->dormant_timeout);
-        rc += fifo_put_byte(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->addressee.ctrl.raw);
-        uint8_t id_length
-            = d7ap_addressee_id_length(((d7ap_session_config_t*)itf_config->itf_config)->addressee.ctrl.id_type);
-        rc += fifo_put_byte(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->addressee.access_class);
-        rc += fifo_put(cmd_fifo, ((d7ap_session_config_t*)itf_config->itf_config)->addressee.id, id_length);
-    } else if (itf_config->itf_id == ALP_ITF_ID_LORAWAN_OTAA) {
-        uint8_t control_byte = ((lorawan_session_config_otaa_t*)itf_config->itf_config)->request_ack << 1;
-        control_byte += ((lorawan_session_config_otaa_t*)itf_config->itf_config)->adr_enabled << 2;
-        rc += fifo_put_byte(cmd_fifo, control_byte);
-        rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->application_port);
-        rc += fifo_put_byte(cmd_fifo, ((lorawan_session_config_otaa_t*)itf_config->itf_config)->data_rate);
-    } else {
-        rc += fifo_put(cmd_fifo, itf_config->itf_config, config_len);
-    }
+    rc += fifo_put(cmd_fifo, itf_config->itf_config, config_len);
 
     DPRINT("FORWARD");
     return (rc == SUCCESS);
@@ -245,15 +226,16 @@ static bool parse_op_forward(alp_command_t* command, alp_action_t* action)
     fifo_t* cmd_fifo = &command->alp_command_fifo;
     if(fifo_pop(cmd_fifo, &action->interface_config.itf_id, 1) != SUCCESS)
         return false;
-
+#ifdef MODULE_D7AP
     if (action->interface_config.itf_id == ALP_ITF_ID_D7ASP) {
         uint8_t min_size = sizeof (d7ap_session_config_t) - 8; // substract max size of responder ID
         if(fifo_pop(cmd_fifo, action->interface_config.itf_config, min_size) != SUCCESS)
             return false;
         uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)&(action->interface_config))->d7ap_session_config.addressee.ctrl.id_type);
         return (fifo_pop(cmd_fifo, action->interface_config.itf_config + min_size, id_len) == SUCCESS);
-    }
 
+    }
+#endif
     for (uint8_t i = 0; i < MODULE_ALP_INTERFACE_CNT; i++) {
         if (action->interface_config.itf_id == interfaces[i]->itf_id) {
             if(fifo_pop(cmd_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)
@@ -369,6 +351,7 @@ static bool parse_operand_interface_config(alp_command_t* command, alp_action_t*
                                                    ->addressee.ctrl.id_type);
                 if(fifo_pop(&command->alp_command_fifo, action->interface_config.itf_config + min_size, id_len) != SUCCESS)
                     return false;
+
 #endif
             } else {
                 if(fifo_pop(&command->alp_command_fifo, action->interface_config.itf_config, interfaces[i]->itf_cfg_len) != SUCCESS)

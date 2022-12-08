@@ -30,6 +30,7 @@
 
 #include "stdint.h"
 #include "d7atp.h"
+#include "dae.h"
 #include "dll.h"
 #include "d7anp.h"
 #include "phy.h"

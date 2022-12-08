@@ -149,15 +149,6 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
  */
 void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status, bool command_completed);
 
-#ifdef MODULE_D7AP
-/*!
- * \brief Process a command triggered by D7A Action Protocol, where the resut of the command will be transmitted over the supplied interface
- * \param interface_config The interface config to transmit the response on
- * \param alp_command The ALP command to execute
- * \param alp_command_length Length of the command
- */
-void alp_layer_process_d7aactp(alp_interface_config_t* interface_config, uint8_t* alp_command, uint32_t alp_command_length);
-#endif
 
 #endif /* ALP_LAYER_H_ */
 

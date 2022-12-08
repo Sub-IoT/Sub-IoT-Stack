@@ -20,6 +20,7 @@
  */
 
 #include "d7ap.h"
+#include "d7ap_internal.h"
 #include "d7ap_stack.h"
 
 #include "d7ap_fs.h"
@@ -31,10 +32,6 @@
 #include "modules_defs.h"
 #include "MODULE_D7AP_defs.h"
 
-#ifdef MODULE_ALP
-#include "alp.h"
-#include "alp_layer.h"
-#endif
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
@@ -93,6 +90,12 @@ uint8_t d7ap_register(d7ap_resource_desc_t* desc)
 
 }*/
 
+int d7ap_read_vid(uint8_t *buffer)
+{
+    uint32_t length = ID_TYPE_VID_LENGTH;
+    return (d7ap_fs_read_file(D7A_FILE_VID_FILE_ID, 0, buffer, &length, ROOT_AUTH));
+}
+
 /**
  * @brief   Gets the device address UID/VID
  *
@@ -102,7 +105,7 @@ uint8_t d7ap_register(d7ap_resource_desc_t* desc)
  */
 d7ap_addressee_id_type_t d7ap_get_dev_addr(uint8_t* addr)
 {
-    d7ap_fs_read_vid(addr);
+    d7ap_read_vid(addr);
 
     // vid is not valid when set to FF
     if (memcmp(addr, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)

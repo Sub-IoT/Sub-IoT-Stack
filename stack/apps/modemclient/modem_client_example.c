@@ -44,31 +44,30 @@
 // This example application shows how to integrate a serial D7 modem
 
 // define the D7 interface configuration used for sending the file data to
-static alp_interface_config_d7ap_t session_config  =
-{
-    .itf_id = ALP_ITF_ID_D7ASP,
-    .d7ap_session_config = {
-        .qos = {
-          .qos_resp_mode = SESSION_RESP_MODE_ANY,
-          .qos_retry_mode = SESSION_RETRY_MODE_NO
-        },
-        .dormant_timeout = 0,
-        .addressee = {
-          .ctrl = {
+static alp_interface_config_d7ap_t session_config = {
+  .itf_id = ALP_ITF_ID_D7ASP,
+  .d7ap_session_config = {
+    .qos = {
+        .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
+        .qos_retry_mode = SESSION_RETRY_MODE_NO
+    },
+    .dormant_timeout = 0,
+    .addressee = {
+        .ctrl = {
             .nls_method = AES_NONE,
             .id_type = ID_TYPE_NOID,
-          },
-          .access_class = 0x01,
-          .id = 0
-        }
+        },
+        .access_class = 0x01,
+        .id = { 0 }
     }
+  }
 };
 
 void send_counter() {
   static uint8_t counter = 0;
   log_print_string("counter %i", counter);
 
-  int8_t tag_id = modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, &session_config);
+  int8_t tag_id = modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, (alp_interface_config_t*)&session_config);
   assert(tag_id >= 0);
   //alp_layer_process_raw_indirect_unsolicited_response(alp_command, sizeof (alp_command), 29, false, NULL);
   counter++;

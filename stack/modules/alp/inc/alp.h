@@ -46,7 +46,6 @@
 
 #define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
 #define ALP_QUERY_COMPARE_BODY_MAX_SIZE 100
-#define ALP_ITF_CONFIG_SIZE 43
 #define ALP_ITF_STATUS_MAX_SIZE 40
 #define ALP_INDIRECT_ITF_OVERLOAD_MAX_SIZE 10
 
@@ -233,7 +232,7 @@ typedef struct {
 
 typedef struct __attribute__ ((__packed__)) {
     uint8_t itf_id;
-    uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
+    uint8_t itf_config[MAX_ITF_CONFIG_SIZE-1];
 } alp_interface_config_t;
 
 typedef struct __attribute__((packed)) {

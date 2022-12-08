@@ -22,6 +22,7 @@
 
 #include "debug.h"
 #include "packet.h"
+#include "d7ap_internal.h"
 #include "d7anp.h"
 #include "d7ap_fs.h"
 #include "ng.h"
@@ -238,7 +239,7 @@ void d7anp_init()
     /*
      * vid or uid caching to prevent latency due to file access
      */
-    d7ap_fs_read_vid(address_id);
+    d7ap_read_vid(address_id);
 
     // vid is not valid when set to FF
     if (memcmp(address_id, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
@@ -509,7 +510,7 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
         }
         else if(packet->dll_header.control_target_id_type == ID_TYPE_VID)
         {
-            d7ap_fs_read_vid(add);
+            d7ap_read_vid(add);
             add_len = 2;
         }
     }

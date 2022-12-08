@@ -69,9 +69,9 @@ INCLUDE_DIRECTORIES(inc
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m0plus" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog"
-	"-fno-builtin" "-ffunction-sections" "-fdata-sections" "-fstack-usage" "-Wstack-usage=128")
+	"-fno-builtin" "-ffunction-sections" "-fdata-sections" "-fstack-usage" "-Wstack-usage=300")
 INSERT_CXX_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m0plus" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog"
-        "-fno-builtin" "-ffunction-sections" "-fdata-sections" "-fstack-usage" "-Wstack-usage=128")
+        "-fno-builtin" "-ffunction-sections" "-fdata-sections" "-fstack-usage" "-Wstack-usage=300")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "--specs=nosys.specs" "-Wl,-gc-sections")
@@ -148,8 +148,8 @@ IF(${PLATFORM_USE_NUCLEO_IKS01A2_SHIELD})
 ENDIF()
 
 IF(${PLATFORM_USE_EXTERNAL_MODEM})
-    ADD_CHIP("oss7_modem")
+    SET(MODULE_ALP_USE_EXTERNAL_MODEM TRUE)
 ENDIF()
 
-#Build the 'platform_defs.h' settings file
+# Build the 'platform_defs.h' settings file
 PLATFORM_BUILD_SETTINGS_FILE()

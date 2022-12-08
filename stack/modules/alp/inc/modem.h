@@ -19,8 +19,8 @@
 
 #ifndef __MODEM_H__
 #define __MODEM_H__
-
-#include "d7ap.h"
+#include "modules_defs.h"
+#include "MODULE_ALP_defs.h"
 #include "hwuart.h"
 #include "lorawan_stack.h"
 #include "alp.h"
@@ -28,6 +28,8 @@
 
 // TODO for now we are assuming running on OSS-7, we can refactor later
 // so it is more portable
+
+#ifdef MODULE_ALP_USE_EXTERNAL_MODEM
 
 typedef void (*modem_command_completed_callback_t)(bool with_error,uint8_t tag_id);
 typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
@@ -53,13 +55,12 @@ alp_command_t* modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 int16_t modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
 int16_t modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, alp_interface_config_t* interface_config);
 int16_t modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, alp_interface_config_t* interface_config);
-int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
-                                              uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
-int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                                  uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
+int16_t modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, uint8_t interface_file_id);
+int16_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length, uint8_t interface_file_id);
 void modem_send_ping();
 alp_command_t* modem_start();
 alp_command_t* modem_stop();
 alp_command_t* modem_restart();
 
+#endif // MODULE_ALP_USE_EXTERNAL_MODEM
 #endif

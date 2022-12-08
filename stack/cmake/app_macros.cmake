@@ -102,7 +102,7 @@ MACRO(__APP_BUILD_ON_LOCATION app_name flash_origin flash_length version_locatio
 	SET(ELF ${app_name}.elf)
 	ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
 	
-	TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
+	TARGET_LINK_LIBRARIES(${ELF} PRIVATE ${__APP_BUILD_LIBS})
 	
 	GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
 	TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})

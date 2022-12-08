@@ -37,6 +37,10 @@
 	#error "Enable the watchdog for this example"
 #endif
 
+#ifndef FRAMEWORK_USE_ERROR_EVENT_FILE
+	#error "Enable the error event file for this example"
+#endif
+
 static uint8_t blocking_task_count = 0;
 
 void blocking_task() {

@@ -96,7 +96,7 @@ void execute_sensor_measurement()
   alp_command_t* command = alp_layer_command_alloc(false, false);
   
   // forward to the LoRaWAN interface
-  alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
+  alp_append_forward_action(command, (alp_interface_config_t*)&itf_config, sizeof(itf_config.lorawan_session_config_otaa));
 
   // add the return file data action
   alp_append_return_file_data_action(command, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);

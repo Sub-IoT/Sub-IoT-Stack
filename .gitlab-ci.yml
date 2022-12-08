@@ -110,6 +110,37 @@ job 1b:
    - build/results_fec.txt
    - build/results_fifo.txt
    - build/results_scheduler.txt
+
+build sample apps:
+  image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
+  tags: 
+  - docker
+  stage: build stack
+  before_script:  
+    - cd $DOCKER_BUILD_LOCATION
+    - git remote set-url origin $CI_REPOSITORY_URL
+    - git submodule sync --recursive
+    - git fetch --all
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
+    - git clean -xfdf
+    - git submodule update --init --recursive -f
+    - git submodule foreach --recursive git clean -xfdf
+
+  script:
+  - mkdir build && cd build
+  - platform="B_L072Z_LRWAN1"
+  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_ACTION=y -DAPP_SENSOR_PULL=y -DAPP_SENSOR_PUSH=y -DAPP_SENSOR_PUSH=y -DAPP_SENSOR_PUSH_LED=y -DAPP_WATCHDOG_TEST=y -DPLATFORM=$platform -DFRAMEWORK_USE_ERROR_EVENT_FILE=y
+  - make -j
+  - rm -rf *
+  - cmake ../stack/ -DAPP_MODEMCLIENT=y -DMODULE_ALP_USE_EXTERNAL_MODEM=y -DPLATFORM=$platform
+  - make -j
+  - rm -rf *
+  - cmake ../stack/ -DAPP_LORAWAN_NODE=y -DPLATFORM=$platform -DMODULE_LORAWAN=y -DMODULE_ALP=n -DMODULE_LORAWAN_REGION=EU868
+  - make -j
+  - rm -rf *
+  - cmake ../stack/ -DAPP_SENSOR_MULTIMODAL=y -DAPP_SENSOR_PUSH_LORAWAN=y -DPLATFORM=$platform -DMODULE_LORAWAN=y -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DMODULE_LORAWAN_REGION=EU868
+  - make -j
+
 job 2:
   tags:
   - testsuite

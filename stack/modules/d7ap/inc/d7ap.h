@@ -46,6 +46,8 @@
 
 #define D7A_PAYLOAD_MAX_SIZE 255 // TODO confirm this value when FEC and security are disabled
 
+#define D7A_MAX_ADDRESS_ID_LENGTH 8
+
 
 typedef enum {
     ID_TYPE_NBID = 0,
@@ -86,7 +88,7 @@ typedef struct __attribute__((__packed__)) {
             uint8_t access_specifier : 4;
         };
     };
-    uint8_t id[8]; // TODO assuming 8 byte id for now
+    uint8_t id[D7A_MAX_ADDRESS_ID_LENGTH];
 } d7ap_addressee_t;
 
 typedef struct {
@@ -286,6 +288,11 @@ static inline uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type)
   }
 
   return ID_TYPE_NOID_ID_LENGTH;
+}
+
+static inline uint8_t d7ap_session_config_length(d7ap_session_config_t* itf_config)
+{
+    return sizeof(d7ap_session_config_t) - D7A_MAX_ADDRESS_ID_LENGTH + d7ap_addressee_id_length(itf_config->addressee.ctrl.id_type);
 }
 
 /**

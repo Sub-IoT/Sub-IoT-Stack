@@ -33,6 +33,7 @@
 #include "stdint.h"
 
 #include "dae.h"
+#include "modules_defs.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
@@ -97,6 +98,8 @@
 #define USER_FILE_LORAWAN_ANTENNA_GAIN_FILE_ID 0x46
 #define USER_FILE_LORAWAN_ANTENNA_GAIN_SIZE 1
 
+#define MAX_ITF_CONFIG_SIZE 44
+
 typedef enum {
   EM_OFF = 0,
   EM_CONTINUOUS_TX = 1,
@@ -143,7 +146,6 @@ int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header
 int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header, authentication_t auth);
 
 int d7ap_fs_read_uid(uint8_t* buffer);
-int d7ap_fs_read_vid(uint8_t* buffer);
 int d7ap_fs_write_vid(uint8_t* buffer);
 
 uint8_t d7ap_fs_read_dll_conf_active_access_class(void);
@@ -160,6 +162,14 @@ int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_n
 
 uint32_t d7ap_fs_get_file_length(uint8_t file_id);
 int d7ap_fs_change_file_length(uint8_t file_id, uint32_t length);
+
+#if defined(MODULE_ALP) && defined(MODULE_D7AP)
+
+typedef void (*process_d7aactp_callback_t)(uint8_t* interface_config, uint8_t* command, uint32_t command_length);
+
+void d7ap_fs_set_process_d7aactp_callback(process_d7aactp_callback_t callback);
+
+#endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
 #endif /* D7AP_FS_H_ */
 

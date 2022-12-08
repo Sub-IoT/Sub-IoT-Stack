@@ -30,7 +30,7 @@ limitations under the License.
 #
 
 IF(${MODULE_LORAWAN})
-    SET(libs alp d7ap d7ap_fs lorawan framework)
+    SET(libs alp d7ap lorawan d7ap_fs framework)
 ELSE()
     SET(libs alp d7ap d7ap_fs framework)
 ENDIF()
