@@ -503,8 +503,8 @@ __LINK_C timer_tick_t sched_check_software_watchdog(task_t task, timer_tick_t cu
 			return hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC;
 		}
 	}
-	return 0;
 #endif
+	return 0;
 }
 
 __LINK_C task_t sched_get_current_task(void)
