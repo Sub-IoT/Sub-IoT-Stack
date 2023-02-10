@@ -91,8 +91,8 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
 uint16_t lorawan_get_duty_cycle_delay();
 
 
-static uint8_t* lorawan_get_deveui( void );
-static uint8_t* lorawan_get_appeui( void );
+uint8_t* lorawan_get_deveui( void );
+uint8_t* lorawan_get_appeui( void );
 
 static void lorawan_set_antenna_gain(uint8_t file_id);
 #endif //LORAWAN_STACK_H
