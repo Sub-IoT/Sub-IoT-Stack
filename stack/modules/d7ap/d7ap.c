@@ -235,3 +235,19 @@ uint8_t d7ap_get_access_class(void)
 {
     return d7ap_fs_read_dll_conf_active_access_class();
 }
+
+/**
+ * @brief Gets the region configured in the active access class
+ * 
+ * @param region the region variable to store the value
+ * @return error_t an error in case of failure
+ */
+error_t d7ap_get_modem_region(modem_region_t* region)
+{
+    channel_header_t channel_header;
+    uint32_t length = 1;
+
+    error_t err = d7ap_fs_read_file(D7A_FILE_ACCESS_PROFILE_ID + (d7ap_get_access_class() >> 4), D7A_FILE_ACCESS_PROFILE_CHANNEL_HEADER_IDX, (uint8_t*)&channel_header, &length, ROOT_AUTH);
+    *region = (channel_header.ch_freq_band == PHY_BAND_868) ? MODEM_REGION_EU868 : MODEM_REGION_US915;
+    return err;
+}

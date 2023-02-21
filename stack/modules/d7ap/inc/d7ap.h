@@ -36,6 +36,7 @@
 #include "types.h"
 #include "debug.h"
 #include "hwblockdevice.h"
+#include "modem_region.h"
 
 #define ID_TYPE_NBID_ID_LENGTH 1
 #define ID_TYPE_NOID_ID_LENGTH 0
@@ -302,6 +303,14 @@ static inline uint8_t d7ap_session_config_length(d7ap_session_config_t* itf_conf
  * @param[in] array     the array where the d7 result has to go
  */
 void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array);
+
+/**
+ * @brief Gets the region configured in the active access class
+ * 
+ * @param region the region variable to store the value
+ * @return error_t an error in case of failure
+ */
+error_t d7ap_get_modem_region(modem_region_t* region);
 
 #endif // D7AP_H
 
