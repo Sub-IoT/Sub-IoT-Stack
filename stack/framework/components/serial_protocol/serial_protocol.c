@@ -62,7 +62,7 @@
 #endif
 
 #ifdef FRAMEWORK_SERIAL_PROTOCOL_SUPPORT_INTERRUPT_LINES
-#define SERIAL_PROTOCOL_TIMEOUT            (5 * TIMER_TICKS_PER_SEC)
+#define SERIAL_PROTOCOL_TIMEOUT            (15 * TIMER_TICKS_PER_SEC) // Same as PING_TIMEOUT of serial protocol monitor, longer than the boot time of the other party
 #define SERIAL_PROTOCOL_TIMEOUT_BLOCK_TIME (5 * TIMER_TICKS_PER_MINUTE)
 
 #endif
