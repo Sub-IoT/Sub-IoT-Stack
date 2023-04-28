@@ -79,6 +79,8 @@ job 1:
    - build/apps/gateway/*
    - build/apps/modem/*
    - build/apps/sensor_push/*
+   - build/apps/sensor_push_lorawan/*
+
 
 job 1b:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
