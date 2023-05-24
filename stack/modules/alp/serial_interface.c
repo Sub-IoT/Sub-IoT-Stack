@@ -67,6 +67,12 @@ static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
     end_atomic();
 
     alp_command_t* command = alp_layer_command_alloc(false, false);
+    if(command == NULL)
+    {
+        log_print_error_string("serial_interface_cmd_handler: unable to allocate alp command");
+        return;
+
+    }
     command->origin_itf_id = ALP_ITF_ID_SERIAL;
     alp_append_interface_status(command, &serial_itf_status);
     fifo_put(&command->alp_command_fifo, alp_command, alp_command_len);

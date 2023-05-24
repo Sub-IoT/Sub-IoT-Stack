@@ -757,8 +757,8 @@ static void process_async(void* arg)
     alp_interface_config_t forward_interface_config;
     alp_command_t* resp_command = alp_layer_command_alloc(false, false);
     if(resp_command == NULL) {
-        log_print_error_string("process async: alloc command failed for the response command, retrying later");
-        fifo_put(&command_fifo, (uint8_t*)&command, sizeof(alp_command_t*));
+        log_print_error_string("process async: alloc command failed for the response command, dropping command");
+        free_command(command);
         return;
     }
     static alp_action_t action;

@@ -528,7 +528,7 @@ __LINK_C void scheduler_run()
 		uint8_t executed_tasks = 0;
 		watchdog_wakeup = false;
 #endif
-#if defined FRAMEWORK_USE_POWER_TRACKING
+#if (defined FRAMEWORK_USE_POWER_TRACKING || FRAMEWORK_SCHEDULER_MAX_ACTIVE_TIME > 0)
 		timer_tick_t wakeup_time = timer_get_counter_value();
 #endif
 		while(NG(current_priority) < NUM_PRIORITIES)
@@ -545,15 +545,18 @@ __LINK_C void scheduler_run()
 #endif
 				check_structs_are_valid();
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
-        timer_tick_t start = timer_get_counter_value();
-        log_print_string("SCHED start %p at %i", NG(m_info)[id].task, start);
+				timer_tick_t start = timer_get_counter_value();
+				log_print_string("SCHED start %p at %i", NG(m_info)[id].task, start);
 #endif
-		current_task_id = id;
-        NG(m_info)[id].task(NG(m_info)[id].arg);
+				current_task_id = id;
+				NG(m_info)[id].task(NG(m_info)[id].arg);
+		#if FRAMEWORK_SCHEDULER_MAX_ACTIVE_TIME > 0
+				assert(timer_get_current_time_difference(wakeup_time) < FRAMEWORK_SCHEDULER_MAX_ACTIVE_TIME * TIMER_TICKS_PER_SEC);
+		#endif
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
-        timer_tick_t stop = timer_get_counter_value();
-        timer_tick_t duration = stop - start;
-        log_print_string("SCHED stop %p at %i took %i", NG(m_info)[id].task, stop, duration);
+				timer_tick_t stop = timer_get_counter_value();
+				timer_tick_t duration = stop - start;
+				log_print_string("SCHED stop %p at %i took %i", NG(m_info)[id].task, stop, duration);
 #endif
 			}
 			//this needs to be done atomically since otherwise we risk decrementing the current priority

@@ -39,6 +39,9 @@ FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_LP_MODE)
 
+SET(FRAMEWORK_SCHEDULER_MAX_ACTIVE_TIME "0" CACHE STRING "Defines the maximum time in seconds the scheduler can be active. When this time is exceeded the processor will assert. Set to 0 to disable this feature")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_ACTIVE_TIME)
+
 # when the current platform is using jlink we enable logging by default
 IF(JLINK_DEVICE)
   SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
