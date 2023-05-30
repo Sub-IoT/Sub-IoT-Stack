@@ -101,6 +101,9 @@
 
 #define MAX_ITF_CONFIG_SIZE 44
 
+#define USER_FILE_LORAWAN_DEVNONCE_FILE_ID           0x47
+#define USER_FILE_LORAWAN_DEVNONCE_SIZE              2
+
 typedef enum {
   EM_OFF = 0,
   EM_CONTINUOUS_TX = 1,

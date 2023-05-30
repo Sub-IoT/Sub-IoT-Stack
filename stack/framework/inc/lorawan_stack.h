@@ -89,11 +89,5 @@ bool lorawan_stack_join(void);
 void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, lorawan_status_callback_t lorawan_status_cb );
 lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 uint16_t lorawan_get_duty_cycle_delay();
-
-
-static uint8_t* lorawan_get_deveui( void );
-static uint8_t* lorawan_get_appeui( void );
-
-static void lorawan_set_antenna_gain(uint8_t file_id);
 #endif //LORAWAN_STACK_H
 
