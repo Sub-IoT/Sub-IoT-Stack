@@ -149,7 +149,7 @@ job 2:
   - job 1
   script:
   - if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
-  - if pgrep -f "python2 run.py" ; then exit 1; fi
+  - if pgrep -f "python3 run.py" ; then exit 1; fi
   - cd build/apps/modem
   - JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
   - JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
@@ -158,20 +158,18 @@ job 2:
   - if grep -q 'FAILED\|ERROR' "flashOutput1.txt"; then exit 1; fi
   - if grep -q 'FAILED\|ERROR' "flashOutput2.txt"; then exit 1; fi
 job 3:
+  image: python:3.8
   tags:
   - testsuite
   stage: run tests
   script:
   - if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
-  - if pgrep -f "python2 run.py" ; then exit 1; fi
+  - if pgrep -f "python3 run.py" ; then exit 1; fi
   - rm -rf Sub-IoT-testsuite
   - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/Sub-IoT-testsuite.git
   - cd Sub-IoT-testsuite
-  - pip install -r requirements.txt
-  - cd lib/pyd7a/
-  - pip install -r requirements.txt
-  - cd ../..
-  - python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
+  - python3 -m pip install -r requirements.txt -r lib/pyd7a/requirements.txt
+  - python3 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not known_issue" --junitxml report.xml -v
   artifacts:
     reports:
       junit: Sub-IoT-testsuite/report.xml

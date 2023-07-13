@@ -99,7 +99,7 @@ LoRaWAN_OTAA_Keys = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07] + \
 
 #This is an offset to factor in the antenna gain in order to comply with max tx pow regulations. So e.g. setting this to 2 will DROP the tx power used in software by 2dBm.
 lorawan_antenna_gain_in_db = 1 #dBm #in EU868 the MAX_EIRP is 16dBm so this corresponds to a max TX power of 15dBm 
-lorawan_antenna_gain = [int(bytes(lorawan_antenna_gain_in_db & 0xff))] #dBm
+lorawan_antenna_gain = [lorawan_antenna_gain_in_db & 0xff] #dBm
 lorawan_antenna_gain_file_size = 1
 
 ctrl_stack_file_size = 2
