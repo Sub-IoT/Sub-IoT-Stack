@@ -163,6 +163,7 @@ job 3:
   - testsuite
   stage: run tests
   script:
+  - ip addr show
   - if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
   - if pgrep -f "python3 run.py" ; then exit 1; fi
   - rm -rf Sub-IoT-testsuite
