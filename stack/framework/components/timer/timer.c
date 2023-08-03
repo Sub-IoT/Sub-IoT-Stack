@@ -303,7 +303,7 @@ static bool configure_next_event()
 		if(NG(next_event) != NO_EVENT)
 		{
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
-            // fire if (fire_time <= timer and neither/both overflowed), or if (fire > timer and timer overflowed)          
+            // fire if the fire time is less than 20 seconds ago since this means we should have fired already (timer_calculate_difference takes overflow into account)          
             if(timer_calculate_difference(next_fire_time, current_time + timer_info->min_delay_ticks) < COUNTER_EVENTTIME_LIMIT)
 			{
                 DPRINT("will be late, sched immediately\n\n");
