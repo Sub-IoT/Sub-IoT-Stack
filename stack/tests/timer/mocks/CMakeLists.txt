@@ -16,10 +16,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
-project(test_fifo)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.18.1)
 
-add_executable(${PROJECT_NAME} main.c)
+include_directories(./inc)
 
-#link with the framework library that includes the fifo component
-target_link_libraries (${PROJECT_NAME} framework)
+add_library(mocks
+    hwtimer.c
+    hwsystem.c
+    libc_overrides.c
+)

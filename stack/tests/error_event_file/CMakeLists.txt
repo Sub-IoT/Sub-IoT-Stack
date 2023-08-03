@@ -21,4 +21,5 @@ cmake_minimum_required(VERSION 2.8)
 
 add_executable(${PROJECT_NAME} main.c )
 
+#link with the framework library that includes the error_event_file component
 target_link_libraries (${PROJECT_NAME} d7ap_fs framework )
