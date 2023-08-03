@@ -48,7 +48,7 @@ create_docker_image:
     - docker build --cache-from registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG --pull -t registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG . && docker push registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG
 
 
-job 1:
+build primary apps:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags: 
   - docker
@@ -73,7 +73,7 @@ job 1:
    - build/apps/gateway/*
    - build/apps/modem/*
    - build/apps/sensor_push/*
-job 1b:
+run unit tests:
   image: "registry.gitlab.com/aloxy/$CI_PROJECT_NAME/builder:$DOCKER_TAG"
   tags: 
   - docker
@@ -87,18 +87,20 @@ job 1b:
   script: 
   - mkdir build && cd build
   - platform="NATIVE"
-  - cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DMODULE_D7AP=n -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
+  - cmake ../stack/ -DPLATFORM=$platform -DCMAKE_TOOLCHAIN_FILE="../stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y -DTEST_ALP=y -DTEST_FIFO=y -DTEST_SCHEDULER=y -DTEST_TIMER=y -DMODULE_D7AP=n -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DFRAMEWORK_USE_POWER_TRACKING=n
   - make -j
   - ./tests/aes/test_aes &> results_aes.txt
   - ./tests/alp/test_alp &> results_alp.txt
   - ./tests/fec/test_fec &> results_fec.txt
   - ./tests/fifo/test_fifo &> results_fifo.txt
   - ./tests/scheduler/test_scheduler &> results_scheduler.txt
+  - ./tests/timer/test_timer &> results_timer.txt
   - if ! grep -q 'AES all unit tests OK !' "results_aes.txt"; then exit 1;  fi
   - if ! grep -q 'Unit-tests for ALP completed' "results_alp.txt"; then exit 1;  fi
   - if ! grep -q 'Input was decoded successfully' "results_fec.txt"; then exit 1;  fi
   - if ! grep -q 'All FIFO tests passed!' "results_fifo.txt"; then exit 1;  fi   
   - if ! grep -q 'All scheduler tests passed!' "results_scheduler.txt"; then exit 1;  fi
+  - if ! grep -q 'All timer tests passed!' "results_timer.txt"; then exit 1;  fi
   - cd ..
   - mv build /builds/aloxy/$CI_PROJECT_NAME/build
   artifacts:
@@ -141,12 +143,12 @@ build sample apps:
   - cmake ../stack/ -DAPP_SENSOR_MULTIMODAL=y -DAPP_SENSOR_PUSH_LORAWAN=y -DPLATFORM=$platform -DMODULE_LORAWAN=y -DFRAMEWORK_MODEM_INTERFACE_ENABLED=n -DMODULE_LORAWAN_REGION=MODEM_REGION_EU868
   - make -j
 
-job 2:
+flash devkits:
   tags:
   - testsuite
   stage: flash test boards
   dependencies: 
-  - job 1
+  - build primary apps
   script:
   - if $(lsof -i -P -n | grep -q JLinkExe) ; then exit 1; fi
   - if pgrep -f "python3 run.py" ; then exit 1; fi
@@ -157,7 +159,7 @@ job 2:
   - cat flashOutput2.txt
   - if grep -q 'FAILED\|ERROR' "flashOutput1.txt"; then exit 1; fi
   - if grep -q 'FAILED\|ERROR' "flashOutput2.txt"; then exit 1; fi
-job 3:
+run testsuite:
   image: python:3.8
   tags:
   - testsuite

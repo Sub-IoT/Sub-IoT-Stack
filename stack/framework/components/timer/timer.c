@@ -39,6 +39,7 @@
 
 #define HW_TIMER_ID 0
 
+#define COUNTER_EVENTTIME_LIMIT TIMER_TICKS_PER_SEC * 20
 #define COUNTER_OVERFLOW_INCREASE (UINT32_C(1) << (8*sizeof(hwtimer_tick_t)))
 
 // define inline functions from timer.h as extern
@@ -302,7 +303,8 @@ static bool configure_next_event()
 		if(NG(next_event) != NO_EVENT)
 		{
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
-      if ( (((int32_t)next_fire_time) - ((int32_t)current_time) - timer_info->min_delay_ticks) <= 0 )
+            // fire if (fire_time <= timer and neither/both overflowed), or if (fire > timer and timer overflowed)          
+            if(timer_calculate_difference(next_fire_time, current_time + timer_info->min_delay_ticks) < COUNTER_EVENTTIME_LIMIT)
 			{
                 DPRINT("will be late, sched immediately\n\n");
                 if(NG(timers)[NG(next_event)].f == 0)
@@ -375,7 +377,7 @@ timer_tick_t timer_calculate_difference(timer_tick_t start_time, timer_tick_t st
 {
     if(start_time <= stop_time)
         return stop_time - start_time;
-    // if a rolloved happened, add both parts together
+    // if a rollover happened, add both parts together
     else
         return (UINT32_MAX - start_time) + 1 + stop_time; 
 }
@@ -385,11 +387,10 @@ static void timer_overflow()
     NG(timer_offset) += COUNTER_OVERFLOW_INCREASE;
     if(NG(next_event) != NO_EVENT && 		//there is an event scheduled at THIS timer level
 	(!NG(hw_event_scheduled)) &&		//but NOT at the hw timer level
-		NG(timers)[NG(next_event)].next_event <= (NG(timer_offset) + COUNTER_OVERFLOW_INCREASE) //and the next trigger will happen before the next overflow
+		( (NG(timers)[NG(next_event)].next_event >= NG(timer_offset))
+	    && (NG(timers)[NG(next_event)].next_event <= (NG(timer_offset) + COUNTER_OVERFLOW_INCREASE - 1) ) ) //and the next trigger will happen before the next overflow
 	)
     {
-		//normally this shouldn't happen. Put an assert here just to make sure
-		assert(NG(timers)[NG(next_event)].next_event >= NG(timer_offset));
 		timer_tick_t fire_time = (NG(timers)[NG(next_event)].next_event - NG(timer_offset));
 
 		//fire time already passed
