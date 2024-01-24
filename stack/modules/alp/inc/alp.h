@@ -61,6 +61,7 @@ typedef enum
     ALP_ITF_ID_NFC = 0x04, // not part of the spec
     ALP_ITF_ID_BLE = 0x05, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7,
+    ALP_ITF_ID_UNKNOWN = 0xFF,
 } alp_itf_id_t;
 
 typedef enum {
