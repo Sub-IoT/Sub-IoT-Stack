@@ -867,6 +867,9 @@ static void process_async(void* arg)
         if (command->forward_itf_id != ALP_ITF_ID_HOST) {
             if (!command->is_response) {
                 forward_command(command, &forward_interface_config);
+                
+                if(!command->respond_when_completed)
+                    free_command(command);
                 free_command(resp_command); // command itself will be free-ed when interface responds with this command
                                             // with correct tag
                 return;
