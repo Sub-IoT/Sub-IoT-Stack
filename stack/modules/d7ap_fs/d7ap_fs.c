@@ -270,7 +270,7 @@ int d7ap_fs_write_file_with_callback(uint8_t file_id, uint32_t offset, const uin
 #endif
     
   if (file_modifying_callbacks[file_id])
-      if (!file_modifying_callbacks[file_id](file_id, offset, buffer, length))
+      if (!file_modifying_callbacks[file_id](file_id, &offset, buffer, &length))
           return -EILSEQ;
 
   rtc = fs_write_file(file_id, sizeof(d7ap_fs_file_header_t) + offset, buffer, length);
