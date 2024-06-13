@@ -848,9 +848,18 @@ void d7asp_signal_dialog_terminated()
     if (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
       switch_state(D7ASP_STATE_PENDING_MASTER);
       schedule_current_session();
+      d7ap_stack_signal_slave_session_terminated();
+
+    } else if (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER) {
+        d7ap_stack_signal_slave_session_terminated();
+
+        switch_state(D7ASP_STATE_MASTER);
+        d7ap_stack_signal_active_master_session(current_master_session.token);
+        schedule_current_session();
+
     } else {
       switch_state(D7ASP_STATE_IDLE);
+      d7ap_stack_signal_slave_session_terminated();
     }
 
-    d7ap_stack_signal_slave_session_terminated();
 }
