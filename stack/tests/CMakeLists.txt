@@ -19,7 +19,15 @@ limitations under the License.
 
 #Add the 'BUILD_UNIT_TESTS' option
 OPTION(BUILD_UNIT_TESTS "Build unit tests applications" ON)
+
+SET(TESTS_EXTRA_TESTS_DIR "" CACHE STRING "Path to directory containing extra, out of tree tests (optional)")
+
+
 LIST_SUBDIRS(TEST_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+IF(NOT(TESTS_EXTRA_TESTS_DIR STREQUAL ""))
+    LIST_SUBDIRS(EXTRA_TESTS_DIRS ${TESTS_EXTRA_TESTS_DIR})
+    LIST(APPEND TEST_DIRS ${EXTRA_TESTS_DIRS})
+ENDIF()
 
 #Add conditional options for all subdirs (which are individual applications)
 FOREACH(__dir ${TEST_DIRS})

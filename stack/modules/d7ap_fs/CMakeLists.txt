@@ -37,7 +37,7 @@ MODULE_HEADER_DEFINE(
 MODULE_BUILD_SETTINGS_FILE()
 
 #Export the module-specific header files to the application by using
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
 
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(d7ap_fs STATIC

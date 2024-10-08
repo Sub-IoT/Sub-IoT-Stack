@@ -21,3 +21,8 @@
 # Toolchain setup gcc
 #######################################
 
+# -fshort enums is required as this seems to be default with gcc-arm-none-eabi and we do some static asserts using this assumption
+# we also set these for c++ as this otherwise gives problems when linking mocks (C) against our test code (C++)
+
+SET(CMAKE_C_FLAGS_DEBUG "-g -fshort-enums -Wno-typedef-redefinition -Wno-switch -Wno-gnu-variable-sized-type-not-at-end")
+SET(CMAKE_CXX_FLAGS_DEBUG "-fshort-enums -g")

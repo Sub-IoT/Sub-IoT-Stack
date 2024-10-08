@@ -50,6 +50,7 @@ IF(NOT CMAKE_BUILD_TYPE MATCHES Debug)
 ENDIF()
 
 PROJECT (${PROJECT_NAME})
+enable_testing()
 
 #Set the c standard to use
 INSERT_C_FLAGS(BEFORE -std=gnu99 -fno-common)
