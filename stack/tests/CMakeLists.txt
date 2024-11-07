@@ -17,11 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-#Add the 'BUILD_UNIT_TESTS' option
+#Add the 'BUILD_UNIT_TESTS' and 'INCLUDE_GTEST' options
 OPTION(BUILD_UNIT_TESTS "Build unit tests applications" ON)
+OPTION(INCLUDE_GTEST "Download and include google test" OFF)
 
 SET(TESTS_EXTRA_TESTS_DIR "" CACHE STRING "Path to directory containing extra, out of tree tests (optional)")
-
 
 LIST_SUBDIRS(TEST_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 IF(NOT(TESTS_EXTRA_TESTS_DIR STREQUAL ""))
@@ -36,6 +36,24 @@ FOREACH(__dir ${TEST_DIRS})
     SETOPTION_IF(TEST_${__upper_name} "Build unit test application ${__dir}" OFF BUILD_UNIT_TESTS)
     UNSET(__upper_name)
 ENDFOREACH()
+
+# Make google test available if INCLUDE_GTEST is set
+IF(INCLUDE_GTEST)
+    # GoogleTest requires at least C++14
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        release-1.12.1 # g++ 11
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    # set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+ENDIF()
+
 
 #Finally Load the individual applications
 FOREACH(__dir ${TEST_DIRS})
