@@ -39,7 +39,7 @@ MODULE_HEADER_DEFINE(BOOL ${MODULE_PREFIX}_USE_EXTERNAL_MODEM)
 MODULE_BUILD_SETTINGS_FILE()
 
 # Export the module-specific header files to the application by using
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(./inc)
 
 SET(sources
   alp_layer.c
