@@ -1,4 +1,5 @@
-[![Gitter](https://badges.gitter.im/Sub-IoT/community.svg)](https://gitter.im/Sub-IoT/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
+# WARNING: THIS REPOSITORY IS NOT ACTIVELY MAINTAINED ANYMORE
 
 # Welcome
 
